@@ -1,0 +1,106 @@
+─────────────────────────────────────────────────────────────
+CONSTANTS (from ADXL345 datasheet, ±2g range, 3.3V supply):
+  ST_X_MIN  = +0.54g,  ST_X_MAX = +5.84g
+  ST_Y_MIN  = -5.84g,  ST_Y_MAX = -0.54g
+  ST_Z_MIN  = +0.54g,  ST_Z_MAX = +5.84g
+  SAMPLE_COUNT      = 32        // samples to average per phase
+  SAMPLE_DELAY_MS   = 10        // 10ms between samples → 100Hz
+
+STATE:
+  phase       = IDLE            // IDLE | SAMPLING | TESTING | RESULT
+  testResult  = UNKNOWN         // PASS | FAIL_X | FAIL_Y | FAIL_Z | FAIL_COMM
+  baseline    = {x:0, y:0, z:0}
+  stReading   = {x:0, y:0, z:0}
+  delta       = {x:0, y:0, z:0}
+
+─────────────────────────────────────────────────────────────
+ON USER LAUNCHES SELF-TEST APP (touchscreen tap):
+
+  phase ← SAMPLING
+  DISPLAY "Collecting baseline…"  with progress bar
+
+─────────────────────────────────────────────────────────────
+PHASE 1 — BASELINE SAMPLING:
+
+  sumX, sumY, sumZ ← 0
+
+  REPEAT SAMPLE_COUNT times:
+    READ raw X, Y, Z from ADXL345
+    IF read fails:
+      testResult ← FAIL_COMM
+      GOTO SHOW RESULT
+    sumX += X,  sumY += Y,  sumZ += Z
+    WAIT SAMPLE_DELAY_MS
+
+  baseline.x ← sumX / SAMPLE_COUNT    // averaged to reduce noise
+  baseline.y ← sumY / SAMPLE_COUNT
+  baseline.z ← sumZ / SAMPLE_COUNT
+
+  phase ← TESTING
+  DISPLAY "Running self-test…" with progress bar
+
+─────────────────────────────────────────────────────────────
+PHASE 2 — SELF-TEST SAMPLING:
+
+  WRITE self-test bit = 1 to ADXL345 DATA_FORMAT register
+  WAIT 20ms                            // settling time per datasheet
+
+  sumX, sumY, sumZ ← 0
+
+  REPEAT SAMPLE_COUNT times:
+    READ raw X, Y, Z from ADXL345
+    sumX += X,  sumY += Y,  sumZ += Z
+    WAIT SAMPLE_DELAY_MS
+
+  stReading.x ← sumX / SAMPLE_COUNT
+  stReading.y ← sumY / SAMPLE_COUNT
+  stReading.z ← sumZ / SAMPLE_COUNT
+
+  WRITE self-test bit = 0 to DATA_FORMAT register   // restore normal mode
+  WAIT 20ms
+
+─────────────────────────────────────────────────────────────
+PHASE 3 — EVALUATE:
+
+  delta.x ← stReading.x − baseline.x
+  delta.y ← stReading.y − baseline.y
+  delta.z ← stReading.z − baseline.z
+
+  IF delta.x NOT IN [ST_X_MIN .. ST_X_MAX]:
+    testResult ← FAIL_X
+
+  ELSE IF delta.y NOT IN [ST_Y_MIN .. ST_Y_MAX]:
+    testResult ← FAIL_Y
+
+  ELSE IF delta.z NOT IN [ST_Z_MIN .. ST_Z_MAX]:
+    testResult ← FAIL_Z
+
+  ELSE:
+    testResult ← PASS
+
+  phase ← RESULT
+
+─────────────────────────────────────────────────────────────
+PHASE 4 — DISPLAY RESULT:
+
+  IF testResult = PASS:
+    SHOW green screen
+    DISPLAY "Self-test passed"
+    DISPLAY delta.x, delta.y, delta.z values   // useful during dev
+
+  ELSE IF testResult = FAIL_COMM:
+    SHOW red screen
+    DISPLAY "Sensor not responding"
+    DISPLAY "Check I2C wiring on GPIO21/22"
+
+  ELSE:                                         // FAIL_X / Y / Z
+    SHOW red screen
+    DISPLAY "Self-test failed — [axis]"
+    DISPLAY expected range vs actual delta
+
+  DISPLAY "Tap to return" button
+
+─────────────────────────────────────────────────────────────
+ON USER TAPS "RETURN":
+  phase ← IDLE
+  RETURN to main step counter screen
