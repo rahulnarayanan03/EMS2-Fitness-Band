@@ -1,0 +1,76 @@
+CONSTANTS:
+ STILL_THRESHOLD       = 0.05g        // near 1g → not moving
+ MIN_STEP_INTERVAL     = 200ms        // ignore unrealistically fast steps
+ MAX_STEP_INTERVAL     = 2000ms       // ignore very slow/no movement
+ WALK_SPM_MIN         = 70           // steps per minute thresholds
+ RUN_SPM_MIN          = 130
+ SMOOTHING_WINDOW     = 4            // number of recent steps to average
+STATE:
+ lastStepTime         = 0
+ stepIntervals[]      = empty list   // stores last few step intervals
+ avgStepInterval      = 0
+ stepFrequencySPM     = 0
+ magnitude            = 0
+ currentPace          = "STANDING"   // STANDING | WALKING | RUNNING
+ stablePace           = "STANDING"   // smoothed output for display
+─────────────────────────────────────────────
+LOOP (runs every 20ms → 50Hz):
+ 1. READ X, Y, Z from ADXL345
+ 2. COMPUTE magnitude = √(X² + Y² + Z²)
+─────────────────────────────────────────────
+ 3. DETECT STILLNESS:
+    IF |magnitude - 1g| < STILL_THRESHOLD:
+      currentPace ← "STANDING"
+      CLEAR stepIntervals[]
+      stepFrequencySPM ← 0
+      GOTO UPDATE DISPLAY
+─────────────────────────────────────────────
+ 4. ON VALID STEP DETECTED (triggered from step tracker):
+    stepInterval ← now - lastStepTime
+    IF stepInterval < MIN_STEP_INTERVAL OR stepInterval > MAX_STEP_INTERVAL:
+      IGNORE (invalid step timing)
+    ELSE:
+      lastStepTime ← now
+      APPEND stepInterval to stepIntervals[]
+      IF size(stepIntervals) > SMOOTHING_WINDOW:
+        REMOVE oldest value
+─────────────────────────────────────────────
+ 5. COMPUTE AVERAGE STEP INTERVAL:
+    sum ← 0
+    FOR each interval in stepIntervals:
+      sum += interval
+    avgStepInterval ← sum / size(stepIntervals)
+─────────────────────────────────────────────
+ 6. CONVERT TO STEP FREQUENCY:
+    stepFrequencySPM ← 60000 / avgStepInterval
+    // converts ms → steps per minute
+─────────────────────────────────────────────
+ 7. CLASSIFY PACE:
+    IF stepFrequencySPM >= RUN_SPM_MIN:
+      currentPace ← "RUNNING"
+    ELSE IF stepFrequencySPM >= WALK_SPM_MIN:
+      currentPace ← "WALKING"
+    ELSE:
+      currentPace ← "STANDING"
+─────────────────────────────────────────────
+ 8. SMOOTH OUTPUT (anti-flicker):
+    // Only update visible pace if consistent over multiple steps
+    IF currentPace = stablePace:
+      KEEP stablePace
+    ELSE:
+      // require consistency over last 2 cycles
+      CONFIRM change before updating
+      stablePace ← currentPace
+─────────────────────────────────────────────
+ 9. UPDATE DISPLAY:
+    IF stablePace = "STANDING":
+      SHOW standing animation
+    ELSE IF stablePace = "WALKING":
+      SHOW walking animation
+    ELSE IF stablePace = "RUNNING":
+      SHOW running animation
+    DISPLAY stepFrequencySPM (optional)
+    DISPLAY speed estimate (optional)
+─────────────────────────────────────────────
+ 10. DEBUG (optional):
+    PRINT avgStepInterval, stepFrequencySPM, stablePace

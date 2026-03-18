@@ -1,0 +1,54 @@
+CONSTANTS:
+ SAMPLE_COUNT      = 64          // more samples → better accuracy
+ SAMPLE_DELAY_MS   = 10
+ GRAVITY_EXPECTED  = 1.0g
+STATE:
+ accelOffset   = {x:0, y:0, z:0}
+ baselineMag   = 0
+ batteryScale  = 1.0
+ phase         = IDLE
+─────────────────────────────────────────────
+ON USER STARTS CALIBRATION:
+ phase ← SAMPLING
+ DISPLAY "Keep watch still..." with progress bar
+─────────────────────────────────────────────
+PHASE 1 — ACCELEROMETER BASELINE:
+ sumX, sumY, sumZ ← 0
+ REPEAT SAMPLE_COUNT times:
+   READ raw X, Y, Z from ADXL345
+   sumX += X, sumY += Y, sumZ += Z
+   WAIT SAMPLE_DELAY_MS
+ avgX ← sumX / SAMPLE_COUNT
+ avgY ← sumY / SAMPLE_COUNT
+ avgZ ← sumZ / SAMPLE_COUNT
+ // Compute magnitude (should be ~1g when stationary)
+ baselineMag ← √(avgX² + avgY² + avgZ²)
+ // Offset correction (normalize to 1g)
+ accelOffset.x ← avgX
+ accelOffset.y ← avgY
+ accelOffset.z ← avgZ
+─────────────────────────────────────────────
+PHASE 2 — BATTERY CALIBRATION:
+ DISPLAY "Reading battery..."
+ READ rawBatteryVoltage
+ // Map raw voltage to percentage scale (simple linear model)
+ // Example: 3.0V = 0%, 4.2V = 100%
+ batteryScale ← (rawBatteryVoltage - 3.0) / (4.2 - 3.0)
+ CLAMP batteryScale between 0 and 1
+─────────────────────────────────────────────
+PHASE 3 — SAVE RESULTS:
+ SAVE accelOffset to NVS
+ SAVE baselineMag to NVS
+ SAVE batteryScale to NVS
+ phase ← RESULT
+─────────────────────────────────────────────
+PHASE 4 — DISPLAY:
+ SHOW green screen
+ DISPLAY "Calibration complete"
+ DISPLAY "Baseline g:", baselineMag
+ DISPLAY "Battery scale:", batteryScale
+ DISPLAY "Tap to return"
+─────────────────────────────────────────────
+ON USER TAP:
+ phase ← IDLE
+ RETURN to main screen
