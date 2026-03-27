@@ -1,1 +1,3 @@
 # Read me for the display
+
+# WARNING: DO NOT test display without assigning pins and changing values within the library of the display ( specifically the user_setup.h file)
