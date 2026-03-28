@@ -1,20 +1,38 @@
 #include <Arduino.h>
 
-// put function declarations here:
-int myFunction(int, int);
+#include "sensors/MAX30102.h"
+#include "sensors/ADXL335.h"
+
+#include "heartrate/heartrate.h"
+#include "pacefind/pacefind.h"
+#include "display/display.h"
+#include "calibration/calibration.h"
+//add rest
+
+// create objects
+MAX30102 heartSM;
+HeartRate hrM;
+PACEFIND paceM;
+Calibration calibM;
+Display screenM;
+//ADXL335 adxlM;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+
+    Serial.begin(115200);
+    delay(2000);
+
+    Serial.println("Compile test");
+
+    //basic initialisation
+    screenM.begin();
+    calibM.begin();
+
+    Serial.println("Everything is compiled");
 }
-// karthik test
+
 void loop() {
-  // put your main code here, to run repeatedly:
-}
 
-//test 2
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+    Serial.println("Testing Testing Hello World");
+    delay(1000);
 }
