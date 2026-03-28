@@ -19,7 +19,7 @@ Display screenM;
 
 void setup() {
 
-    Serial.begin(115200);
+    Serial.begin(9600);
     delay(2000);
 
     Serial.println("Compile test");
