@@ -15,7 +15,7 @@ void Calibration::begin() {
     pinMode(zPin, INPUT);
 }
 
-//trigger fr calibration
+//trigger for calibration
 void Calibration::startCalibration() {
     calibrating = true;
     startTime = millis();
