@@ -2,10 +2,10 @@
 #define HEARTRATE_H
 
 class HeartRate {
-    
+
 public:
-    void update(long irValue);   // takes IR from your MAX30102
-    int getBPM();                // returns calculated BPM
+    void update(long irValue); //takes IR from MAX30102
+    int getBPM();  //bpm
 
 private:
     int bpm = 0;
@@ -14,7 +14,7 @@ private:
 
     bool aboveThreshold = false;
 
-    int threshold = 50000; // base threshold (adjust later)
+    int threshold = 50000; //base threshold as seen in example
 };
 
 #endif
