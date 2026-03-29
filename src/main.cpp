@@ -15,7 +15,7 @@ HeartRate hrM;
 PACEFIND paceM;
 Calibration calibM;
 Display screenM;
-//ADXL335 adxlM;
+ADXL335 adxlM;
 
 void setup() {
 
