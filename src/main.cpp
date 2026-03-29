@@ -15,7 +15,7 @@ HeartRate hrM;
 PACEFIND paceM;
 Calibration calibM;
 Display screenM;
-ADXL335 adxlM;
+ADXL335 adxlM(34, 35, 32); //Pins DO NOT FORGET TO CHANGE FOR TESTING
 
 void setup() {
 
@@ -29,9 +29,13 @@ void setup() {
     calibM.begin();
 
     Serial.println("Everything is compiled");
+
+    calibM.startCalibration();
 }
 
 void loop() {
+
+    calibM.update();
 
     Serial.println("Testing Testing Hello World");
     delay(1000);
