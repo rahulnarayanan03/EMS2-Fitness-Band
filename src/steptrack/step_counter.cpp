@@ -2,60 +2,46 @@
  * step_counter.cpp
  *
  * Step counting routine for EMS2-Fitness-Band.
- * Hardware : ESP32-D0WDQ6 + ADXL345 (I2C, GPIO21=SDA, GPIO22=SCL)
- * Algorithm: Hysteresis peak-detection on √(X²+Y²+Z²) magnitude,
- *            with a cooldown gate and batched NVS persistence.
+ * Hardware : ESP32-D0WDQ6 + ADXL335 (analog)
+ *   X → GPIO34,  Y → GPIO35,  Z → GPIO32
+ *   Supply: 3.3 V
  *
- * Flow (matches Step_tracker_routine_Pseudocode & flowchart):
- *   Setup → Read ADXL → Compute Magnitude → Above Threshold?
- *     Yes → Set flag
- *     No  → Peak Complete? (flag was set AND now below hysteresis line)
- *             Yes → Cooldown Elapsed? → Yes → Count Step → (NVS every 10)
+ * Conversion (matches calibration.cpp):
+ *   voltage = raw * (3.3 / 4095.0)
+ *   g       = (voltage - 1.65) / 0.33
+ *
+ * Calibration offsets (from Calibration object) are subtracted
+ * from each axis to correct for sensor tilt/bias at rest.
+ *
+ * Algorithm (matches flowchart & pseudocode):
+ *   Read ADXL335 → Compute magnitude → Above threshold?
+ *     Yes → set flag (don't count yet)
+ *     No  → was flag set AND now below hysteresis line?
+ *             Yes → cooldown elapsed? → Yes → count step → (NVS every 10)
  *             No  → ignore
- *
- * Call begin() once in setup(), update() every 20 ms in loop().
  */
 
 #include "step_counter.h"
-
-#include <Wire.h>
 #include <math.h>
 #include <Preferences.h>   // ESP32 NVS wrapper
 
-// ─────────────────────────────────────────────────────────────
-//  ADXL345 I2C address and register map
-// ─────────────────────────────────────────────────────────────
-static constexpr uint8_t ADXL345_ADDR       = 0x53;  // SDO/ALT = GND
-
-static constexpr uint8_t REG_DEVID          = 0x00;
-static constexpr uint8_t REG_POWER_CTL      = 0x2D;
-static constexpr uint8_t REG_DATA_FORMAT    = 0x31;
-static constexpr uint8_t REG_BW_RATE        = 0x2C;
-static constexpr uint8_t REG_DATAX0         = 0x32;  // first of 6 data bytes
-
-// BW_RATE value for 50 Hz output data rate
-static constexpr uint8_t BW_RATE_50HZ       = 0x09;
-
-// DATA_FORMAT: full resolution OFF, ±2 g range → 10-bit, 256 LSB/g
-static constexpr uint8_t DATA_FORMAT_2G     = 0x00;
-
 // NVS namespace and key
-static constexpr char NVS_NAMESPACE[]       = "steptrack";
-static constexpr char NVS_KEY_COUNT[]       = "stepCount";
+static constexpr char NVS_NAMESPACE[]  = "steptrack";
+static constexpr char NVS_KEY_COUNT[]  = "stepCount";
+
+// ─────────────────────────────────────────────────────────────
+//  Constructor
+// ─────────────────────────────────────────────────────────────
+StepCounter::StepCounter(Calibration &cal) : _cal(cal) {}
 
 // ─────────────────────────────────────────────────────────────
 //  Public — begin()
 // ─────────────────────────────────────────────────────────────
 bool StepCounter::begin() {
-    // I2C is shared with other modules; only call Wire.begin() if not
-    // already started. The calibration module calls it first, so we
-    // attempt to begin but do not fail if it was already active.
-    Wire.begin();  // GPIO21 SDA, GPIO22 SCL by default on ESP32
-
-    if (!initADXL345()) {
-        Serial.println("[StepCounter] ERROR: ADXL345 not found. Check wiring.");
-        return false;
-    }
+    // Configure analog input pins (input-only GPIOs on ESP32)
+    pinMode(SC_PIN_X, INPUT);
+    pinMode(SC_PIN_Y, INPUT);
+    pinMode(SC_PIN_Z, INPUT);
 
     if (!loadFromNVS()) {
         Serial.println("[StepCounter] NVS load failed — starting from 0.");
@@ -78,34 +64,36 @@ bool StepCounter::begin() {
 void StepCounter::update() {
     if (!_initialised) return;
 
-    // ── 1. Read raw X, Y, Z from ADXL345 ──────────────────────
+    // ── 1. Read X, Y, Z from ADXL335 in g ────────────────────
     float x = 0.0f, y = 0.0f, z = 0.0f;
-    if (!readADXL345(x, y, z)) {
-        Serial.println("[StepCounter] WARN: ADXL345 read failed.");
-        return;
-    }
+    readADXL335(x, y, z);
 
-    // ── 2. Compute orientation-independent magnitude (in g) ───
-    //        At rest = 1 g (gravity). A step produces a peak > 1 g.
+    // ── 2. Apply calibration offsets ──────────────────────────
+    //  Offsets are the measured g deviation at rest (from Calibration).
+    //  Subtracting them corrects for sensor tilt and bias.
+    x -= _cal.getXOffset();
+    y -= _cal.getYOffset();
+    z -= _cal.getZOffset();
+
+    // ── 3. Compute orientation-independent magnitude ───────────
+    //  At rest = 1 g (gravity). A step produces a peak above 1 g.
     float magnitude = sqrtf(x * x + y * y + z * z);
 
-    // Threshold lines in g
-    float highLine = 1.0f + SC_THRESHOLD_G;   // 1.40 g  — rising edge
-    float lowLine  = 1.0f + SC_HYSTERESIS_G;  // 1.16 g  — falling edge
+    float highLine = 1.0f + SC_THRESHOLD_G;   // 1.40 g — rising edge
+    float lowLine  = 1.0f + SC_HYSTERESIS_G;  // 1.16 g — falling edge
 
     uint32_t now = millis();
 
-    // ── 3. Peak detection (hysteresis gate) ────────────────────
+    // ── 4. Peak detection (hysteresis gate) ───────────────────
     if (!_aboveThreshold && magnitude > highLine) {
-        // Rising edge: magnitude crossed the threshold — start watching
+        // Rising edge: crossed threshold — start watching, don't count yet
         _aboveThreshold = true;
-        // Do NOT count yet; wait for the peak to complete (fall below lowLine)
 
     } else if (_aboveThreshold && magnitude < lowLine) {
-        // Falling edge: peak is complete — clear the flag
+        // Falling edge: peak is confirmed complete — clear flag
         _aboveThreshold = false;
 
-        // ── 4. Cooldown / timing gate ──────────────────────────
+        // ── 5. Cooldown / timing gate ──────────────────────────
         uint32_t elapsed = now - _lastStepTimeMs;
         if (elapsed >= SC_COOLDOWN_MS) {
             _lastStepTimeMs = now;
@@ -118,20 +106,23 @@ void StepCounter::update() {
                 saveToNVS();
             }
         }
-        // else: peak happened too soon → ignore (debounce)
+        // else: peak too soon after last step → discard (debounce)
     }
-    // If magnitude is between lowLine and highLine and _aboveThreshold is
-    // true → we are in the hysteresis band, still tracking the peak; ignore.
+    // If magnitude is between lowLine and highLine while _aboveThreshold
+    // is true → still in hysteresis band, keep watching.
 
-    // ── 5. Display update every 300 ms ─────────────────────────
-    //   Plug in your display call here when the display module is ready.
-    //   e.g.: if (now - _lastDisplayMs >= 300) { screenM.showSteps(_stepCount); _lastDisplayMs = now; }
+    // ── 6. Display update every 300 ms ────────────────────────
+    //  Uncomment and plug in your display call when ready:
+    //  if (now - _lastDisplayMs >= 300) {
+    //      _lastDisplayMs = now;
+    //      screenM.showSteps(_stepCount);
+    //  }
     if (now - _lastDisplayMs >= 300) {
         _lastDisplayMs = now;
         // TODO: call display module → show _stepCount
     }
 
-    // ── 6. Serial debug every 500 ms ───────────────────────────
+    // ── 7. Serial debug every 500 ms ──────────────────────────
     if (now - _lastSerialMs >= 500) {
         _lastSerialMs = now;
         Serial.printf("[StepCounter] mag=%.3f g | steps=%u | above=%s\n",
@@ -159,67 +150,25 @@ void StepCounter::resetCount() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Private — ADXL345 initialisation
+//  Private — read ADXL335 analog outputs, convert to g
 // ─────────────────────────────────────────────────────────────
-bool StepCounter::initADXL345() {
-    // Check device ID (must be 0xE5)
-    Wire.beginTransmission(ADXL345_ADDR);
-    Wire.write(REG_DEVID);
-    if (Wire.endTransmission(false) != 0) return false;
+void StepCounter::readADXL335(float &x, float &y, float &z) {
+    // Read 12-bit ADC (0–4095)
+    int rawX = analogRead(SC_PIN_X);
+    int rawY = analogRead(SC_PIN_Y);
+    int rawZ = analogRead(SC_PIN_Z);
 
-    Wire.requestFrom((uint8_t)ADXL345_ADDR, (uint8_t)1);
-    if (!Wire.available()) return false;
-    uint8_t devId = Wire.read();
-    if (devId != 0xE5) {
-        Serial.printf("[StepCounter] Bad ADXL345 device ID: 0x%02X\n", devId);
-        return false;
-    }
+    // Convert to voltage (same formula as calibration.cpp)
+    float vX = rawX * (SC_VCC / SC_ADC_MAX);
+    float vY = rawY * (SC_VCC / SC_ADC_MAX);
+    float vZ = rawZ * (SC_VCC / SC_ADC_MAX);
 
-    // Set output data rate to 50 Hz
-    writeReg(REG_BW_RATE, BW_RATE_50HZ);
-
-    // Set data format: right-justified, ±2 g, 10-bit (256 LSB/g)
-    writeReg(REG_DATA_FORMAT, DATA_FORMAT_2G);
-
-    // Wake from standby — enable measurement mode
-    writeReg(REG_POWER_CTL, 0x08);
-
-    return true;
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Private — read X, Y, Z as signed g values
-// ─────────────────────────────────────────────────────────────
-bool StepCounter::readADXL345(float &x, float &y, float &z) {
-    // Burst-read 6 bytes starting at DATAX0
-    Wire.beginTransmission(ADXL345_ADDR);
-    Wire.write(REG_DATAX0);
-    if (Wire.endTransmission(false) != 0) return false;
-
-    Wire.requestFrom((uint8_t)ADXL345_ADDR, (uint8_t)6);
-    if (Wire.available() < 6) return false;
-
-    // Each axis is a 16-bit two's complement value, little-endian
-    int16_t rawX = (int16_t)(Wire.read() | (Wire.read() << 8));
-    int16_t rawY = (int16_t)(Wire.read() | (Wire.read() << 8));
-    int16_t rawZ = (int16_t)(Wire.read() | (Wire.read() << 8));
-
-    // Convert to g (256 LSB per g at ±2 g)
-    x = (float)rawX / SC_LSB_PER_G;
-    y = (float)rawY / SC_LSB_PER_G;
-    z = (float)rawZ / SC_LSB_PER_G;
-
-    return true;
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Private — low-level I2C register write
-// ─────────────────────────────────────────────────────────────
-void StepCounter::writeReg(uint8_t reg, uint8_t value) {
-    Wire.beginTransmission(ADXL345_ADDR);
-    Wire.write(reg);
-    Wire.write(value);
-    Wire.endTransmission();
+    // Convert voltage to g
+    //   At rest each axis = 1.65 V (mid-supply = 0 g)
+    //   Sensitivity = 0.33 V/g at 3.3 V
+    x = (vX - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
+    y = (vY - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
+    z = (vZ - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -2,39 +2,51 @@
 #define STEP_COUNTER_H
 
 #include <Arduino.h>
+#include "../calibration/calibration.h"
 
 // ─────────────────────────────────────────────────────────────
-//  Tuning constants — adjust these after physical testing
+//  ADXL335 pin assignments  (matches calibration.cpp)
 // ─────────────────────────────────────────────────────────────
+static constexpr int SC_PIN_X = 34;
+static constexpr int SC_PIN_Y = 35;
+static constexpr int SC_PIN_Z = 32;
 
-// Peak must rise this many g above 1 g (gravity baseline) to register
-static constexpr float SC_THRESHOLD_G   = 0.40f;   // 0.40 g
+// ─────────────────────────────────────────────────────────────
+//  ADXL335 analog conversion constants (3.3 V supply)
+//    Voltage   = raw * (3.3 / 4095.0)
+//    g value   = (voltage - 1.65) / 0.33
+//  Where:
+//    1.65 V  = mid-supply zero-g bias  (Vcc / 2)
+//    0.33 V/g = sensitivity at 3.3 V
+// ─────────────────────────────────────────────────────────────
+static constexpr float SC_VCC         = 3.3f;
+static constexpr float SC_ADC_MAX     = 4095.0f;
+static constexpr float SC_ZERO_G_BIAS = 1.65f;   // V  (Vcc / 2)
+static constexpr float SC_SENSITIVITY = 0.33f;   // V/g at 3.3 V
 
-// Peak must fall THIS far below (1g + THRESHOLD) to confirm it finished.
-// Using 40 % of threshold gives a clean hysteresis band.
-static constexpr float SC_HYSTERESIS_G  = 0.16f;   // 0.16 g  (= THRESHOLD × 0.4)
-
-// Fastest realistic step cadence: 250 ms ≈ 240 steps/min (sprinting)
-static constexpr uint32_t SC_COOLDOWN_MS   = 250;
-
-// NVS is written every N steps to limit flash wear
-static constexpr uint32_t SC_NVS_BATCH     = 10;
-
-// ADXL345 full-scale sensitivity at ±2 g, 10-bit output → 256 LSB/g
-static constexpr float SC_LSB_PER_G        = 256.0f;
+// ─────────────────────────────────────────────────────────────
+//  Tuning constants
+// ─────────────────────────────────────────────────────────────
+static constexpr float    SC_THRESHOLD_G  = 0.40f; // must exceed 1g + this to register
+static constexpr float    SC_HYSTERESIS_G = 0.16f; // must fall below 1g + this to confirm peak
+static constexpr uint32_t SC_COOLDOWN_MS  = 250;   // minimum ms between steps
+static constexpr uint32_t SC_NVS_BATCH    = 10;    // save to NVS every N steps
 
 // ─────────────────────────────────────────────────────────────
 //  StepCounter class
 // ─────────────────────────────────────────────────────────────
 class StepCounter {
 public:
-    // Call once in setup() — inits I2C, ADXL345, and loads NVS count
+    // Pass a reference to the Calibration object so we can read offsets
+    StepCounter(Calibration &cal);
+
+    // Call once in setup() — configures pins and loads NVS count
     bool begin();
 
-    // Call every 20 ms in loop() — one complete sample-and-detect cycle
+    // Call every 20 ms in loop() — one full sample-and-detect cycle
     void update();
 
-    // Return current step count (including unsaved steps)
+    // Returns the current step count (including unsaved steps)
     uint32_t getStepCount() const;
 
     // Force an immediate NVS save (e.g. before deep-sleep)
@@ -44,30 +56,24 @@ public:
     void resetCount();
 
 private:
-    // ── ADXL345 helpers ──────────────────────────────────────
-    bool    initADXL345();
-    bool    readADXL345(float &x, float &y, float &z);
-
-    // Write one byte to an ADXL345 register
-    void    writeReg(uint8_t reg, uint8_t value);
-
-    // Read one signed byte from an ADXL345 register
-    int8_t  readReg(uint8_t reg);
+    // ── ADXL335 helpers ──────────────────────────────────────
+    void readADXL335(float &x, float &y, float &z);
 
     // ── NVS helpers ──────────────────────────────────────────
-    bool     loadFromNVS();
-    bool     saveToNVS();
+    bool loadFromNVS();
+    bool saveToNVS();
 
-    // ── State ────────────────────────────────────────────────
-    uint32_t _stepCount       = 0;
-    bool     _aboveThreshold  = false;
-    uint32_t _lastStepTimeMs  = 0;
+    // ── Members ──────────────────────────────────────────────
+    Calibration &_cal;
 
-    // Display and serial throttle timers
-    uint32_t _lastDisplayMs   = 0;
-    uint32_t _lastSerialMs    = 0;
+    uint32_t _stepCount      = 0;
+    bool     _aboveThreshold = false;
+    uint32_t _lastStepTimeMs = 0;
 
-    bool     _initialised     = false;
+    uint32_t _lastDisplayMs  = 0;
+    uint32_t _lastSerialMs   = 0;
+
+    bool     _initialised    = false;
 };
 
 #endif // STEP_COUNTER_H
