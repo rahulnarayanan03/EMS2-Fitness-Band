@@ -76,4 +76,4 @@ private:
     bool     _initialised    = false;
 };
 
-#endif // STEP_COUNTER_H  
+#endif // STEP_COUNTER_H
