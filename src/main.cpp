@@ -15,7 +15,7 @@ HeartRate hrM;
 PACEFIND paceM;
 Calibration calibM;
 Display screenM;
-ADXL335 adxlM(34, 35, 32); //Pins DO NOT FORGET TO CHANGE FOR TESTING
+ADXL335 adxlM(32, 33, 34); //Pins DO NOT FORGET TO CHANGE FOR TESTING
 
 void setup() {
 
