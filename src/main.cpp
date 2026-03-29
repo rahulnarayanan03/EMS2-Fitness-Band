@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <math.h>
 
 #include "sensors/MAX30102.h"
 #include "sensors/ADXL335.h"
@@ -7,24 +8,20 @@
 #include "pacefind/pacefind.h"
 #include "display/display.h"
 #include "calibration/calibration.h"
-//add rest
 
-// create objects
 MAX30102 heartSM;
 HeartRate hrM;
 PACEFIND paceM;
 Calibration calibM;
 Display screenM;
-ADXL335 adxlM(32, 33, 34); //Pins DO NOT FORGET TO CHANGE FOR TESTING
+ADXL335 adxlM(32, 35, 34);
 
 void setup() {
-
     Serial.begin(9600);
     delay(2000);
 
     Serial.println("Compile test");
 
-    //basic initialisation
     screenM.begin();
     calibM.begin();
 
@@ -34,9 +31,20 @@ void setup() {
 }
 
 void loop() {
-
     calibM.update();
 
-    Serial.println("Testing Testing Hello World");
-    delay(1000);
+    if (calibM.isCalibrated()) {
+        float x = calibM.getXG();
+        float y = calibM.getYG();
+        float z = calibM.getZG();
+
+        float magnitude = sqrt(x*x + y*y + z*z);
+
+        Serial.print("X: "); Serial.print(x, 3);
+        Serial.print(" Y: "); Serial.print(y, 3);
+        Serial.print(" Z: "); Serial.print(z, 3);
+        Serial.print(" | Mag: "); Serial.println(magnitude, 3);
+
+        // delay(250);
+    }
 }

@@ -8,19 +8,34 @@ public:
     void startCalibration();
     void update();
 
+    bool isCalibrated();
+
     float getXOffset();
     float getYOffset();
     float getZOffset();
 
+    float getXG();
+    float getYG();
+    float getZG();
+
 private:
     bool calibrating = false;
+    bool calibrated = false;
     unsigned long startTime = 0;
 
-    // offsets
     float xOffset = 0;
     float yOffset = 0;
     float zOffset = 0;
-    
+
+    float xScale = 1;  // added
+    float yScale = 1;  // added
+    float zScale = 1;  // added
+
+    float xMin, xMax;
+    float yMin, yMax;
+    float zMin, zMax;
+
+    float readVoltage(int pin);
 };
 
 #endif

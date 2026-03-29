@@ -1,85 +1,125 @@
 #include <Arduino.h>
 #include "Calibration.h"
 
-//temp pin assignments DONT FORGET TO CHANGE
-const int xPin = 34;
+const int xPin = 32;
 const int yPin = 35;
-const int zPin = 32;
+const int zPin = 34;
 
-//setup
+const int NUM_SAMPLES = 50;
+const float SENSITIVITY = 0.015f; // adxl335 ~330mV per g
+
+float Calibration::readVoltage(int pin) {
+    long sum = 0;
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        sum += analogRead(pin);
+        delayMicroseconds(100);
+    }
+    return (sum / (float)NUM_SAMPLES) * (3.3f / 4095.0f);
+}
+
 void Calibration::begin() {
     calibrating = false;
+    calibrated = false;
 
     pinMode(xPin, INPUT);
     pinMode(yPin, INPUT);
     pinMode(zPin, INPUT);
+
+    analogSetAttenuation(ADC_11db);
 }
 
-//trigger for calibration
 void Calibration::startCalibration() {
     calibrating = true;
+    calibrated = false;
     startTime = millis();
 
-    Serial.println("Calibration initialised - Testing");
+    xMin = yMin = zMin = 9999;
+    xMax = yMax = zMax = -9999;
+
+    Serial.println("Calibration started...");
+    Serial.println("Move sensor in ALL directions!");
 }
-
-
 
 void Calibration::update() {
 
     if (calibrating) {
 
-        // wait 2 seconds for stability
-        if (millis() - startTime > 2000) {
+        float voltageX = readVoltage(xPin);
+        float voltageY = readVoltage(yPin);
+        float voltageZ = readVoltage(zPin);
 
-            // read raw values from ADXL335
-            int rawX = analogRead(xPin);
-            int rawY = analogRead(yPin);
-            int rawZ = analogRead(zPin);
+        if (voltageX < xMin) xMin = voltageX;
+        if (voltageX > xMax) xMax = voltageX;
 
-            //convert to voltage
-            float voltageX = rawX * (3.3 / 4095.0);
-            float voltageY = rawY * (3.3 / 4095.0);
-            float voltageZ = rawZ * (3.3 / 4095.0);
+        if (voltageY < yMin) yMin = voltageY;
+        if (voltageY > yMax) yMax = voltageY;
 
-            //acceleration conversiom
-            float x = (voltageX - 1.65) / 0.33;
-            float y = (voltageY - 1.65) / 0.33;
-            float z = (voltageZ - 1.65) / 0.33;
+        if (voltageZ < zMin) zMin = voltageZ;
+        if (voltageZ > zMax) zMax = voltageZ;
 
+        Serial.print("X: "); Serial.print(voltageX);
+        Serial.print(" | Y: "); Serial.print(voltageY);
+        Serial.print(" | Z: "); Serial.println(voltageZ);
 
+        if (millis() - startTime > 20000) {
 
-            //offsets
-            xOffset = x;
-            yOffset = y;
-            zOffset = z;
+            xOffset = (xMax + xMin) / 2;
+            yOffset = (yMax + yMin) / 2;
+            zOffset = (zMax + zMin) / 2;
 
-            //serial monitor
-            Serial.println("Calibration Complete!");
-            Serial.print("X Offset: "); 
-            Serial.println(xOffset);
-            Serial.print("Y Offset: "); 
-            Serial.println(yOffset);
-            Serial.print("Z Offset: "); 
-            Serial.println(zOffset);
+            calibrating = false;
+            calibrated = true;
 
-            calibrating = false;  // stop calibration
+            Serial.println("----- CALIBRATION COMPLETE -----");
+
+            Serial.print("X Min: "); Serial.println(xMin);
+            Serial.print("X Max: "); Serial.println(xMax);
+
+            Serial.print("Y Min: "); Serial.println(yMin);
+            Serial.print("Y Max: "); Serial.println(yMax);
+
+            Serial.print("Z Min: "); Serial.println(zMin);
+            Serial.print("Z Max: "); Serial.println(zMax);
+
+            Serial.println("---- OFFSETS ----");
+            Serial.print("X Offset: "); Serial.println(xOffset);
+            Serial.print("Y Offset: "); Serial.println(yOffset);
+            Serial.print("Z Offset: "); Serial.println(zOffset);
         }
     }
 }
 
-// getters
-float Calibration::getXOffset() {
-    return xOffset;
+bool Calibration::isCalibrated() { 
+    return calibrated; 
 
 }
 
-float Calibration::getYOffset() {
-    return yOffset;
+float Calibration::getXOffset() { 
+    return xOffset; 
 
 }
 
-float Calibration::getZOffset() {
-    return zOffset;
+float Calibration::getYOffset() { 
+    return yOffset; 
+
+}
+
+float Calibration::getZOffset() { 
+    return zOffset; 
+
+}
+
+float Calibration::getXG() { 
+    return (readVoltage(xPin) - xOffset) / SENSITIVITY; 
+
+}
+
+float Calibration::getYG() { 
+    return (readVoltage(yPin) - yOffset) / SENSITIVITY; 
+
+}
+
+float Calibration::getZG() { 
+    return (readVoltage(zPin) - zOffset) / SENSITIVITY; 
 
 }
