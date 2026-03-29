@@ -49,7 +49,7 @@ bool StepCounter::begin() {
     }
 
     _aboveThreshold = false;
-    _lastStepTimeMs = 0;
+    _lastStepTimeMs = 0; 
     _lastDisplayMs  = 0;
     _lastSerialMs   = 0;
     _initialised    = true;
