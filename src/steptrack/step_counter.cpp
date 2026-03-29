@@ -1,7 +1,7 @@
-/* step_counter.cpp
-Reads acceleration from the ADXL335 and counts steps
-Uses a peak detection approach with hysteresis to avoid false counts
-GPIO34 = X, GPIO35 = Y, GPIO32 = Z, running at 3.3V */
+// step_counter.cpp
+// Reads acceleration from the ADXL335 and counts steps
+// Uses a peak detection approach with hysteresis to avoid false counts
+// Relies on calibration.getXG/getYG/getZG() for corrected g values
 
 #include "step_counter.h"
 #include <math.h>
@@ -11,15 +11,11 @@ GPIO34 = X, GPIO35 = Y, GPIO32 = Z, running at 3.3V */
 static constexpr char NVS_NAMESPACE[] = "steptrack";
 static constexpr char NVS_KEY_COUNT[] = "stepCount";
 
-// constructor - takes a reference to the calibration object so we can use the offsets
+// constructor - takes a reference to the calibration object
 StepCounter::StepCounter(Calibration &cal) : _cal(cal) {}
 
-// sets up the pins and loads the last saved step count from flash
+// sets up and loads the last saved step count from flash
 bool StepCounter::begin() {
-
-    pinMode(SC_PIN_X, INPUT);
-    pinMode(SC_PIN_Y, INPUT);
-    pinMode(SC_PIN_Z, INPUT);
 
     // try to load previous step count, start from 0 if nothing saved yet
     if (!loadFromNVS()) {
@@ -37,43 +33,43 @@ bool StepCounter::begin() {
     return true;
 }
 
-// main loop function - call this every 20ms
+// main update function - call this every loop()
 void StepCounter::update() {
     if (!_initialised) return;
 
-    // read raw acceleration from the sensor
-    float x = 0.0f, y = 0.0f, z = 0.0f;
-    readADXL335(x, y, z);
+    // don't do anything until calibration is complete
+    // calibration takes 20 seconds of moving the sensor around
+    if (!_cal.isCalibrated()) return;
 
-    // subtract calibration offsets to correct for resting tilt/bias
-    x -= _cal.getXOffset();
-    y -= _cal.getYOffset();
-    z -= _cal.getZOffset();
+    // get corrected g values directly from the calibration object
+    // getXG/getYG/getZG already handle the ADC->voltage->g conversion
+    // and subtract the offsets internally
+    float x = _cal.getXG();
+    float y = _cal.getYG();
+    float z = _cal.getZG();
 
     // compute total magnitude across all 3 axes
-    // this way it doesn't matter which way the watch is oriented
     // at rest this should sit around 1g due to gravity
+    // a step produces a peak above that
     float magnitude = sqrtf(x*x + y*y + z*z);
 
-    // thresholds for peak detection
     float highLine = 1.0f + SC_THRESHOLD_G;   // magnitude needs to go above this
     float lowLine  = 1.0f + SC_HYSTERESIS_G;  // then drop below this to confirm a peak
 
     uint32_t now = millis();
 
-    // peak detection logic
-    // we wait for magnitude to rise above highLine, then fall below lowLine
-    // this two-stage check (hysteresis) stops noise from triggering false steps
+    // peak detection with hysteresis
+    // wait for magnitude to rise above highLine, then fall below lowLine
+    // the two-stage check stops noise from triggering false steps
     if (!_aboveThreshold && magnitude > highLine) {
         // rising edge - flag it but don't count yet
         _aboveThreshold = true;
 
     } else if (_aboveThreshold && magnitude < lowLine) {
-        // falling edge - peak is done
+        // falling edge - peak is confirmed done
         _aboveThreshold = false;
 
         // cooldown check - ignore if steps are coming in too fast (under 250ms)
-        // fastest realistic walking cadence is around 250ms per step
         if ((now - _lastStepTimeMs) >= SC_COOLDOWN_MS) {
             _lastStepTimeMs = now;
             _stepCount++;
@@ -114,27 +110,6 @@ void StepCounter::resetCount() {
     _stepCount = 0;
     saveToNVS();
     Serial.println("[StepCounter] Step count reset.");
-}
-
-// reads the 3 analog pins and converts ADC values into g forces
-// using the same conversion as calibration.cpp so the values are consistent
-void StepCounter::readADXL335(float &x, float &y, float &z) {
-
-    int rawX = analogRead(SC_PIN_X);
-    int rawY = analogRead(SC_PIN_Y);
-    int rawZ = analogRead(SC_PIN_Z);
-
-    // convert 12-bit ADC reading to voltage
-    float vX = rawX * (SC_VCC / SC_ADC_MAX);
-    float vY = rawY * (SC_VCC / SC_ADC_MAX);
-    float vZ = rawZ * (SC_VCC / SC_ADC_MAX);
-
-    // convert voltage to g
-    // 1.65V is the midpoint at 0g (half of 3.3V supply)
-    // 0.33 V/g is the sensitivity of the ADXL335 at 3.3V
-    x = (vX - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
-    y = (vY - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
-    z = (vZ - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
 }
 
 // load step count from NVS flash (persists across power cycles)
