@@ -10,6 +10,9 @@ ADXL335::ADXL335(int pinX, int pinY, int pinZ) {
 
 void ADXL335::begin() {
     
+    pinMode(_pinX, INPUT);
+    pinMode(_pinY, INPUT);
+    pinMode(_pinZ, INPUT);
 }
 
 void ADXL335::readAcc(float &x, float &y, float &z) {
