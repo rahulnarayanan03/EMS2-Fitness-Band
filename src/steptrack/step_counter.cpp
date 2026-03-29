@@ -1,140 +1,107 @@
-/*
- * step_counter.cpp
- *
- * Step counting routine for EMS2-Fitness-Band.
- * Hardware : ESP32-D0WDQ6 + ADXL335 (analog)
- *   X → GPIO34,  Y → GPIO35,  Z → GPIO32
- *   Supply: 3.3 V
- *
- * Conversion (matches calibration.cpp):
- *   voltage = raw * (3.3 / 4095.0)
- *   g       = (voltage - 1.65) / 0.33
- *
- * Calibration offsets (from Calibration object) are subtracted
- * from each axis to correct for sensor tilt/bias at rest.
- *
- * Algorithm (matches flowchart & pseudocode):
- *   Read ADXL335 → Compute magnitude → Above threshold?
- *     Yes → set flag (don't count yet)
- *     No  → was flag set AND now below hysteresis line?
- *             Yes → cooldown elapsed? → Yes → count step → (NVS every 10)
- *             No  → ignore
- */
+/* step_counter.cpp
+Reads acceleration from the ADXL335 and counts steps
+Uses a peak detection approach with hysteresis to avoid false counts
+GPIO34 = X, GPIO35 = Y, GPIO32 = Z, running at 3.3V */
 
 #include "step_counter.h"
 #include <math.h>
-#include <Preferences.h>   // ESP32 NVS wrapper
+#include <Preferences.h>
 
-// NVS namespace and key
-static constexpr char NVS_NAMESPACE[]  = "steptrack";
-static constexpr char NVS_KEY_COUNT[]  = "stepCount";
+// NVS storage keys
+static constexpr char NVS_NAMESPACE[] = "steptrack";
+static constexpr char NVS_KEY_COUNT[] = "stepCount";
 
-// ─────────────────────────────────────────────────────────────
-//  Constructor
-// ─────────────────────────────────────────────────────────────
+// constructor - takes a reference to the calibration object so we can use the offsets
 StepCounter::StepCounter(Calibration &cal) : _cal(cal) {}
 
-// ─────────────────────────────────────────────────────────────
-//  Public — begin()
-// ─────────────────────────────────────────────────────────────
+// sets up the pins and loads the last saved step count from flash
 bool StepCounter::begin() {
-    // Configure analog input pins (input-only GPIOs on ESP32)
+
     pinMode(SC_PIN_X, INPUT);
     pinMode(SC_PIN_Y, INPUT);
     pinMode(SC_PIN_Z, INPUT);
 
+    // try to load previous step count, start from 0 if nothing saved yet
     if (!loadFromNVS()) {
-        Serial.println("[StepCounter] NVS load failed — starting from 0.");
+        Serial.println("[StepCounter] Nothing in NVS, starting fresh.");
         _stepCount = 0;
     }
 
     _aboveThreshold = false;
-    _lastStepTimeMs = 0; 
+    _lastStepTimeMs = 0;
     _lastDisplayMs  = 0;
     _lastSerialMs   = 0;
     _initialised    = true;
 
-    Serial.printf("[StepCounter] Ready. Loaded step count: %u\n", _stepCount);
+    Serial.printf("[StepCounter] Started! Step count loaded: %u\n", _stepCount);
     return true;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Public — update()   (call every 20 ms)
-// ─────────────────────────────────────────────────────────────
+// main loop function - call this every 20ms
 void StepCounter::update() {
     if (!_initialised) return;
 
-    // ── 1. Read X, Y, Z from ADXL335 in g ────────────────────
+    // read raw acceleration from the sensor
     float x = 0.0f, y = 0.0f, z = 0.0f;
     readADXL335(x, y, z);
 
-    // ── 2. Apply calibration offsets ──────────────────────────
-    //  Offsets are the measured g deviation at rest (from Calibration).
-    //  Subtracting them corrects for sensor tilt and bias.
+    // subtract calibration offsets to correct for resting tilt/bias
     x -= _cal.getXOffset();
     y -= _cal.getYOffset();
     z -= _cal.getZOffset();
 
-    // ── 3. Compute orientation-independent magnitude ───────────
-    //  At rest = 1 g (gravity). A step produces a peak above 1 g.
-    float magnitude = sqrtf(x * x + y * y + z * z);
+    // compute total magnitude across all 3 axes
+    // this way it doesn't matter which way the watch is oriented
+    // at rest this should sit around 1g due to gravity
+    float magnitude = sqrtf(x*x + y*y + z*z);
 
-    float highLine = 1.0f + SC_THRESHOLD_G;   // 1.40 g — rising edge
-    float lowLine  = 1.0f + SC_HYSTERESIS_G;  // 1.16 g — falling edge
+    // thresholds for peak detection
+    float highLine = 1.0f + SC_THRESHOLD_G;   // magnitude needs to go above this
+    float lowLine  = 1.0f + SC_HYSTERESIS_G;  // then drop below this to confirm a peak
 
     uint32_t now = millis();
 
-    // ── 4. Peak detection (hysteresis gate) ───────────────────
+    // peak detection logic
+    // we wait for magnitude to rise above highLine, then fall below lowLine
+    // this two-stage check (hysteresis) stops noise from triggering false steps
     if (!_aboveThreshold && magnitude > highLine) {
-        // Rising edge: crossed threshold — start watching, don't count yet
+        // rising edge - flag it but don't count yet
         _aboveThreshold = true;
 
     } else if (_aboveThreshold && magnitude < lowLine) {
-        // Falling edge: peak is confirmed complete — clear flag
+        // falling edge - peak is done
         _aboveThreshold = false;
 
-        // ── 5. Cooldown / timing gate ──────────────────────────
-        uint32_t elapsed = now - _lastStepTimeMs;
-        if (elapsed >= SC_COOLDOWN_MS) {
+        // cooldown check - ignore if steps are coming in too fast (under 250ms)
+        // fastest realistic walking cadence is around 250ms per step
+        if ((now - _lastStepTimeMs) >= SC_COOLDOWN_MS) {
             _lastStepTimeMs = now;
             _stepCount++;
 
-            Serial.printf("[StepCounter] Step! Count = %u\n", _stepCount);
+            Serial.printf("[StepCounter] Step counted! Total: %u\n", _stepCount);
 
-            // Batch NVS write every SC_NVS_BATCH steps to limit flash wear
+            // save to NVS every 10 steps so we don't wear out the flash
             if (_stepCount % SC_NVS_BATCH == 0) {
                 saveToNVS();
             }
         }
-        // else: peak too soon after last step → discard (debounce)
     }
-    // If magnitude is between lowLine and highLine while _aboveThreshold
-    // is true → still in hysteresis band, keep watching.
 
-    // ── 6. Display update every 300 ms ────────────────────────
-    //  Uncomment and plug in your display call when ready:
-    //  if (now - _lastDisplayMs >= 300) {
-    //      _lastDisplayMs = now;
-    //      screenM.showSteps(_stepCount);
-    //  }
+    // update display every 300ms
     if (now - _lastDisplayMs >= 300) {
         _lastDisplayMs = now;
-        // TODO: call display module → show _stepCount
+        // TODO: hook up display here e.g. screenM.showSteps(_stepCount);
     }
 
-    // ── 7. Serial debug every 500 ms ──────────────────────────
+    // print debug info to serial every 500ms
     if (now - _lastSerialMs >= 500) {
         _lastSerialMs = now;
-        Serial.printf("[StepCounter] mag=%.3f g | steps=%u | above=%s\n",
-                      magnitude,
-                      _stepCount,
-                      _aboveThreshold ? "YES" : "no");
+        Serial.printf("[StepCounter] mag=%.3fg  steps=%u  aboveThreshold=%s\n",
+                      magnitude, _stepCount, _aboveThreshold ? "yes" : "no");
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Public — getters / control
-// ─────────────────────────────────────────────────────────────
+// getters and controls
 uint32_t StepCounter::getStepCount() const {
     return _stepCount;
 }
@@ -146,55 +113,48 @@ void StepCounter::saveNow() {
 void StepCounter::resetCount() {
     _stepCount = 0;
     saveToNVS();
-    Serial.println("[StepCounter] Step count reset to 0.");
+    Serial.println("[StepCounter] Step count reset.");
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Private — read ADXL335 analog outputs, convert to g
-// ─────────────────────────────────────────────────────────────
+// reads the 3 analog pins and converts ADC values into g forces
+// using the same conversion as calibration.cpp so the values are consistent
 void StepCounter::readADXL335(float &x, float &y, float &z) {
-    // Read 12-bit ADC (0–4095)
+
     int rawX = analogRead(SC_PIN_X);
     int rawY = analogRead(SC_PIN_Y);
     int rawZ = analogRead(SC_PIN_Z);
 
-    // Convert to voltage (same formula as calibration.cpp)
+    // convert 12-bit ADC reading to voltage
     float vX = rawX * (SC_VCC / SC_ADC_MAX);
     float vY = rawY * (SC_VCC / SC_ADC_MAX);
     float vZ = rawZ * (SC_VCC / SC_ADC_MAX);
 
-    // Convert voltage to g
-    //   At rest each axis = 1.65 V (mid-supply = 0 g)
-    //   Sensitivity = 0.33 V/g at 3.3 V
+    // convert voltage to g
+    // 1.65V is the midpoint at 0g (half of 3.3V supply)
+    // 0.33 V/g is the sensitivity of the ADXL335 at 3.3V
     x = (vX - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
     y = (vY - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
     z = (vZ - SC_ZERO_G_BIAS) / SC_SENSITIVITY;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Private — NVS load
-// ─────────────────────────────────────────────────────────────
+// load step count from NVS flash (persists across power cycles)
 bool StepCounter::loadFromNVS() {
     Preferences prefs;
-    if (!prefs.begin(NVS_NAMESPACE, /*readOnly=*/true)) {
-        return false;
-    }
+    if (!prefs.begin(NVS_NAMESPACE, true)) return false;
     _stepCount = prefs.getUInt(NVS_KEY_COUNT, 0);
     prefs.end();
     return true;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Private — NVS save
-// ─────────────────────────────────────────────────────────────
+// save step count to NVS flash
 bool StepCounter::saveToNVS() {
     Preferences prefs;
-    if (!prefs.begin(NVS_NAMESPACE, /*readOnly=*/false)) {
-        Serial.println("[StepCounter] ERROR: Could not open NVS for writing.");
+    if (!prefs.begin(NVS_NAMESPACE, false)) {
+        Serial.println("[StepCounter] ERROR: couldn't open NVS for writing");
         return false;
     }
     prefs.putUInt(NVS_KEY_COUNT, _stepCount);
     prefs.end();
-    Serial.printf("[StepCounter] NVS saved: %u steps.\n", _stepCount);
+    Serial.printf("[StepCounter] Saved %u steps to NVS.\n", _stepCount);
     return true;
 }
