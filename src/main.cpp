@@ -8,6 +8,7 @@
 #include "pacefind/pacefind.h"
 #include "display/display.h"
 #include "calibration/calibration.h"
+#include "steptrack/step_counter.h"
 
 MAX30102 heartSM;
 HeartRate hrM;
@@ -15,6 +16,7 @@ PACEFIND paceM;
 Calibration calibM;
 Display screenM;
 ADXL335 adxlM(32, 35, 34);
+StepCounter stepM(calibM);
 
 void setup() {
     Serial.begin(9600);
@@ -24,6 +26,7 @@ void setup() {
 
     screenM.begin();
     calibM.begin();
+    stepM.begin();
 
     Serial.println("Everything is compiled");
 
@@ -32,6 +35,7 @@ void setup() {
 
 void loop() {
     calibM.update();
+    stepM.update();
 
     if (calibM.isCalibrated()) {
         float x = calibM.getXG();
@@ -43,8 +47,7 @@ void loop() {
         Serial.print("X: "); Serial.print(x, 3);
         Serial.print(" Y: "); Serial.print(y, 3);
         Serial.print(" Z: "); Serial.print(z, 3);
-        Serial.print(" | Mag: "); Serial.println(magnitude, 3);
-
-        // delay(250);
+        Serial.print(" | Mag: "); Serial.print(magnitude, 3);
+        Serial.print(" | Steps: "); Serial.println(stepM.getStepCount());
     }
 }

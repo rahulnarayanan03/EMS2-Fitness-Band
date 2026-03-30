@@ -8,9 +8,9 @@
 #include "../calibration/calibration.h"
 
 // tuning values - can be adjusted after physical testing
-static constexpr float    SC_THRESHOLD_G  = 0.40f; // how far above 1g the peak needs to go
-static constexpr float    SC_HYSTERESIS_G = 0.16f; // how far it needs to drop back down to confirm the peak
-static constexpr uint32_t SC_COOLDOWN_MS  = 250;   // min time between steps (250ms = max 4 steps/sec)
+static constexpr float    SC_THRESHOLD_G  = 0.20f; // how far above 1g the peak needs to go
+static constexpr float    SC_HYSTERESIS_G = 0.08f; // how far it needs to drop back down to confirm the peak
+static constexpr uint32_t SC_COOLDOWN_MS  = 375;   // min time between steps (250ms = max 4 steps/sec)
 static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
 
 class StepCounter {
