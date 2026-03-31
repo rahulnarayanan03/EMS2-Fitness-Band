@@ -37,6 +37,8 @@ void loop() {
     calibM.update();
     stepM.update();
 
+    screenM.displaySteps(stepM.getStepCount());
+
     if (calibM.isCalibrated()) {
         float x = calibM.getXG();
         float y = calibM.getYG();
