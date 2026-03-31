@@ -30,7 +30,7 @@ void setup() {
     touchSPI.begin(25, 39, 32);
     SPI.begin(25, 39, 32);
     ts.begin();
-    ts.setRotation(1);
+    ts.setRotation(2);
 
     Serial.println("Touch test ready.");
 }
