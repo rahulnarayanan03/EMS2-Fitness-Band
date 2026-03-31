@@ -1,55 +1,59 @@
 #include <Arduino.h>
-#include <math.h>
+#include <TFT_eSPI.h>
+#include <XPT2046_Touchscreen.h>
+#include <SPI.h>
 
-#include "sensors/MAX30102.h"
-#include "sensors/ADXL335.h"
+TFT_eSPI tft = TFT_eSPI();
 
-#include "heartrate/heartrate.h"
-#include "pacefind/pacefind.h"
-#include "display/display.h"
-#include "calibration/calibration.h"
-#include "steptrack/step_counter.h"
+#define TOUCH_CS  33
+#define TOUCH_IRQ 36
 
-MAX30102 heartSM;
-HeartRate hrM;
-PACEFIND paceM;
-Calibration calibM;
-Display screenM;
-ADXL335 adxlM(32, 35, 34);
-StepCounter stepM(calibM);
+SPIClass touchSPI(HSPI);
+XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);
+
+uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3700;
+uint16_t touchScreenMinimumY = 240, touchScreenMaximumY = 3800;
 
 void setup() {
     Serial.begin(9600);
     delay(2000);
 
-    Serial.println("Compile test");
+    tft.init();
+    tft.setRotation(0);
+    tft.fillScreen(TFT_BLACK);
 
-    screenM.begin();
-    calibM.begin();
-    stepM.begin();
+    tft.setTextColor(TFT_WHITE);
+    tft.setTextSize(2);
+    tft.setCursor(10, 10);
+    tft.println("EMS2 Testing");
 
-    Serial.println("Everything is compiled");
+    touchSPI.begin(25, 39, 32);
+    SPI.begin(25, 39, 32);
+    ts.begin();
+    ts.setRotation(2);
 
-    calibM.startCalibration();
+    Serial.println("Touch test ready.");
 }
 
 void loop() {
-    calibM.update();
-    stepM.update();
+    if (ts.touched()) {
+        TS_Point p = ts.getPoint();
 
-    screenM.displaySteps(stepM.getStepCount());
+        if (p.x < touchScreenMinimumX) touchScreenMinimumX = p.x;
+        if (p.x > touchScreenMaximumX) touchScreenMaximumX = p.x;
+        if (p.y < touchScreenMinimumY) touchScreenMinimumY = p.y;
+        if (p.y > touchScreenMaximumY) touchScreenMaximumY = p.y;
 
-    if (calibM.isCalibrated()) {
-        float x = calibM.getXG();
-        float y = calibM.getYG();
-        float z = calibM.getZG();
+        uint16_t x = map(p.x, touchScreenMinimumX, touchScreenMaximumX, 0, tft.width());
+        uint16_t y = map(p.y, touchScreenMinimumY, touchScreenMaximumY, 0, tft.height());
 
-        float magnitude = sqrt(x*x + y*y + z*z);
+        tft.fillCircle(x, y, 5, TFT_RED);
 
-        Serial.print("X: "); Serial.print(x, 3);
-        Serial.print(" Y: "); Serial.print(y, 3);
-        Serial.print(" Z: "); Serial.print(z, 3);
-        Serial.print(" | Mag: "); Serial.print(magnitude, 3);
-        Serial.print(" | Steps: "); Serial.println(stepM.getStepCount());
+        Serial.print("Touch at: ");
+        Serial.print(x);
+        Serial.print(", ");
+        Serial.println(y);
+
+        delay(100);
     }
 }
