@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Calibration.h"
 
-const int xPin = 32;
+const int xPin = 26;
 const int yPin = 35;
 const int zPin = 34;
 
