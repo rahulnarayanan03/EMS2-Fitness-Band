@@ -22,7 +22,7 @@ static constexpr uint16_t ANIM_WALK_THRESHOLD = 30;
 static constexpr uint16_t ANIM_RUN_THRESHOLD  = 100;
 
 // how long each GIF frame is shown before moving to the next (ms)
-static constexpr uint32_t ANIM_WALK_FRAME_MS = 120;
+static constexpr uint32_t ANIM_WALK_FRAME_MS = 240;
 static constexpr uint32_t ANIM_RUN_FRAME_MS  = 80;
 
 // step rate is recalculated over this window
