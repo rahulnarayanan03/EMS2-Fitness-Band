@@ -1,11 +1,11 @@
-/* Displays a stick figure animation that reflects the user's current activity level.
-Determines standing / walking / running from the step rate, then cycles through
-the matching animation frames so the figure actually moves on screen.
+/*Shows stand.png, walk.gif or run.gif depending on the user's step rate.
+ Images are compiled into flash as C arrays (see anim_data.h) so no
+ filesystem setup is needed.
 
-Activity thresholds (steps per minute):
-  standing  ->  0 - 29  spm
-  walking   ->  30 - 99 spm
-  running   ->  100+    spm
+ Activity thresholds (steps per minute):
+   standing  ->   0 - 29  spm
+   walking   ->  30 - 99  spm
+   running   ->  100+     spm
 */
 
 #ifndef ANIMATION_H
@@ -13,74 +13,71 @@ Activity thresholds (steps per minute):
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
+#include <AnimatedGIF.h>
+#include <PNGdec.h>
+#include "anim_data.h"
 
-// --- activity thresholds (steps per minute) ---
-static constexpr uint16_t ANIM_WALK_THRESHOLD = 30;   // below this = standing
-static constexpr uint16_t ANIM_RUN_THRESHOLD  = 100;  // above this = running
+// activity thresholds in steps per minute - adjust after physical testing
+static constexpr uint16_t ANIM_WALK_THRESHOLD = 30;
+static constexpr uint16_t ANIM_RUN_THRESHOLD  = 100;
 
-// how often to advance the animation frame (ms)
-static constexpr uint32_t ANIM_FRAME_INTERVAL_STAND = 0;    // standing doesn't cycle
-static constexpr uint32_t ANIM_FRAME_INTERVAL_WALK  = 400;  // walk cadence
-static constexpr uint32_t ANIM_FRAME_INTERVAL_RUN   = 180;  // run cadence
+// how long each GIF frame is shown before moving to the next (ms)
+static constexpr uint32_t ANIM_WALK_FRAME_MS = 120;
+static constexpr uint32_t ANIM_RUN_FRAME_MS  = 80;
 
-enum class ActivityState {
-    STANDING,
-    WALKING,
-    RUNNING
-};
+// step rate is recalculated over this window
+static constexpr uint32_t RATE_WINDOW_MS = 5000;
+
+enum class ActivityState { STANDING, WALKING, RUNNING };
 
 class Animation {
 public:
-    // pass in the shared TFT instance; x/y are the top-left corner of the
-    // drawing area, which should not overlap with the step counter region
+    // pass the shared tft and the top-left pixel where the sprite should sit
     Animation(TFT_eSPI &tft, int16_t x, int16_t y);
 
-    // call once in setup() - draws the initial frame
+    // call once after tft.init() and after any full fillScreen so the
+    // first frame lands on a clean background
     void begin();
 
-    // call every loop() - pass the latest step count and current millis()
-    // the class tracks rate internally so you don't have to
+    // call every loop() - handles rate calculation, state switching and
+    // advancing GIF frames automatically
     void update(uint32_t stepCount, uint32_t nowMs);
 
-    // returns whichever state is currently active
-    ActivityState getState() const;
+    ActivityState getState() const { return _state; }
 
 private:
-    TFT_eSPI  &_tft;
-    int16_t    _x;
-    int16_t    _y;
+    TFT_eSPI   &_tft;
+    int16_t     _x, _y;
+
+    AnimatedGIF _gif;
+    PNG         _png;
 
     // step rate tracking
-    uint32_t   _prevStepCount    = 0;
-    uint32_t   _prevRateCheckMs  = 0;
-    uint16_t   _stepsPerMinute   = 0;
-    static constexpr uint32_t RATE_WINDOW_MS = 5000; // check rate every 5 s
+    uint32_t    _prevStepCount   = 0;
+    uint32_t    _prevRateCheckMs = 0;
+    uint16_t    _stepsPerMinute  = 0;
 
-    // animation state
+    // state
     ActivityState _state         = ActivityState::STANDING;
-    ActivityState _lastDrawnState = (ActivityState)255; // forces first draw
-    uint8_t    _frame            = 0;
-    uint32_t   _lastFrameMs      = 0;
+    ActivityState _lastState     = (ActivityState)255; // force first draw
 
-    // how many frames each activity has
-    static constexpr uint8_t FRAMES_STAND = 1;
-    static constexpr uint8_t FRAMES_WALK  = 4;
-    static constexpr uint8_t FRAMES_RUN   = 4;
+    // GIF frame tracking
+    int         _gifFrame        = 0;
+    uint32_t    _lastFrameMs     = 0;
+    int         _totalGifFrames  = 0;
 
-    // internal helpers
     void updateState();
-    void advanceFrame(uint32_t nowMs);
-    void drawFrame();
-    void eraseArea();
+    void drawCurrentState(uint32_t nowMs);
+    void drawStandingPng();
+    void drawGifFrame(const uint8_t *gifData, size_t gifLen,
+                      uint32_t frameIntervalMs, uint32_t nowMs);
 
-    // one draw function per activity, parameterised by frame index
-    void drawStanding();
-    void drawWalking(uint8_t frame);
-    void drawRunning(uint8_t frame);
+    // static callbacks required by AnimatedGIF and PNGdec
+    static void gifDraw(GIFDRAW *pDraw);
+    static int pngDraw(PNGDRAW *pDraw);
 
-    // low-level drawing helpers - all coords relative to _x/_y
-    void drawHead(int16_t cx, int16_t cy, int16_t r, uint16_t colour);
-    void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t colour);
+    // pointer back to self so static callbacks can reach instance members
+    static Animation *_instance;
 };
 
 #endif // ANIMATION_H
