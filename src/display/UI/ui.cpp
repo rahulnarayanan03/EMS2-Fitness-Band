@@ -30,7 +30,7 @@ void UI::begin() {
     _gif.begin(GIF_PALETTE_RGB565_BE);
     _tft.fillScreen(GB_LIGHTEST);
     drawStaticLayout();
-    drawStandingGif();
+    drawStandingGif();        // initial display
 }
 
 void UI::update(uint32_t nowMs) {
@@ -92,15 +92,12 @@ void UI::drawStepsBar() {
     _tft.fillRect(STEPS_BAR_X, STEPS_BAR_Y, STEPS_BAR_W, STEPS_BAR_H, GB_LIGHT);
     _tft.drawRect(STEPS_BAR_X, STEPS_BAR_Y, STEPS_BAR_W, STEPS_BAR_H, GB_DARKEST);
 
-    // "STEPS" label - static, only drawn once
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARK, GB_LIGHT);
     _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 4, 1);
 
-    // vertical divider separating step count from date
     _tft.drawFastVLine(148, STEPS_BAR_Y + 2, STEPS_BAR_H - 4, GB_DARK);
 
-    // placeholders - refreshSteps/refreshDate will overwrite these
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
     _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 20, 4);
     _tft.setTextDatum(TR_DATUM);
@@ -111,17 +108,14 @@ void UI::drawLeftPanel() {
     _tft.fillRect(LEFT_PNL_X, BOTTOM_Y, LEFT_PNL_W, BOTTOM_H, GB_LIGHT);
     _tft.drawRect(LEFT_PNL_X, BOTTOM_Y, LEFT_PNL_W, BOTTOM_H, GB_DARKEST);
 
-    // horizontal divider splitting heart row from battery row
     _tft.drawFastHLine(LEFT_PNL_X + 2, BOTTOM_Y + BOTTOM_H / 2,
                        LEFT_PNL_W - 4, GB_DARK);
 
-    // heart icon and placeholder BPM
     drawHeartIcon(LEFT_PNL_X + 14, BOTTOM_Y + 18);
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
     _tft.drawString("-- BPM", LEFT_PNL_X + 28, BOTTOM_Y + 10, 2);
 
-    // battery icon and placeholder %
     drawBattIcon(LEFT_PNL_X + 8, BOTTOM_Y + 48, 0);
     _tft.drawString("--%", LEFT_PNL_X + 34, BOTTOM_Y + 48, 2);
 }
@@ -156,9 +150,9 @@ void UI::drawHeartIcon(int16_t cx, int16_t cy) {
 void UI::drawBattIcon(int16_t x, int16_t y, int8_t pct) {
     _tft.fillRect(x, y, 18, 10, GB_LIGHTEST);
     _tft.drawRect(x, y, 18, 10, GB_DARKEST);
-    _tft.fillRect(x + 18, y + 3, 3, 4, GB_DARKEST); // terminal nub
+    _tft.fillRect(x + 18, y + 3, 3, 4, GB_DARKEST);
 
-    if (pct < 0) return; // AC - leave body empty, "AC" shown as text
+    if (pct < 0) return;
 
     uint8_t fillW = (uint8_t)((pct / 100.0f) * 14);
     if (fillW > 0) {
@@ -252,54 +246,82 @@ void UI::refreshBattery() {
 void UI::updateActivity(uint32_t nowMs, uint32_t stepCount) {
     if (nowMs - _prevRateCheckMs < UI_RATE_WINDOW_MS) return;
 
-    uint32_t elapsed    = nowMs - _prevRateCheckMs;
-    uint32_t delta      = stepCount - _prevStepCount;
-    _stepsPerMinute     = (uint16_t)((delta * 60000UL) / elapsed);
-    _prevStepCount      = stepCount;
-    _prevRateCheckMs    = nowMs;
+    uint32_t elapsed = nowMs - _prevRateCheckMs;
+    uint32_t delta   = stepCount - _prevStepCount;
 
-    UIActivity next;
+    _stepsPerMinute  = (uint16_t)((delta * 60000UL) / elapsed);
+    _prevStepCount   = stepCount;
+    _prevRateCheckMs = nowMs;
+
+    // Determine real activity from steps
+    UIActivity realActivity;
     if (_stepsPerMinute >= UI_RUN_THRESHOLD) {
-        next = UIActivity::RUNNING;
+        realActivity = UIActivity::RUNNING;
     } else if (_stepsPerMinute >= UI_WALK_THRESHOLD) {
-        next = UIActivity::WALKING;
+        realActivity = UIActivity::WALKING;
     } else {
-        next = UIActivity::STANDING;
+        realActivity = UIActivity::STANDING;
     }
 
-    if (next != _activity) {
-        _activity  = next;
-        _gifFrame  = 0;
-        _lastFrameMs = 0;
-        // erase sprite area so no ghost pixels from previous animation remain
+    // === INVERTED LOGIC AS YOU REQUESTED ===
+    // When standing still → show running GIF
+    // When walking or running → show standing GIF
+    UIActivity displayActivity = (realActivity == UIActivity::STANDING)
+                                 ? UIActivity::RUNNING
+                                 : UIActivity::STANDING;
+
+    if (displayActivity != _activity) {
+        _activity     = displayActivity;
+        _gifFrame     = 0;
+        _lastFrameMs  = 0;
+        _lastActivity = UIActivity::NONE;     // force redraw
         _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
     }
 }
 
 void UI::advanceSprite(uint32_t nowMs) {
+    // If activity hasn't changed and it's not the first time, just continue animation
+    if (_activity == _lastActivity && _activity != UIActivity::NONE) {
+        if (_activity == UIActivity::RUNNING) {
+            drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
+        } else if (_activity == UIActivity::WALKING) {
+            drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
+        }
+        return;
+    }
+
+    // First time or activity changed → draw the appropriate animation
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
+
     switch (_activity) {
         case UIActivity::STANDING:
-            if (_lastActivity != UIActivity::STANDING) {
-                drawStandingGif();
-            }
+            drawStandingGif();                    // standing GIF when actually moving
             break;
+
+        case UIActivity::RUNNING:
+            drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);   // running GIF when standing still
+            break;
+
         case UIActivity::WALKING:
             drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
             break;
-        case UIActivity::RUNNING:
-            drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
+
+        case UIActivity::NONE:                    // fallback on first boot
+            drawStandingGif();
             break;
     }
+
     _lastActivity = _activity;
 }
 
 void UI::drawStandingGif() {
-    // stand.gif is a single-frame GIF stored in PROGMEM flash
     _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
+
     int frameCount = _gif.openFLASH((uint8_t *)stand_gif, stand_gif_len, gifDraw);
-    if (frameCount <= 0) return;
-    _gif.playFrame(false, nullptr);
-    _gif.close();
+    if (frameCount > 0) {
+        _gif.playFrame(false, nullptr);
+        _gif.close();
+    }
 }
 
 void UI::drawGifFrame(const uint8_t *data, size_t len,
@@ -312,7 +334,7 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
     int frameCount = _gif.openFLASH((uint8_t *)data, len, gifDraw);
     if (frameCount <= 0) return;
 
-    // seek to the current frame index
+    // Seek to current frame
     for (int i = 0; i < _gifFrame; i++) {
         if (!_gif.playFrame(false, nullptr)) break;
     }
@@ -331,11 +353,6 @@ void UI::gifDraw(GIFDRAW *pDraw) {
     int16_t y = SPRITE_Y + pDraw->iY + pDraw->y;
     int16_t x0 = SPRITE_X + pDraw->iX;
 
-    // Many GIFs (especially from PIL) need help with disposal method 2
-    if (pDraw->ucDisposalMethod == 2 && pDraw->ucHasTransparency) {
-        // Force transparent pixels to be skipped properly
-    }
-
     if (pDraw->ucHasTransparency) {
         uint8_t  *src     = pDraw->pPixels;
         uint16_t *palette = pDraw->pPalette;
@@ -347,8 +364,6 @@ void UI::gifDraw(GIFDRAW *pDraw) {
             }
         }
     } else {
-        // Fallback: treat palette index 0 as potentially transparent if it's dark
-        // (common when PIL bakes black background)
         uint16_t *palette = pDraw->pPalette;
         for (int i = 0; i < pDraw->iWidth; i++) {
             uint8_t idx = pDraw->pPixels[i];

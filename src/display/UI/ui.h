@@ -74,29 +74,19 @@ static constexpr int16_t BTN_W         = 50;
 static constexpr int16_t BTN_H         = 34;
 static constexpr int16_t BTN_GAP       = 4;
 
-enum class UIActivity { STANDING, WALKING, RUNNING };
+enum class UIActivity { NONE, STANDING, WALKING, RUNNING };
 
 class UI {
 public:
-    // tft    - shared display instance
-    // stepM  - step counter so UI can read count and rate internally
-    // cal    - calibration so UI knows when counting is active
     UI(TFT_eSPI &tft, StepCounter &stepM, Calibration &cal);
 
-    // call once when transitioning to homepage - draws the full screen
     void begin();
-
-    // call every loop() while on the homepage
-    // handles sprite animation, step count, battery, and BPM updates
     void update(uint32_t nowMs);
 
-    // live data setters - call before or alongside update()
     void setTime(uint8_t hour, uint8_t minute);
     void setDate(uint8_t day, uint8_t month);
     void setBPM(int bpm);  // pass -1 to show "--"
 
-    // returns true if an app button was tapped
-    // btnIndex: 0=C.T  1=S.T  2=S.C.T  3=P.ID.T
     bool checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex);
 
 private:
@@ -107,8 +97,8 @@ private:
     AnimatedGIF  _gif;
 
     // sprite / activity state
-    UIActivity   _activity        = UIActivity::STANDING;
-    UIActivity   _lastActivity    = (UIActivity)255;
+    UIActivity   _activity        = UIActivity::NONE;
+    UIActivity   _lastActivity    = UIActivity::NONE;
     int          _gifFrame        = 0;
     uint32_t     _lastFrameMs     = 0;
 
