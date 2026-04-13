@@ -325,8 +325,25 @@ void UI::gifDraw(GIFDRAW *pDraw) {
     if (!_instance) return;
     UI &self = *_instance;
     int16_t y = SPRITE_Y + pDraw->iY + pDraw->y;
-    self._tft.pushImage(SPRITE_X + pDraw->iX, y,
-                        pDraw->iWidth, 1, (uint16_t *)pDraw->pPixels);
+
+    // if the GIF frame has a transparent colour, draw pixel by pixel
+    // skipping transparent indices so the screen background shows through
+    if (pDraw->ucHasTransparency) {
+        uint8_t  *src     = pDraw->pPixels;
+        uint16_t *palette = pDraw->pPalette;
+        uint8_t   trans   = pDraw->ucTransparent;
+        int16_t   x0      = SPRITE_X + pDraw->iX;
+
+        for (int i = 0; i < pDraw->iWidth; i++) {
+            if (src[i] != trans) {
+                self._tft.drawPixel(x0 + i, y, palette[src[i]]);
+            }
+        }
+    } else {
+        // no transparency - push the whole row at once (fast path)
+        self._tft.pushImage(SPRITE_X + pDraw->iX, y,
+                            pDraw->iWidth, 1, (uint16_t *)pDraw->pPixels);
+    }
 }
 
 // ---- battery ---------------------------------------------------------------
