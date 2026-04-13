@@ -294,8 +294,8 @@ void UI::advanceSprite(uint32_t nowMs) {
 }
 
 void UI::drawStandingGif() {
-    // stand.gif is a single-frame GIF so this just draws that one frame
-    int frameCount = _gif.open((uint8_t *)stand_gif, stand_gif_len, gifDraw);
+    // stand.gif is a single-frame GIF stored in PROGMEM flash
+    int frameCount = _gif.openFLASH((uint8_t *)stand_gif, stand_gif_len, gifDraw);
     if (frameCount <= 0) return;
     _gif.playFrame(false, nullptr);
     _gif.close();
@@ -306,7 +306,7 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
     if (nowMs - _lastFrameMs < frameMs) return;
     _lastFrameMs = nowMs;
 
-    int frameCount = _gif.open((uint8_t *)data, len, gifDraw);
+    int frameCount = _gif.openFLASH((uint8_t *)data, len, gifDraw);
     if (frameCount <= 0) return;
 
     // seek to the current frame index
