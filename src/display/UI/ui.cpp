@@ -1,6 +1,5 @@
-/*UI.cpp
- See UI.h for layout description, geometry and colour constants.
-*/
+// UI.cpp
+// See UI.h for layout description, geometry and colour constants.
 
 #include "UI.h"
 
@@ -31,8 +30,7 @@ void UI::begin() {
     _gif.begin(GIF_PALETTE_RGB565_BE);
     _tft.fillScreen(GB_LIGHTEST);
     drawStaticLayout();
-    // draw the standing sprite immediately so the area isn't blank
-    drawStandingPng();
+    drawStandingGif();
 }
 
 void UI::update(uint32_t nowMs) {
@@ -281,9 +279,8 @@ void UI::updateActivity(uint32_t nowMs, uint32_t stepCount) {
 void UI::advanceSprite(uint32_t nowMs) {
     switch (_activity) {
         case UIActivity::STANDING:
-            // only draw standing PNG when we first enter the standing state
             if (_lastActivity != UIActivity::STANDING) {
-                drawStandingPng();
+                drawStandingGif();
             }
             break;
         case UIActivity::WALKING:
@@ -296,12 +293,12 @@ void UI::advanceSprite(uint32_t nowMs) {
     _lastActivity = _activity;
 }
 
-void UI::drawStandingPng() {
-    int rc = _png.openFLASH((uint8_t *)stand_png, stand_png_len, pngDraw);
-    if (rc == PNG_SUCCESS) {
-        _png.decode(nullptr, 0);
-        _png.close();
-    }
+void UI::drawStandingGif() {
+    // stand.gif is a single-frame GIF so this just draws that one frame
+    int frameCount = _gif.open((uint8_t *)stand_gif, stand_gif_len, gifDraw);
+    if (frameCount <= 0) return;
+    _gif.playFrame(false, nullptr);
+    _gif.close();
 }
 
 void UI::drawGifFrame(const uint8_t *data, size_t len,
@@ -330,16 +327,6 @@ void UI::gifDraw(GIFDRAW *pDraw) {
     int16_t y = SPRITE_Y + pDraw->iY + pDraw->y;
     self._tft.pushImage(SPRITE_X + pDraw->iX, y,
                         pDraw->iWidth, 1, (uint16_t *)pDraw->pPixels);
-}
-
-int UI::pngDraw(PNGDRAW *pDraw) {
-    if (!_instance) return 0;
-    UI &self = *_instance;
-    uint16_t lineBuf[SPRITE_W];
-    self._png.getLineAsRGB565(pDraw, lineBuf, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-    self._tft.pushImage(SPRITE_X, SPRITE_Y + pDraw->y,
-                        pDraw->iWidth, 1, lineBuf);
-    return 1;
 }
 
 // ---- battery ---------------------------------------------------------------

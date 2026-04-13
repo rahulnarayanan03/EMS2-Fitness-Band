@@ -1,23 +1,21 @@
-/* UI.h
- Homepage for the EMS2 fitness band.
-
- Owns the full home screen rendering including Red's animated sprite.
- Animation is driven internally - no need to call animM separately from main.
-
- Screen layout (240x320 portrait):
-   y=0   - y=20   time bar (HH:MM)
-   y=26  - y=100  Red's sprite centred (65x75), animated by step rate
-   y=114 - y=158  steps bar: count left, date bottom-right
-   y=164 - y=244  bottom row: left panel (heart + battery) | right panel (2x2 app buttons)
-
- State machine cases (defined in main.cpp):
-   Case 1 = C.T (calibration - boots here)
-   Case 2 = Homepage (this file)
-   Case 3 = S.T
-   Case 4 = S.C.T
-   Case 5 = P.ID.T
-
-*/
+// UI.h
+// Homepage for the EMS2 fitness band.
+//
+// Owns the full home screen rendering including Red's animated sprite.
+// Animation is driven internally - no need to call animM separately from main.
+//
+// Screen layout (240x320 portrait):
+//   y=0   - y=20   time bar (HH:MM)
+//   y=26  - y=100  Red's sprite centred (65x75), animated by step rate
+//   y=114 - y=158  steps bar: count left, date bottom-right
+//   y=164 - y=244  bottom row: left panel (heart + battery) | right panel (2x2 app buttons)
+//
+// State machine cases (defined in main.cpp):
+//   Case 1 = C.T (calibration - boots here)
+//   Case 2 = Homepage (this file)
+//   Case 3 = S.T
+//   Case 4 = S.C.T
+//   Case 5 = P.ID.T
 
 #ifndef UI_H
 #define UI_H
@@ -25,7 +23,6 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include <AnimatedGIF.h>
-#include <PNGdec.h>
 #include "../animation/anim_data.h"
 #include "../../steptrack/step_counter.h"
 #include "../../calibration/calibration.h"
@@ -108,7 +105,6 @@ private:
     Calibration &_cal;
 
     AnimatedGIF  _gif;
-    PNG          _png;
 
     // sprite / activity state
     UIActivity   _activity        = UIActivity::STANDING;
@@ -157,16 +153,15 @@ private:
     // sprite animation
     void updateActivity(uint32_t nowMs, uint32_t stepCount);
     void advanceSprite(uint32_t nowMs);
-    void drawStandingPng();
+    void drawStandingGif();
     void drawGifFrame(const uint8_t *data, size_t len,
                       uint32_t frameMs, uint32_t nowMs);
 
     // battery ADC
     int8_t readBatteryPercent();
 
-    // static callbacks for AnimatedGIF and PNGdec
+    // static callback for AnimatedGIF
     static void     gifDraw(GIFDRAW *pDraw);
-    static int      pngDraw(PNGDRAW *pDraw);
     static UI      *_instance;
 };
 

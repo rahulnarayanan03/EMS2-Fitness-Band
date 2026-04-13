@@ -1,20 +1,20 @@
-// main.cpp
-// State machine coordinator for the EMS2 fitness band.
-//
-// Cases:
-//   1 = C.T   - calibration, runs automatically on boot
-//   2 = HOME  - main homepage (UI.h/cpp), Red's sprite, steps, app buttons
-//   3 = S.T   - self test (stub, not yet implemented)
-//   4 = S.C.T - step count test (live counter + serial output)
-//   5 = P.ID.T - pace ID test (stub, not yet implemented)
-//
-// Boot flow:
-//   Power on -> Case 1 (calibration runs) -> home button appears -> Case 2
-//
-// From Case 2 the user taps app buttons to reach Cases 1/3/4/5.
-// Every app case has a home button that returns to Case 2.
-// Re-entering Case 1 saves current steps, re-calibrates, then asks
-// whether to keep or reset the step count.
+/* main.cpp
+ State machine coordinator for the EMS2 fitness band.
+
+ Cases:
+   1 = C.T   - calibration, runs automatically on boot
+   2 = HOME  - main homepage (UI.h/cpp), Red's sprite, steps, app buttons
+   3 = S.T   - self test (stub, not yet implemented)
+   4 = S.C.T - step count test (live counter + serial output)
+   5 = P.ID.T - pace ID test (stub, not yet implemented)
+
+ Boot flow:
+   Power on -> Case 1 (calibration runs) -> home button appears -> Case 2
+
+ From Case 2 the user taps app buttons to reach Cases 1/3/4/5.
+ Every app case has a home button that returns to Case 2.
+ Re-entering Case 1 saves current steps, re-calibrates, then asks
+ whether to keep or reset the step count. */
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
