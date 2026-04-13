@@ -272,7 +272,7 @@ void UI::updateActivity(uint32_t nowMs, uint32_t stepCount) {
         _gifFrame  = 0;
         _lastFrameMs = 0;
         // erase sprite area so no ghost pixels from previous animation remain
-        _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
+        _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
     }
 }
 
@@ -295,6 +295,7 @@ void UI::advanceSprite(uint32_t nowMs) {
 
 void UI::drawStandingGif() {
     // stand.gif is a single-frame GIF stored in PROGMEM flash
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
     int frameCount = _gif.openFLASH((uint8_t *)stand_gif, stand_gif_len, gifDraw);
     if (frameCount <= 0) return;
     _gif.playFrame(false, nullptr);
@@ -305,6 +306,8 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
                       uint32_t frameMs, uint32_t nowMs) {
     if (nowMs - _lastFrameMs < frameMs) return;
     _lastFrameMs = nowMs;
+
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
 
     int frameCount = _gif.openFLASH((uint8_t *)data, len, gifDraw);
     if (frameCount <= 0) return;
@@ -324,15 +327,19 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
 void UI::gifDraw(GIFDRAW *pDraw) {
     if (!_instance) return;
     UI &self = *_instance;
-    int16_t y = SPRITE_Y + pDraw->iY + pDraw->y;
 
-    // if the GIF frame has a transparent colour, draw pixel by pixel
-    // skipping transparent indices so the screen background shows through
+    int16_t y = SPRITE_Y + pDraw->iY + pDraw->y;
+    int16_t x0 = SPRITE_X + pDraw->iX;
+
+    // Many GIFs (especially from PIL) need help with disposal method 2
+    if (pDraw->ucDisposalMethod == 2 && pDraw->ucHasTransparency) {
+        // Force transparent pixels to be skipped properly
+    }
+
     if (pDraw->ucHasTransparency) {
         uint8_t  *src     = pDraw->pPixels;
         uint16_t *palette = pDraw->pPalette;
         uint8_t   trans   = pDraw->ucTransparent;
-        int16_t   x0      = SPRITE_X + pDraw->iX;
 
         for (int i = 0; i < pDraw->iWidth; i++) {
             if (src[i] != trans) {
@@ -340,9 +347,15 @@ void UI::gifDraw(GIFDRAW *pDraw) {
             }
         }
     } else {
-        // no transparency - push the whole row at once (fast path)
-        self._tft.pushImage(SPRITE_X + pDraw->iX, y,
-                            pDraw->iWidth, 1, (uint16_t *)pDraw->pPixels);
+        // Fallback: treat palette index 0 as potentially transparent if it's dark
+        // (common when PIL bakes black background)
+        uint16_t *palette = pDraw->pPalette;
+        for (int i = 0; i < pDraw->iWidth; i++) {
+            uint8_t idx = pDraw->pPixels[i];
+            if (palette[idx] != 0x0000) {  // skip pure black
+                self._tft.drawPixel(x0 + i, y, palette[idx]);
+            }
+        }
     }
 }
 
