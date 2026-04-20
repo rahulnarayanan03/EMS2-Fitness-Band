@@ -130,7 +130,7 @@ void UI::drawRightPanel() {
 }
 
 void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
-    uint16_t bg  = active ? GB_MID     : GB_INACTIVE;
+    uint16_t bg  = active ? GB_LIGHT     : GB_INACTIVE;
     uint16_t bor = active ? GB_DARKEST : GB_DARK;
     uint16_t txt = active ? GB_DARKEST : GB_DARK;
 
