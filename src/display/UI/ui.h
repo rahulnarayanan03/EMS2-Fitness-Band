@@ -34,16 +34,9 @@ static constexpr float    BATT_MAX_V          = 4.2f;
 static constexpr float    BATT_MIN_V          = 3.3f;
 static constexpr float    BATT_USB_THRESHOLD  = 4.25f;
 
-// activity thresholds in steps per minute - matches animation.h
-static constexpr uint16_t UI_WALK_THRESHOLD   = 30;
-static constexpr uint16_t UI_RUN_THRESHOLD    = 100;
-
 // how long each GIF frame is shown (ms)
 static constexpr uint32_t UI_WALK_FRAME_MS    = 120;
 static constexpr uint32_t UI_RUN_FRAME_MS     = 80;
-
-// step rate recalculation window
-static constexpr uint32_t UI_RATE_WINDOW_MS   = 5000;
 
 // GB palette RGB565
 static constexpr uint16_t GB_DARKEST  = 0x1923; // #304828
@@ -85,7 +78,8 @@ public:
 
     void setTime(uint8_t hour, uint8_t minute);
     void setDate(uint8_t day, uint8_t month);
-    void setBPM(int bpm);  // pass -1 to show "--"
+    void setBPM(int bpm);        // pass -1 to show "--"
+    void setPace(const char *pace);  // pass "STANDING", "WALKING", or "RUNNING" from pacefind
 
     bool checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex);
 
@@ -102,10 +96,8 @@ private:
     int          _gifFrame        = 0;
     uint32_t     _lastFrameMs     = 0;
 
-    // step rate tracking
-    uint32_t     _prevStepCount   = 0;
-    uint32_t     _prevRateCheckMs = 0;
-    uint16_t     _stepsPerMinute  = 0;
+    // pace string from pacefind ("STANDING", "WALKING", "RUNNING")
+    const char  *_pace            = "STANDING";
 
     // dirty tracking for each display region
     uint8_t      _lastHour        = 255;
@@ -141,7 +133,7 @@ private:
     void refreshBattery();
 
     // sprite animation
-    void updateActivity(uint32_t nowMs, uint32_t stepCount);
+    void updateActivity();
     void advanceSprite(uint32_t nowMs);
     void drawStandingGif();
     void drawGifFrame(const uint8_t *data, size_t len,

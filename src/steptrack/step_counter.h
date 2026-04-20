@@ -28,6 +28,9 @@ public:
     // returns current step count
     uint32_t getStepCount() const;
 
+    // returns true once per new step, then resets - for pacefind integration
+    bool wasStepDetected();
+
     // force save to NVS right now, useful before going to sleep
     void saveNow();
 
@@ -43,6 +46,7 @@ private:
 
     uint32_t _stepCount      = 0;
     bool     _aboveThreshold = false;
+    bool     _stepDetected   = false;  // set true each time a step is counted, cleared by wasStepDetected()
     uint32_t _lastStepTimeMs = 0;
 
     uint32_t _lastDisplayMs  = 0;

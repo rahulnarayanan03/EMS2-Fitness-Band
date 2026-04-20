@@ -27,6 +27,7 @@
 #include "calibration/calibration.h"
 #include "steptrack/step_counter.h"
 #include "display/UI/UI.h"
+#include "pacefind/pacefind.h"
 
 // ---- hardware ---------------------------------------------------------------
 
@@ -47,6 +48,7 @@ MAX30105    particleSensor;
 HeartRate   hrM;
 Calibration calibM;
 StepCounter stepM(calibM);
+PACEFIND    paceM;
 UI          ui(tft, stepM, calibM);
 
 // ---- state machine ----------------------------------------------------------
@@ -289,12 +291,16 @@ void loop() {
 
         // ------------------------------------------------------------------ //
         case CASE_HOME: {
-            if (calibM.isCalibrated()) stepM.update();
+            if (calibM.isCalibrated()) {
+                stepM.update();
+                if (stepM.wasStepDetected()) paceM.update(now);
+            }
 
             // swap 0,0 for real RTC hour/minute once the PCB RTC is wired up
             ui.setTime(0, 0);
             ui.setDate(1, 1);
             ui.setBPM(hrM.getBPM());
+            ui.setPace(paceM.getPace());
             ui.update(now);
 
             if (touched) {
@@ -343,7 +349,10 @@ void loop() {
 
         // ------------------------------------------------------------------ //
         case CASE_SCT: {
-            if (calibM.isCalibrated()) stepM.update();
+            if (calibM.isCalibrated()) {
+                stepM.update();
+                if (stepM.wasStepDetected()) paceM.update(now);
+            }
 
             static unsigned long lastSCTUpdate = 0;
             if (millis() - lastSCTUpdate >= 500) {

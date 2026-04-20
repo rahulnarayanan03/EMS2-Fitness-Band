@@ -73,6 +73,7 @@ void StepCounter::update() {
         if ((now - _lastStepTimeMs) >= SC_COOLDOWN_MS) {
             _lastStepTimeMs = now;
             _stepCount++;
+            _stepDetected = true;  // pacefind will pick this up via wasStepDetected()
 
             Serial.printf("[StepCounter] Step counted! Total: %u\n", _stepCount);
 
@@ -100,6 +101,13 @@ void StepCounter::update() {
 // getters and controls
 uint32_t StepCounter::getStepCount() const {
     return _stepCount;
+}
+
+// returns true the first time it's called after a new step, then false until the next one
+bool StepCounter::wasStepDetected() {
+    if (!_stepDetected) return false;
+    _stepDetected = false;
+    return true;
 }
 
 void StepCounter::saveNow() {
