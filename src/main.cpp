@@ -66,6 +66,10 @@ uint32_t savedStepsBeforeCal = 0;
 // set true once calibration finishes so we wait for the user's button press
 bool awaitingStepChoice = false;
 
+// touch state, populated once per loop tick and shared across case functions
+uint16_t tx = 0, ty = 0;
+bool     touched = false;
+
 // ---- touch helper -----------------------------------------------------------
 
 bool readTouch(uint16_t &tx, uint16_t &ty) {
@@ -184,6 +188,171 @@ void drawStubScreen(const char *title) {
     tft.drawString("HOME", 120, 280, 2);
 }
 
+// ---- case functions ---------------------------------------------------------
+
+void Calibration_Case() {
+    calibM.update();
+
+    // pulse the "Sampling..." text so the user knows it's alive
+    static unsigned long lastTick = 0;
+    if (!awaitingStepChoice && millis() - lastTick >= 1000) {
+        lastTick = millis();
+        tft.fillRect(0, 76, 240, 24, GB_LIGHTEST);
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(GB_DARK, GB_LIGHTEST);
+        tft.drawString("Sampling...", 10, 80, 2);
+    }
+
+    // calibration just finished - show the done screen
+    if (!awaitingStepChoice && calibM.isCalibrated()) {
+        awaitingStepChoice = true;
+        drawCalibrationDone();
+        Serial.println("Calibration complete.");
+    }
+
+    // wait for the user to tap a button on the done screen
+    if (awaitingStepChoice && touched) {
+        if (caseCtIsReentry) {
+            // KEEP (x 10-110, y 110-150)
+            if (tx >= 10 && tx <= 110 && ty >= 110 && ty <= 150) {
+                Serial.println("CT: keeping previous step count.");
+                awaitingStepChoice = false;
+                caseCtIsReentry    = false;
+                currentCase        = CASE_HOME;
+                ui.begin();
+                delay(200);
+            }
+            // RESET (x 130-230, y 110-150)
+            else if (tx >= 130 && tx <= 230 && ty >= 110 && ty <= 150) {
+                stepM.resetCount();
+                Serial.println("CT: step count reset to 0.");
+                awaitingStepChoice = false;
+                caseCtIsReentry    = false;
+                currentCase        = CASE_HOME;
+                ui.begin();
+                delay(200);
+            }
+        } else {
+            // first boot HOME button (x 70-170, y 140-180)
+            if (tx >= 70 && tx <= 170 && ty >= 140 && ty <= 180) {
+                awaitingStepChoice = false;
+                currentCase        = CASE_HOME;
+                ui.begin();
+                delay(200);
+            }
+        }
+    }
+}
+
+void Home_Case(uint32_t now) {
+    if (calibM.isCalibrated()) {
+        stepM.update();
+        if (stepM.wasStepDetected()) paceM.update(now);
+    }
+
+    // swap 0,0 for real RTC hour/minute once the PCB RTC is wired up
+    ui.setTime(0, 0);
+    ui.setDate(1, 1);
+    ui.setBPM(hrM.getBPM());
+    ui.setPace(paceM.getPace());
+    ui.update(now);
+
+    if (touched) {
+        uint8_t btnIndex = 0;
+        if (ui.checkButtonTouch(tx, ty, btnIndex)) {
+            delay(200);
+            switch (btnIndex) {
+                case 0: // C.T - save steps then re-calibrate
+                    stepM.saveNow();
+                    savedStepsBeforeCal = stepM.getStepCount();
+                    caseCtIsReentry     = true;
+                    awaitingStepChoice  = false;
+                    currentCase         = CASE_CT;
+                    calibM.startCalibration();
+                    drawCalibrationScreen();
+                    Serial.println("Re-entering calibration.");
+                    break;
+                case 1: // S.T
+                    currentCase = CASE_ST;
+                    break;
+                case 2: // S.C.T
+                    currentCase = CASE_SCT;
+                    drawSCTScreen();
+                    break;
+                case 3: // P.ID.T stub
+                    currentCase = CASE_PIDT;
+                    drawStubScreen("PACE ID TEST");
+                    break;
+            }
+        }
+    }
+}
+
+void SelfTest_Case() {
+    static bool stRan = false;
+    if (!stRan) {
+        stRan = true;
+        bool passed = stM.run();
+        tft.fillScreen(GB_LIGHTEST);
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+        tft.drawString("SELF TEST", 10, 10, 2);
+        tft.setTextColor(passed ? 0x07E0 : TFT_RED, GB_LIGHTEST);
+        tft.drawString(stM.getResultStr(), 10, 40, 4);
+        tft.setTextColor(GB_DARK, GB_LIGHTEST);
+        char buf[32];
+        snprintf(buf, sizeof(buf), "dX: %.3f g", stM.getDeltaX());
+        tft.drawString(buf, 10, 90, 2);
+        snprintf(buf, sizeof(buf), "dY: %.3f g", stM.getDeltaY());
+        tft.drawString(buf, 10, 115, 2);
+        snprintf(buf, sizeof(buf), "dZ: %.3f g", stM.getDeltaZ());
+        tft.drawString(buf, 10, 140, 2);
+        tft.fillRect(70, 260, 100, 40, GB_MID);
+        tft.drawRect(70, 260, 100, 40, GB_DARKEST);
+        tft.setTextDatum(MC_DATUM);
+        tft.setTextColor(GB_DARKEST, GB_MID);
+        tft.drawString("HOME", 120, 280, 2);
+    }
+    // home button (x 70-170, y 260-300)
+    if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+        stRan = false;  // reset so next visit reruns the test
+        currentCase = CASE_HOME;
+        ui.begin();
+        delay(200);
+    }
+}
+
+void StepCountTest_Case(uint32_t now) {
+    if (calibM.isCalibrated()) {
+        stepM.update();
+        if (stepM.wasStepDetected()) paceM.update(now);
+    }
+
+    static unsigned long lastSCTUpdate = 0;
+    if (millis() - lastSCTUpdate >= 500) {
+        lastSCTUpdate = millis();
+        updateSCTScreen();
+        Serial.print("[SCT] Steps: ");
+        Serial.println(stepM.getStepCount());
+    }
+
+    // home button (x 70-170, y 260-300)
+    if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+        currentCase = CASE_HOME;
+        ui.begin();
+        delay(200);
+    }
+}
+
+void PaceID_Case() {
+    // home button (x 70-170, y 260-300)
+    if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+        currentCase = CASE_HOME;
+        ui.begin();
+        delay(200);
+    }
+}
+
 // ---- setup ------------------------------------------------------------------
 
 void setup() {
@@ -231,182 +400,13 @@ void loop() {
     long irValue = particleSensor.getIR();
     hrM.update(irValue);
 
-    uint16_t tx = 0, ty = 0;
-    bool touched = readTouch(tx, ty);
+    touched = readTouch(tx, ty);
 
     switch (currentCase) {
-
-        // ------------------------------------------------------------------ //
-        case CASE_CT: {
-            calibM.update();
-
-            // pulse the "Sampling..." text so the user knows it's alive
-            static unsigned long lastTick = 0;
-            if (!awaitingStepChoice && millis() - lastTick >= 1000) {
-                lastTick = millis();
-                tft.fillRect(0, 76, 240, 24, GB_LIGHTEST);
-                tft.setTextDatum(TL_DATUM);
-                tft.setTextColor(GB_DARK, GB_LIGHTEST);
-                tft.drawString("Sampling...", 10, 80, 2);
-            }
-
-            // calibration just finished - show the done screen
-            if (!awaitingStepChoice && calibM.isCalibrated()) {
-                awaitingStepChoice = true;
-                drawCalibrationDone();
-                Serial.println("Calibration complete.");
-            }
-
-            // wait for the user to tap a button on the done screen
-            if (awaitingStepChoice && touched) {
-                if (caseCtIsReentry) {
-                    // KEEP (x 10-110, y 110-150)
-                    if (tx >= 10 && tx <= 110 && ty >= 110 && ty <= 150) {
-                        Serial.println("CT: keeping previous step count.");
-                        awaitingStepChoice = false;
-                        caseCtIsReentry    = false;
-                        currentCase        = CASE_HOME;
-                        ui.begin();
-                        delay(200);
-                    }
-                    // RESET (x 130-230, y 110-150)
-                    else if (tx >= 130 && tx <= 230 && ty >= 110 && ty <= 150) {
-                        stepM.resetCount();
-                        Serial.println("CT: step count reset to 0.");
-                        awaitingStepChoice = false;
-                        caseCtIsReentry    = false;
-                        currentCase        = CASE_HOME;
-                        ui.begin();
-                        delay(200);
-                    }
-                } else {
-                    // first boot HOME button (x 70-170, y 140-180)
-                    if (tx >= 70 && tx <= 170 && ty >= 140 && ty <= 180) {
-                        awaitingStepChoice = false;
-                        currentCase        = CASE_HOME;
-                        ui.begin();
-                        delay(200);
-                    }
-                }
-            }
-            break;
-        }
-
-        // ------------------------------------------------------------------ //
-        case CASE_HOME: {
-            if (calibM.isCalibrated()) {
-                stepM.update();
-                if (stepM.wasStepDetected()) paceM.update(now);
-            }
-
-            // swap 0,0 for real RTC hour/minute once the PCB RTC is wired up
-            ui.setTime(0, 0);
-            ui.setDate(1, 1);
-            ui.setBPM(hrM.getBPM());
-            ui.setPace(paceM.getPace());
-            ui.update(now);
-
-            if (touched) {
-                uint8_t btnIndex = 0;
-                if (ui.checkButtonTouch(tx, ty, btnIndex)) {
-                    delay(200);
-                    switch (btnIndex) {
-                        case 0: // C.T - save steps then re-calibrate
-                            stepM.saveNow();
-                            savedStepsBeforeCal = stepM.getStepCount();
-                            caseCtIsReentry     = true;
-                            awaitingStepChoice  = false;
-                            currentCase         = CASE_CT;
-                            calibM.startCalibration();
-                            drawCalibrationScreen();
-                            Serial.println("Re-entering calibration.");
-                            break;
-                        case 1: // S.T
-                            currentCase = CASE_ST;
-                            break;
-                        case 2: // S.C.T
-                            currentCase = CASE_SCT;
-                            drawSCTScreen();
-                            break;
-                        case 3: // P.ID.T stub
-                            currentCase = CASE_PIDT;
-                            drawStubScreen("PACE ID TEST");
-                            break;
-                    }
-                }
-            }
-            break;
-        }
-
-        // ------------------------------------------------------------------ //
-        case CASE_ST: {
-            static bool stRan = false;
-            if (!stRan) {
-                stRan = true;
-                bool passed = stM.run();
-                tft.fillScreen(GB_LIGHTEST);
-                tft.setTextDatum(TL_DATUM);
-                tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
-                tft.drawString("SELF TEST", 10, 10, 2);
-                tft.setTextColor(passed ? 0x07E0 : TFT_RED, GB_LIGHTEST);
-                tft.drawString(stM.getResultStr(), 10, 40, 4);
-                tft.setTextColor(GB_DARK, GB_LIGHTEST);
-                char buf[32];
-                snprintf(buf, sizeof(buf), "dX: %.3f g", stM.getDeltaX());
-                tft.drawString(buf, 10, 90, 2);
-                snprintf(buf, sizeof(buf), "dY: %.3f g", stM.getDeltaY());
-                tft.drawString(buf, 10, 115, 2);
-                snprintf(buf, sizeof(buf), "dZ: %.3f g", stM.getDeltaZ());
-                tft.drawString(buf, 10, 140, 2);
-                tft.fillRect(70, 260, 100, 40, GB_MID);
-                tft.drawRect(70, 260, 100, 40, GB_DARKEST);
-                tft.setTextDatum(MC_DATUM);
-                tft.setTextColor(GB_DARKEST, GB_MID);
-                tft.drawString("HOME", 120, 280, 2);
-            }
-            // home button (x 70-170, y 260-300)
-            if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
-                stRan = false;  // reset so next visit reruns the test
-                currentCase = CASE_HOME;
-                ui.begin();
-                delay(200);
-            }
-            break;
-        }
-
-        // ------------------------------------------------------------------ //
-        case CASE_SCT: {
-            if (calibM.isCalibrated()) {
-                stepM.update();
-                if (stepM.wasStepDetected()) paceM.update(now);
-            }
-
-            static unsigned long lastSCTUpdate = 0;
-            if (millis() - lastSCTUpdate >= 500) {
-                lastSCTUpdate = millis();
-                updateSCTScreen();
-                Serial.print("[SCT] Steps: ");
-                Serial.println(stepM.getStepCount());
-            }
-
-            // home button (x 70-170, y 260-300)
-            if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
-                currentCase = CASE_HOME;
-                ui.begin();
-                delay(200);
-            }
-            break;
-        }
-
-        // ------------------------------------------------------------------ //
-        case CASE_PIDT: {
-            // home button (x 70-170, y 260-300)
-            if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
-                currentCase = CASE_HOME;
-                ui.begin();
-                delay(200);
-            }
-            break;
-        }
+        case CASE_CT:   Calibration_Case();       break;
+        case CASE_HOME: Home_Case(now);            break;
+        case CASE_ST:   SelfTest_Case();           break;
+        case CASE_SCT:  StepCountTest_Case(now);   break;
+        case CASE_PIDT: PaceID_Case();             break;
     }
 }
