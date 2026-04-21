@@ -275,6 +275,7 @@ void setup() {
     Serial.begin(9600);
     delay(2000);  // let serial monitor connect before any output
 
+    stM.begin();
     initDisplay();
     stepM.begin();   // load saved step count from NVS before calibration starts
     initHeartRate();
