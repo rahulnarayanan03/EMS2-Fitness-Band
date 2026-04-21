@@ -28,6 +28,7 @@
 #include "steptrack/step_counter.h"
 #include "display/UI/UI.h"
 #include "pacefind/pacefind.h"
+#include "selftest/SelfTest.h"
 
 // ---- hardware ---------------------------------------------------------------
 
@@ -35,6 +36,7 @@ TFT_eSPI tft = TFT_eSPI();
 
 #define TOUCH_CS  33
 #define TOUCH_IRQ 36
+#define ST_PIN    26  // TODO: confirm GPIO from PCB schematic
 
 SPIClass touchSPI(HSPI);
 XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);
@@ -49,6 +51,7 @@ HeartRate   hrM;
 Calibration calibM;
 StepCounter stepM(calibM);
 PACEFIND    paceM;
+SelfTest    stM(calibM, ST_PIN);
 UI          ui(tft, stepM, calibM);
 
 // ---- state machine ----------------------------------------------------------
@@ -318,9 +321,8 @@ void loop() {
                             drawCalibrationScreen();
                             Serial.println("Re-entering calibration.");
                             break;
-                        case 1: // S.T stub
+                        case 1: // S.T
                             currentCase = CASE_ST;
-                            drawStubScreen("SELF TEST");
                             break;
                         case 2: // S.C.T
                             currentCase = CASE_SCT;
@@ -338,8 +340,33 @@ void loop() {
 
         // ------------------------------------------------------------------ //
         case CASE_ST: {
+            static bool stRan = false;
+            if (!stRan) {
+                stRan = true;
+                bool passed = stM.run();
+                tft.fillScreen(GB_LIGHTEST);
+                tft.setTextDatum(TL_DATUM);
+                tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+                tft.drawString("SELF TEST", 10, 10, 2);
+                tft.setTextColor(passed ? 0x07E0 : TFT_RED, GB_LIGHTEST);
+                tft.drawString(stM.getResultStr(), 10, 40, 4);
+                tft.setTextColor(GB_DARK, GB_LIGHTEST);
+                char buf[32];
+                snprintf(buf, sizeof(buf), "dX: %.3f g", stM.getDeltaX());
+                tft.drawString(buf, 10, 90, 2);
+                snprintf(buf, sizeof(buf), "dY: %.3f g", stM.getDeltaY());
+                tft.drawString(buf, 10, 115, 2);
+                snprintf(buf, sizeof(buf), "dZ: %.3f g", stM.getDeltaZ());
+                tft.drawString(buf, 10, 140, 2);
+                tft.fillRect(70, 260, 100, 40, GB_MID);
+                tft.drawRect(70, 260, 100, 40, GB_DARKEST);
+                tft.setTextDatum(MC_DATUM);
+                tft.setTextColor(GB_DARKEST, GB_MID);
+                tft.drawString("HOME", 120, 280, 2);
+            }
             // home button (x 70-170, y 260-300)
             if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+                stRan = false;  // reset so next visit reruns the test
                 currentCase = CASE_HOME;
                 ui.begin();
                 delay(200);
