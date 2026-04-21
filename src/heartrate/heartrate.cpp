@@ -1,73 +1,40 @@
 #include <Arduino.h>
 #include "HeartRate.h"
+#include <heartRate.h>
+
+static const byte RATE_SIZE = 4;
+static byte rates[RATE_SIZE];
+static byte rateSpot = 0;
+static long lastBeat = 0;
+static float beatsPerMinute = 0;
+static int beatAvg = 0;
 
 void HeartRate::update(long irValue) {
 
-    // no finger
     if (irValue < minIR) {
-        bpm = 0;
-        aboveThreshold = false;
-        lastBeatTime = 0;
-        intervalCount = 0;
-        bufferIndex = 0;
-        movingAvg = 0;
-        for (int i = 0; i < AVG_SIZE; i++) irBuffer[i] = 0;
+        beatsPerMinute = 0;
+        beatAvg = 0;
+        lastBeat = 0;
         return;
     }
 
-    // timeout
-    if (lastBeatTime != 0 && (millis() - lastBeatTime) > BEAT_TIMEOUT) {
-        bpm = 0;
-        lastBeatTime = 0;
-        intervalCount = 0;
-        aboveThreshold = false;
-        return;
-    }
+    if (checkForBeat(irValue) == true) {
+        long delta = millis() - lastBeat;
+        lastBeat = millis();
 
-    // update moving average
-    irBuffer[bufferIndex] = irValue;
-    bufferIndex = (bufferIndex + 1) % AVG_SIZE;
+        beatsPerMinute = 60 / (delta / 1000.0);
 
-    long sum = 0;
-    for (int i = 0; i < AVG_SIZE; i++) sum += irBuffer[i];
-    movingAvg = sum / AVG_SIZE;
+        if (beatsPerMinute < 255 && beatsPerMinute > 20) {
+            rates[rateSpot++] = (byte)beatsPerMinute;
+            rateSpot %= RATE_SIZE;
 
-    // dynamic threshold - slightly above moving average
-    long dynamicThreshold = (long)(movingAvg * THRESHOLD_FACTOR);
-
-    // rising edge - beat peak
-    if (!aboveThreshold && irValue > dynamicThreshold) {
-        aboveThreshold = true;
-
-        unsigned long currentTime = millis();
-
-        if (lastBeatTime != 0) {
-            unsigned long interval = currentTime - lastBeatTime;
-
-            if (interval >= 300 && interval <= 1500) {
-                intervals[intervalIndex] = interval;
-                intervalIndex = (intervalIndex + 1) % 4;
-                if (intervalCount < 4) intervalCount++;
-
-                unsigned long avgSum = 0;
-                for (int i = 0; i < intervalCount; i++) {
-                    avgSum += intervals[i];
-                }
-                unsigned long avgInterval = avgSum / intervalCount;
-                bpm = 60000 / avgInterval;
-
-                Serial.print("Beat detected! BPM: ");
-                Serial.println(bpm);
-            }
+            beatAvg = 0;
+            for (byte x = 0; x < RATE_SIZE; x++) beatAvg += rates[x];
+            beatAvg /= RATE_SIZE;
         }
-
-        lastBeatTime = currentTime;
     }
 
-    // falling edge
-    if (aboveThreshold && irValue < dynamicThreshold) {
-        aboveThreshold = false;
-    }
+    bpm = beatAvg;
 }
 
 int HeartRate::getBPM() {

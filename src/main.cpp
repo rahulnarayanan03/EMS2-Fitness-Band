@@ -37,7 +37,7 @@ TFT_eSPI tft = TFT_eSPI();
 
 #define TOUCH_CS  33
 #define TOUCH_IRQ 36
-#define ST_PIN    26  // TODO: confirm GPIO from PCB schematic
+#define ST_PIN    4  // TODO: confirm GPIO from PCB schematic
 
 SPIClass touchSPI(HSPI);
 XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);
