@@ -11,7 +11,7 @@ void SelfTest::begin() {
 
 // averages multiple readings from one axis to reduce noise
 float SelfTest::sampleAxis(float (Calibration::*getter)(), int samples) {
-    float sum = 0;
+    float sum = 0.0;
     for (int i = 0; i < samples; i++) {
         sum += (_cal.*getter)();
         delay(5);  // small gap between samples
