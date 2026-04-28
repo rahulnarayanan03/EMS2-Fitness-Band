@@ -37,7 +37,7 @@ TFT_eSPI tft = TFT_eSPI();
 
 #define TOUCH_CS  33
 #define TOUCH_IRQ 36
-#define ST_PIN    4  // TODO: confirm GPIO from PCB schematic
+#define ST_PIN    4
 
 SPIClass touchSPI(HSPI);
 XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);
@@ -106,6 +106,7 @@ void updateStepAndPace(uint32_t now) {
     if (!calibM.isCalibrated()) return;
     stepM.update();
     if (stepM.wasStepDetected()) paceM.update(now);
+    else paceM.checkTimeout(now);
 }
 
 // ---- case functions ---------------------------------------------------------
@@ -187,9 +188,8 @@ void Home_Case(uint32_t now) {
                     currentCase = CASE_SCT;
                     drawSCTScreen(tft);
                     break;
-                case 3: // P.ID.T stub
+                case 3: // P.ID.T
                     currentCase = CASE_PIDT;
-                    drawStubScreen(tft, "PACE ID TEST");
                     break;
             }
         }
@@ -229,8 +229,54 @@ void StepCountTest_Case(uint32_t now) {
 }
 
 void PaceID_Case() {
+    static bool drawn = false;
+    if (!drawn) {
+        drawn = true;
+        tft.fillScreen(GB_LIGHTEST);
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+        tft.drawString("PACE ID TEST", 10, 10, 2);
+
+        tft.fillRect(70, 260, 100, 40, GB_MID);
+        tft.drawRect(70, 260, 100, 40, GB_DARKEST);
+        tft.setTextDatum(MC_DATUM);
+        tft.setTextColor(GB_DARKEST, GB_MID);
+        tft.drawString("HOME", 120, 280, 2);
+    }
+
+    // run step detection and pace update
+    if (calibM.isCalibrated()) {
+        stepM.update();
+        uint32_t now = millis();
+        if (stepM.wasStepDetected()) {
+            paceM.update(now);
+        } else {
+            paceM.checkTimeout(now);
+        }
+    }
+
+    static unsigned long lastUpdate = 0;
+    if (millis() - lastUpdate >= 500) {
+        lastUpdate = millis();
+
+        tft.fillRect(10, 50, 220, 120, GB_LIGHTEST);
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(GB_DARK, GB_LIGHTEST);
+        tft.drawString("Current Pace:", 10, 50, 2);
+        tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+        tft.drawString(paceM.getPace(), 10, 80, 4);
+
+        tft.setTextColor(GB_DARK, GB_LIGHTEST);
+        tft.drawString("Steps:", 10, 150, 2);
+        char buf[12];
+        snprintf(buf, sizeof(buf), "%lu", (unsigned long)stepM.getStepCount());
+        tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+        tft.drawString(buf, 10, 175, 2);
+    }
+
     // home button (x 70-170, y 260-300)
     if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+        drawn = false;
         goHome();
     }
 }

@@ -5,8 +5,7 @@ const int xPin = 26;
 const int yPin = 35;
 const int zPin = 34;
 
-const int NUM_SAMPLES = 50;
-const float SENSITIVITY = 0.015f; // adxl335 ~330mV per g
+const int NUM_SAMPLES = 32;
 
 float Calibration::readVoltage(int pin) {
     long sum = 0;
@@ -63,63 +62,42 @@ void Calibration::update() {
 
         if (millis() - startTime > 20000) {
 
-            xOffset = (xMax + xMin) / 2;
-            yOffset = (yMax + yMin) / 2;
-            zOffset = (zMax + zMin) / 2;
+            xOffset = (xMax + xMin) / 2.0f;
+            yOffset = (yMax + yMin) / 2.0f;
+            zOffset = (zMax + zMin) / 2.0f;
+
+            xScale = (xMax - xMin) / 2.0f;
+            yScale = (yMax - yMin) / 2.0f;
+            zScale = (zMax - zMin) / 2.0f;
+
+            // ADC2 on GPIO26 has limited voltage swing
+            // clamp xScale to minimum so getXG() doesn't produce crazy values
+            if (xScale < 0.05f) xScale = 0.05f;
 
             calibrating = false;
             calibrated = true;
 
             Serial.println("----- CALIBRATION COMPLETE -----");
-
             Serial.print("X Min: "); Serial.println(xMin);
             Serial.print("X Max: "); Serial.println(xMax);
-
             Serial.print("Y Min: "); Serial.println(yMin);
             Serial.print("Y Max: "); Serial.println(yMax);
-
             Serial.print("Z Min: "); Serial.println(zMin);
             Serial.print("Z Max: "); Serial.println(zMax);
-
-            Serial.println("---- OFFSETS ----");
-            Serial.print("X Offset: "); Serial.println(xOffset);
-            Serial.print("Y Offset: "); Serial.println(yOffset);
-            Serial.print("Z Offset: "); Serial.println(zOffset);
+            Serial.println("---- OFFSETS & SCALES ----");
+            Serial.print("X Offset: "); Serial.print(xOffset); Serial.print("  Scale: "); Serial.println(xScale);
+            Serial.print("Y Offset: "); Serial.print(yOffset); Serial.print("  Scale: "); Serial.println(yScale);
+            Serial.print("Z Offset: "); Serial.print(zOffset); Serial.print("  Scale: "); Serial.println(zScale);
         }
     }
 }
 
-bool Calibration::isCalibrated() { 
-    return calibrated; 
+bool Calibration::isCalibrated() { return calibrated; }
 
-}
+float Calibration::getXOffset() { return xOffset; }
+float Calibration::getYOffset() { return yOffset; }
+float Calibration::getZOffset() { return zOffset; }
 
-float Calibration::getXOffset() { 
-    return xOffset; 
-
-}
-
-float Calibration::getYOffset() { 
-    return yOffset; 
-
-}
-
-float Calibration::getZOffset() { 
-    return zOffset; 
-
-}
-
-float Calibration::getXG() { 
-    return (readVoltage(xPin) - xOffset) / SENSITIVITY; 
-
-}
-
-float Calibration::getYG() { 
-    return (readVoltage(yPin) - yOffset) / SENSITIVITY; 
-
-}
-
-float Calibration::getZG() { 
-    return (readVoltage(zPin) - zOffset) / SENSITIVITY; 
-
-}
+float Calibration::getXG() { return (readVoltage(xPin) - xOffset) / xScale; }
+float Calibration::getYG() { return (readVoltage(yPin) - yOffset) / yScale; }
+float Calibration::getZG() { return (readVoltage(zPin) - zOffset) / zScale; }

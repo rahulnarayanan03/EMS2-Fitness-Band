@@ -20,11 +20,13 @@ void PACEFIND::update(unsigned long currentTime) {
 
     if (interval > MAX_STEP_INTERVAL) {
     // The wearer might very potentially be standing. Reset the pace to standing.
-    // In case this function isn't called when the user suddenly halted when running, 
-    // we'll have to do another standing check in main.cpp.
+    // In case this function isn't called when the user suddenly halted when running,
+    // we'll have to do another standing check in main.cpp via checkTimeout().
         intervalCount = 0;
         intervalHead  = 0;
         currentPace   = "STANDING";
+        stablePace    = "STANDING";
+        pendingPace   = "STANDING";
         return;
     }
 
@@ -32,7 +34,7 @@ void PACEFIND::update(unsigned long currentTime) {
     // check when counting the steps??
     lastStepTime = currentTime;
 
-    // Store interval in circular buffer. 
+    // Store interval in circular buffer.
     // Working principle: Given PACEFIND_SMOOTHING_WINDOW = 4. The intervalHead will keep cycling: 0-1-2-3-0-1-2-3
     // due to the remainder math. If PACEFIND_SMOOTHING_WINDOW = 5, the sequence will be: 0-1-2-3-4-0-1-2-3-4.
     // PACEFIND_SMOOTHING_WINDOW will need to be tuned experimentally to find the most suitable value.
@@ -59,7 +61,7 @@ void PACEFIND::update(unsigned long currentTime) {
         currentPace = "STANDING";
     }
 
-    // Anti-flicker: only set the stablePace after two consecutive matching readings. 
+    // Anti-flicker: only set the stablePace after two consecutive matching readings.
     // The number of consecutive readings can also be experimentally tuned
     if (currentPace == stablePace) {
         pendingPace = currentPace;
@@ -67,6 +69,21 @@ void PACEFIND::update(unsigned long currentTime) {
         stablePace  = currentPace;
     } else {
         pendingPace = currentPace;
+    }
+}
+
+// Called every loop when no step is detected - checks if user has stopped moving
+// and resets pace to standing if MAX_STEP_INTERVAL has passed since last step.
+// This handles the case where the user suddenly stops and update() is never called.
+void PACEFIND::checkTimeout(unsigned long currentTime) {
+    if (lastStepTime == 0) return;
+    if (currentTime - lastStepTime > MAX_STEP_INTERVAL) {
+        intervalCount = 0;
+        intervalHead  = 0;
+        lastStepTime  = 0;
+        currentPace   = "STANDING";
+        stablePace    = "STANDING";
+        pendingPace   = "STANDING";
     }
 }
 

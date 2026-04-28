@@ -27,9 +27,9 @@ private:
     float yOffset = 0;
     float zOffset = 0;
 
-    float xScale = 1;  // added
-    float yScale = 1;  // added
-    float zScale = 1;  // added
+    float xScale = 1;
+    float yScale = 1;
+    float zScale = 1;
 
     float xMin, xMax;
     float yMin, yMax;
