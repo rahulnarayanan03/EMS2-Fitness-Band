@@ -22,8 +22,6 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
-#include "MAX30105.h"
-#include "heartrate/heartrate.h"
 #include "calibration/calibration.h"
 #include "steptrack/step_counter.h"
 #include "display/UI/UI.h"
@@ -47,8 +45,6 @@ uint16_t touchScreenMinimumY = 240, touchScreenMaximumY = 3800;
 
 // ---- module objects ---------------------------------------------------------
 
-MAX30105    particleSensor;
-HeartRate   hrM;
 Calibration calibM;
 StepCounter stepM(calibM);
 PACEFIND    paceM;
@@ -162,7 +158,6 @@ void Home_Case(uint32_t now) {
     // swap 0,0 for real RTC hour/minute once the PCB RTC is wired up
     ui.setTime(0, 0);
     ui.setDate(1, 1);
-    ui.setBPM(hrM.getBPM());
     ui.setPace(paceM.getPace());
     ui.update(now);
 
@@ -292,22 +287,6 @@ void initDisplay() {
     ts.setRotation(2);
 }
 
-void initHeartRate() {
-    Wire.begin(21, 22);
-    if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
-        Serial.println("MAX30102 not found!");
-        return;
-    }
-    particleSensor.setup();
-    particleSensor.setPulseAmplitudeRed(0xFF);
-    particleSensor.setPulseAmplitudeIR(0xFF);
-    particleSensor.setPulseAmplitudeGreen(0);
-    particleSensor.setSampleRate(400);
-    particleSensor.setPulseWidth(411);
-    particleSensor.setADCRange(16384);
-    Serial.println("MAX30102 ready.");
-}
-
 void initCalibration() {
     calibM.begin();
     calibM.startCalibration();
@@ -324,7 +303,6 @@ void setup() {
     stM.begin();
     initDisplay();
     stepM.begin();   // load saved step count from NVS before calibration starts
-    initHeartRate();
     initCalibration();
 }
 
@@ -332,10 +310,6 @@ void setup() {
 
 void loop() {
     uint32_t now = millis();
-
-    // heart rate runs in all cases
-    long irValue = particleSensor.getIR();
-    hrM.update(irValue);
 
     // suppress touches for 200ms after any case transition (debounce)
     touched = (millis() - lastTransition >= 200) && readTouch(tx, ty);
