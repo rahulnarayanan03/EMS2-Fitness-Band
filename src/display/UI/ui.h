@@ -72,7 +72,7 @@ public:
     UI(TFT_eSPI &tft, StepCounter &stepM, Calibration &cal);
 
     void begin();
-    void update(uint32_t nowMs);
+    void update(uint32_t nowMs, float cv, float cp);
 
     void setTime(uint8_t hour, uint8_t minute);
     void setDate(uint8_t day, uint8_t month);
@@ -123,7 +123,7 @@ private:
     void refreshDate();
     void refreshSteps(uint32_t steps);
     void refreshBPM();
-    void refreshBattery();
+    void refreshBattery(float cv, float cp);
 
     void updateActivity();
     void advanceSprite(uint32_t nowMs);

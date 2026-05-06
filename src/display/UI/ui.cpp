@@ -32,17 +32,17 @@ void UI::begin() {
     drawStandingGif();
 }
 
-void UI::update(uint32_t nowMs) {
+void UI::update(uint32_t nowMs, float cv, float cp) {
     uint32_t steps = _stepM.getStepCount();
 
     updateActivity();
     advanceSprite(nowMs);
-
+    
     refreshTime();
     refreshDate();
     refreshSteps(steps);
     refreshBPM();
-    refreshBattery();
+    refreshBattery(cv, cp);
 }
 
 void UI::setTime(uint8_t hour, uint8_t minute) {
@@ -255,12 +255,11 @@ void UI::refreshBPM() {
     _tft.drawString(buf, LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
 }
 
-void UI::refreshBattery() {
-    float vBatt = readBatteryVoltage();
-    int8_t pct  = readBatteryPercent(vBatt);
+void UI::refreshBattery(float cv, float cp) {
+    int8_t pct = (cp >= 0) ? (int8_t)cp : -1;
+    uint16_t battMv = (uint16_t)(cv * 1000.0f);
 
-    uint16_t battMv = (uint16_t)(vBatt * 1000.0f);
-
+    // Avoid unnecessary redraw
     if (pct == _lastBattPct && battMv == _lastBattMv) return;
 
     _lastBattPct = pct;
@@ -272,22 +271,24 @@ void UI::refreshBattery() {
                   30,
                   GB_LIGHT);
 
-    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, pct);
+    // Draw icon (fallback to 0% if invalid)
+    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58,
+                 (pct >= 0) ? pct : 0);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
-    char buf[10];
+    char buf[12];
 
     if (pct < 0) {
-        snprintf(buf, sizeof(buf), "%.2fV", vBatt);
+        // If percentage invalid → show voltage
+        snprintf(buf, sizeof(buf), "%.2fV", cv);
     } else {
         snprintf(buf, sizeof(buf), "%d%%", pct);
     }
 
     _tft.drawString(buf, LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
 }
-
 // ---- sprite / activity -----------------------------------------------------
 
 void UI::updateActivity() {

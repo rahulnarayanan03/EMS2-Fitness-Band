@@ -28,6 +28,9 @@
 #include "display/screens/screens.h"
 #include "pacefind/pacefind.h"
 #include "selftest/SelfTest.h"
+#include "Adafruit_MAX1704X.h"
+
+Adafruit_MAX17048 maxlipo;
 
 // ---- hardware ---------------------------------------------------------------
 
@@ -152,14 +155,14 @@ void Calibration_Case() {
     }
 }
 
-void Home_Case(uint32_t now) {
+void Home_Case(uint32_t now, float cv, float cp) {
     updateStepAndPace(now);
 
     // swap 0,0 for real RTC hour/minute once the PCB RTC is wired up
     ui.setTime(0, 0);
     ui.setDate(1, 1);
     ui.setPace(paceM.getPace());
-    ui.update(now);
+    ui.update(now, cv, cp);
 
     if (touched) {
         uint8_t btnIndex = 0;
@@ -298,12 +301,20 @@ void initCalibration() {
 
 void setup() {
     Serial.begin(115200);
-    delay(2000);  // let serial monitor connect before any output
 
+    if (!maxlipo.begin()) {
+        Serial.println("MAX17048 not found");
+        while (1);
+    }
+
+    delay(500);  // let serial monitor connect before any output
+    Wire.begin(21,22);
     stM.begin();
     initDisplay();
     stepM.begin();   // load saved step count from NVS before calibration starts
     initCalibration();
+
+    
 }
 
 // ---- loop -------------------------------------------------------------------
@@ -316,7 +327,7 @@ void loop() {
 
     switch (currentCase) {
         case CASE_CT:   Calibration_Case();      break;
-        case CASE_HOME: Home_Case(now);           break;
+        case CASE_HOME: Home_Case(now, maxlipo.cellVoltage(), maxlipo.cellPercent());           break;
         case CASE_ST:   SelfTest_Case();          break;
         case CASE_SCT:  StepCountTest_Case(now);  break;
         case CASE_PIDT: PaceID_Case();            break;
