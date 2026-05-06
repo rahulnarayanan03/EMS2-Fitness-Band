@@ -3,14 +3,13 @@
 
 #include "UI.h"
 
-// static instance pointer for GIF/PNG callbacks
 UI *UI::_instance = nullptr;
 
-// button positions inside the right panel (2x2 grid)
-static const int16_t BTN_COL1_X = RIGHT_PNL_X + 4;
-static const int16_t BTN_COL2_X = RIGHT_PNL_X + 4 + BTN_W + BTN_GAP;
-static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 6;
-static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 6 + BTN_H + BTN_GAP;
+// button positions inside the right panel
+static const int16_t BTN_COL1_X = RIGHT_PNL_X + 5;
+static const int16_t BTN_COL2_X = RIGHT_PNL_X + 5 + BTN_W + BTN_GAP;
+static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 7;
+static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 7 + BTN_H + BTN_GAP;
 
 static const char   *BTN_LABEL[4]  = { "C.T", "S.T", "S.C.T", "P.ID.T" };
 static const bool    BTN_ACTIVE[4] = { true, false, true, false };
@@ -80,9 +79,9 @@ bool UI::checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex) {
 
 void UI::drawStaticLayout() {
     drawTopBar();
-    drawStepsBar();
-    drawLeftPanel();
     drawRightPanel();
+    drawLeftPanel();
+    drawStepsBar();
 }
 
 void UI::drawTopBar() {
@@ -100,32 +99,33 @@ void UI::drawStepsBar() {
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARK, GB_LIGHT);
-    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 4, 2);
-
-    _tft.drawFastVLine(STEPS_BAR_X + 20, STEPS_BAR_Y + 2, STEPS_BAR_H - 4, GB_DARK);
+    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 6, 2);
 
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-    _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 20, 4);
+    _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 28, 4);
 
     _tft.setTextDatum(TR_DATUM);
-    _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 4, STEPS_BAR_Y + 24, 2);
+    _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 8,
+                    STEPS_BAR_Y + STEPS_BAR_H - 22, 2);
 }
 
 void UI::drawLeftPanel() {
     _tft.fillRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_LIGHT);
     _tft.drawRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_DARKEST);
 
-    _tft.drawFastHLine(LEFT_PNL_X + 2, LEFT_PNL_Y + LEFT_PNL_H / 2,
-                       LEFT_PNL_W - 4, GB_DARK);
+    _tft.drawFastHLine(LEFT_PNL_X + 3,
+                       LEFT_PNL_Y + LEFT_PNL_H / 2,
+                       LEFT_PNL_W - 6,
+                       GB_DARK);
 
-    drawHeartIcon(LEFT_PNL_X + 14, LEFT_PNL_Y + 18);
+    drawHeartIcon(LEFT_PNL_X + 17, LEFT_PNL_Y + 20);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-    _tft.drawString("-- BPM", LEFT_PNL_X + 28, LEFT_PNL_Y + 10, 2);
+    _tft.drawString("-- BPM", LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
 
-    drawBattIcon(LEFT_PNL_X + 8, LEFT_PNL_Y + 48, 0);
-    _tft.drawString("--V", LEFT_PNL_X + 34, LEFT_PNL_Y + 48, 2);
+    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, 0);
+    _tft.drawString("--V", LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
 }
 
 void UI::drawRightPanel() {
@@ -192,13 +192,22 @@ void UI::refreshDate() {
     _lastDay   = _day;
     _lastMonth = _month;
 
-    _tft.fillRect(STEPS_BAR_X + STEPS_BAR_W - 82, STEPS_BAR_Y + 22, 78, 18, GB_LIGHT);
+    _tft.fillRect(STEPS_BAR_X + STEPS_BAR_W - 70,
+                  STEPS_BAR_Y + STEPS_BAR_H - 24,
+                  64,
+                  20,
+                  GB_LIGHT);
+
     _tft.setTextDatum(TR_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
     char buf[6];
     snprintf(buf, sizeof(buf), "%02d/%02d", _day, _month);
-    _tft.drawString(buf, STEPS_BAR_X + STEPS_BAR_W - 4, STEPS_BAR_Y + 24, 2);
+
+    _tft.drawString(buf,
+                    STEPS_BAR_X + STEPS_BAR_W - 8,
+                    STEPS_BAR_Y + STEPS_BAR_H - 22,
+                    2);
 }
 
 void UI::refreshSteps(uint32_t steps) {
@@ -206,13 +215,19 @@ void UI::refreshSteps(uint32_t steps) {
 
     _lastSteps = steps;
 
-    _tft.fillRect(STEPS_BAR_X + 2, STEPS_BAR_Y + 18, 142, 34, GB_LIGHT);
+    _tft.fillRect(STEPS_BAR_X + 6,
+                  STEPS_BAR_Y + 26,
+                  STEPS_BAR_W - 12,
+                  34,
+                  GB_LIGHT);
+
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
     char buf[10];
     snprintf(buf, sizeof(buf), "%lu", (unsigned long)steps);
-    _tft.drawString(buf, STEPS_BAR_X + 8, STEPS_BAR_Y + 20, 4);
+
+    _tft.drawString(buf, STEPS_BAR_X + 8, STEPS_BAR_Y + 28, 4);
 }
 
 void UI::refreshBPM() {
@@ -220,18 +235,24 @@ void UI::refreshBPM() {
 
     _lastBPM = _bpm;
 
-    _tft.fillRect(LEFT_PNL_X + 26, LEFT_PNL_Y + 6, LEFT_PNL_W - 30, 22, GB_LIGHT);
+    _tft.fillRect(LEFT_PNL_X + 32,
+                  LEFT_PNL_Y + 8,
+                  LEFT_PNL_W - 38,
+                  28,
+                  GB_LIGHT);
+
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
     char buf[10];
+
     if (_bpm < 0) {
         snprintf(buf, sizeof(buf), "-- BPM");
     } else {
         snprintf(buf, sizeof(buf), "%d BPM", _bpm);
     }
 
-    _tft.drawString(buf, LEFT_PNL_X + 28, LEFT_PNL_Y + 10, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
 }
 
 void UI::refreshBattery() {
@@ -245,9 +266,13 @@ void UI::refreshBattery() {
     _lastBattPct = pct;
     _lastBattMv  = battMv;
 
-    _tft.fillRect(LEFT_PNL_X + 2, LEFT_PNL_Y + 44, LEFT_PNL_W - 4, 24, GB_LIGHT);
+    _tft.fillRect(LEFT_PNL_X + 4,
+                  LEFT_PNL_Y + 47,
+                  LEFT_PNL_W - 8,
+                  30,
+                  GB_LIGHT);
 
-    drawBattIcon(LEFT_PNL_X + 8, LEFT_PNL_Y + 48, pct);
+    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, pct);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
@@ -260,7 +285,7 @@ void UI::refreshBattery() {
         snprintf(buf, sizeof(buf), "%d%%", pct);
     }
 
-    _tft.drawString(buf, LEFT_PNL_X + 34, LEFT_PNL_Y + 48, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
 }
 
 // ---- sprite / activity -----------------------------------------------------
@@ -282,7 +307,7 @@ void UI::updateActivity() {
         _lastFrameMs  = 0;
         _lastActivity = UIActivity::NONE;
 
-        _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
+        _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
     }
 }
 
@@ -296,7 +321,7 @@ void UI::advanceSprite(uint32_t nowMs) {
         return;
     }
 
-    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
 
     switch (_activity) {
         case UIActivity::STANDING:
@@ -320,7 +345,7 @@ void UI::advanceSprite(uint32_t nowMs) {
 }
 
 void UI::drawStandingGif() {
-    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
 
     int frameCount = _gif.openFLASH((uint8_t *)stand_gif, stand_gif_len, gifDraw);
     if (frameCount > 0) {
@@ -335,7 +360,7 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
 
     _lastFrameMs = nowMs;
 
-    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHT);
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
 
     int frameCount = _gif.openFLASH((uint8_t *)data, len, gifDraw);
     if (frameCount <= 0) return;
