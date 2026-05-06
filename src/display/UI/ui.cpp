@@ -99,7 +99,7 @@ void UI::drawStepsBar() {
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARK, GB_LIGHT);
-    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 4, 1);
+    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 4, 2);
 
     _tft.drawFastVLine(STEPS_BAR_X + 20, STEPS_BAR_Y + 2, STEPS_BAR_H - 4, GB_DARK);
 
@@ -146,7 +146,7 @@ void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
 
     _tft.setTextDatum(MC_DATUM);
     _tft.setTextColor(txt, bg);
-    _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 1);
+    _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 2);  // was font 1
 }
 
 void UI::drawHeartIcon(int16_t cx, int16_t cy) {
