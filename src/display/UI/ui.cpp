@@ -72,6 +72,7 @@ bool UI::checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex) {
             return true;
         }
     }
+
     return false;
 }
 
@@ -124,7 +125,7 @@ void UI::drawLeftPanel() {
     _tft.drawString("-- BPM", LEFT_PNL_X + 28, LEFT_PNL_Y + 10, 2);
 
     drawBattIcon(LEFT_PNL_X + 8, LEFT_PNL_Y + 48, 0);
-    _tft.drawString("--%", LEFT_PNL_X + 34, LEFT_PNL_Y + 48, 2);
+    _tft.drawString("--V", LEFT_PNL_X + 34, LEFT_PNL_Y + 48, 2);
 }
 
 void UI::drawRightPanel() {
@@ -146,7 +147,7 @@ void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
 
     _tft.setTextDatum(MC_DATUM);
     _tft.setTextColor(txt, bg);
-    _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 2);  // was font 1
+    _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 2);
 }
 
 void UI::drawHeartIcon(int16_t cx, int16_t cy) {
@@ -234,10 +235,15 @@ void UI::refreshBPM() {
 }
 
 void UI::refreshBattery() {
-    int8_t pct = readBatteryPercent();
-    if (pct == _lastBattPct) return;
+    float vBatt = readBatteryVoltage();
+    int8_t pct  = readBatteryPercent(vBatt);
+
+    uint16_t battMv = (uint16_t)(vBatt * 1000.0f);
+
+    if (pct == _lastBattPct && battMv == _lastBattMv) return;
 
     _lastBattPct = pct;
+    _lastBattMv  = battMv;
 
     _tft.fillRect(LEFT_PNL_X + 2, LEFT_PNL_Y + 44, LEFT_PNL_W - 4, 24, GB_LIGHT);
 
@@ -246,9 +252,10 @@ void UI::refreshBattery() {
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
-    char buf[8];
+    char buf[10];
+
     if (pct < 0) {
-        snprintf(buf, sizeof(buf), "AC");
+        snprintf(buf, sizeof(buf), "%.2fV", vBatt);
     } else {
         snprintf(buf, sizeof(buf), "%d%%", pct);
     }
@@ -378,7 +385,7 @@ void UI::gifDraw(GIFDRAW *pDraw) {
 
 // ---- battery ---------------------------------------------------------------
 
-int8_t UI::readBatteryPercent() {
+float UI::readBatteryVoltage() {
     uint32_t sum = 0;
 
     for (uint8_t i = 0; i < 8; i++) {
@@ -388,6 +395,10 @@ int8_t UI::readBatteryPercent() {
     float vAdc  = (sum / 8.0f / 4095.0f) * 3.3f;
     float vBatt = vAdc * BATT_DIVIDER_RATIO;
 
+    return vBatt;
+}
+
+int8_t UI::readBatteryPercent(float vBatt) {
     if (vBatt >= BATT_USB_THRESHOLD) return -1;
 
     float clamped = constrain(vBatt, BATT_MIN_V, BATT_MAX_V);
