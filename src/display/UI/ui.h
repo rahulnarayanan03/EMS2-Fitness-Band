@@ -41,29 +41,30 @@ static constexpr int16_t  SCREEN_H         = 240;
 
 static constexpr int16_t TOPBAR_H = 20;
 
+//layout constants
 static constexpr int16_t SPRITE_X = 215;
 static constexpr int16_t SPRITE_Y = 56;
 static constexpr int16_t SPRITE_W = 65;
 static constexpr int16_t SPRITE_H = 75;
 
-static constexpr int16_t STEPS_BAR_X = 128;
-static constexpr int16_t STEPS_BAR_Y = 122;
-static constexpr int16_t STEPS_BAR_W = 180;
+static constexpr int16_t STEPS_BAR_X = 178;
+static constexpr int16_t STEPS_BAR_Y = 150;
+static constexpr int16_t STEPS_BAR_W = 130;
 static constexpr int16_t STEPS_BAR_H = 70;
 
 static constexpr int16_t LEFT_PNL_X = 8;
-static constexpr int16_t LEFT_PNL_Y = 122;
+static constexpr int16_t LEFT_PNL_Y = 150;
 static constexpr int16_t LEFT_PNL_W = 112;
 static constexpr int16_t LEFT_PNL_H = 70;
 
 static constexpr int16_t RIGHT_PNL_X = 8;
 static constexpr int16_t RIGHT_PNL_Y = 24;
-static constexpr int16_t RIGHT_PNL_W = 114;
-static constexpr int16_t RIGHT_PNL_H = 86;
+static constexpr int16_t RIGHT_PNL_W = 150;
+static constexpr int16_t RIGHT_PNL_H = 112;
 
-static constexpr int16_t BTN_W   = 50;
-static constexpr int16_t BTN_H   = 34;
-static constexpr int16_t BTN_GAP = 4;
+static constexpr int16_t BTN_W   = 68;
+static constexpr int16_t BTN_H   = 45;
+static constexpr int16_t BTN_GAP = 6;
 
 enum class UIActivity { NONE, STANDING, WALKING, RUNNING };
 

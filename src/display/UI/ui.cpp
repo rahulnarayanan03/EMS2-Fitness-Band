@@ -1,3 +1,4 @@
+// Date parts commented out, not deleted. check lines 43, 108-110, 190-212
 // UI.cpp
 // See UI.h for layout description, geometry and colour constants.
 
@@ -6,10 +7,10 @@
 UI *UI::_instance = nullptr;
 
 // button positions inside the right panel
-static const int16_t BTN_COL1_X = RIGHT_PNL_X + 5;
-static const int16_t BTN_COL2_X = RIGHT_PNL_X + 5 + BTN_W + BTN_GAP;
-static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 7;
-static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 7 + BTN_H + BTN_GAP;
+static const int16_t BTN_COL1_X = RIGHT_PNL_X + 6;
+static const int16_t BTN_COL2_X = RIGHT_PNL_X + 6 + BTN_W + BTN_GAP;
+static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 8;
+static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 8 + BTN_H + BTN_GAP;
 
 static const char   *BTN_LABEL[4]  = { "C.T", "S.T", "S.C.T", "P.ID.T" };
 static const bool    BTN_ACTIVE[4] = { true, false, true, false };
@@ -39,7 +40,7 @@ void UI::update(uint32_t nowMs, float cv, float cp) {
     advanceSprite(nowMs);
     
     refreshTime();
-    refreshDate();
+    // refreshDate();
     refreshSteps(steps);
     refreshBPM();
     refreshBattery(cv, cp);
@@ -104,9 +105,9 @@ void UI::drawStepsBar() {
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
     _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 28, 4);
 
-    _tft.setTextDatum(TR_DATUM);
-    _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 8,
-                    STEPS_BAR_Y + STEPS_BAR_H - 22, 2);
+    // _tft.setTextDatum(TR_DATUM);
+    // _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 8,
+                    // STEPS_BAR_Y + STEPS_BAR_H - 22, 2);
 }
 
 void UI::drawLeftPanel() {
@@ -186,29 +187,29 @@ void UI::refreshTime() {
     _tft.drawString(buf, 6, 3, 2);
 }
 
-void UI::refreshDate() {
-    if (_day == _lastDay && _month == _lastMonth) return;
+// void UI::refreshDate() {
+//     if (_day == _lastDay && _month == _lastMonth) return;
 
-    _lastDay   = _day;
-    _lastMonth = _month;
+//     _lastDay   = _day;
+//     _lastMonth = _month;
 
-    _tft.fillRect(STEPS_BAR_X + STEPS_BAR_W - 70,
-                  STEPS_BAR_Y + STEPS_BAR_H - 24,
-                  64,
-                  20,
-                  GB_LIGHT);
+//     _tft.fillRect(STEPS_BAR_X + STEPS_BAR_W - 70,
+//                   STEPS_BAR_Y + STEPS_BAR_H - 24,
+//                   64,
+//                   20,
+//                   GB_LIGHT);
 
-    _tft.setTextDatum(TR_DATUM);
-    _tft.setTextColor(GB_DARKEST, GB_LIGHT);
+//     _tft.setTextDatum(TR_DATUM);
+//     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
-    char buf[6];
-    snprintf(buf, sizeof(buf), "%02d/%02d", _day, _month);
+//     char buf[6];
+//     snprintf(buf, sizeof(buf), "%02d/%02d", _day, _month);
 
-    _tft.drawString(buf,
-                    STEPS_BAR_X + STEPS_BAR_W - 8,
-                    STEPS_BAR_Y + STEPS_BAR_H - 22,
-                    2);
-}
+//     _tft.drawString(buf,
+//                     STEPS_BAR_X + STEPS_BAR_W - 8,
+//                     STEPS_BAR_Y + STEPS_BAR_H - 22,
+//                     2);
+// }
 
 void UI::refreshSteps(uint32_t steps) {
     if (steps == _lastSteps) return;
