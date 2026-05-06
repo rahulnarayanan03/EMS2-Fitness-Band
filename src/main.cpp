@@ -297,7 +297,7 @@ void initCalibration() {
 // ---- setup ------------------------------------------------------------------
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(115200);
     delay(2000);  // let serial monitor connect before any output
 
     stM.begin();
