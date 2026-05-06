@@ -10,18 +10,19 @@ static constexpr int16_t HOME_BTN_W = 100;
 static constexpr int16_t HOME_BTN_H = 40;
 
 // App screen colours
-static constexpr uint16_t APP_BG     = TFT_BLACK;
-static constexpr uint16_t APP_TEXT   = TFT_WHITE;
-static constexpr uint16_t APP_MUTED  = TFT_LIGHTGREY;
-static constexpr uint16_t APP_BUTTON = GB_MID;
-static constexpr uint16_t APP_BORDER = TFT_WHITE;
+static constexpr uint16_t APP_BG          = TFT_BLACK;
+static constexpr uint16_t APP_TEXT        = TFT_WHITE;
+static constexpr uint16_t APP_MUTED       = TFT_LIGHTGREY;
+static constexpr uint16_t APP_BUTTON      = GB_LIGHTEST;
+static constexpr uint16_t APP_BUTTON_TEXT = GB_DARKEST;
+static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
 static void drawHomeButton(TFT_eSPI &tft) {
     tft.fillRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, APP_BUTTON);
     tft.drawRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, APP_BORDER);
 
     tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(APP_TEXT, APP_BUTTON);
+    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
     tft.drawString("HOME", HOME_BTN_X + HOME_BTN_W / 2,
                    HOME_BTN_Y + HOME_BTN_H / 2, 2);
 }
@@ -61,12 +62,12 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
         tft.fillRect(50, 150, 100, 40, APP_BUTTON);
         tft.drawRect(50, 150, 100, 40, APP_BORDER);
         tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(APP_TEXT, APP_BUTTON);
+        tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
         tft.drawString("KEEP", 100, 170, 2);
 
-        tft.fillRect(170, 150, 100, 40, GB_DARK);
+        tft.fillRect(170, 150, 100, 40, APP_BUTTON);
         tft.drawRect(170, 150, 100, 40, APP_BORDER);
-        tft.setTextColor(APP_TEXT, GB_DARK);
+        tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
         tft.drawString("RESET", 220, 170, 2);
     } else {
         drawHomeButton(tft);
