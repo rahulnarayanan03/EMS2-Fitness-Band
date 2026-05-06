@@ -113,7 +113,7 @@ void Calibration_Case() {
     static unsigned long lastTick = 0;
     if (!awaitingStepChoice && millis() - lastTick >= 1000) {
         lastTick = millis();
-        tft.fillRect(0, 76, 240, 24, GB_LIGHTEST);
+        tft.fillRect(0, 76, SCREEN_W, 24, GB_LIGHTEST);
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(GB_DARK, GB_LIGHTEST);
         tft.drawString("Sampling...", 10, 80, 2);  // pulse so user knows it's alive
@@ -128,14 +128,14 @@ void Calibration_Case() {
     if (awaitingStepChoice && touched) {
         if (caseCtIsReentry) {
             // KEEP (x 10-110, y 110-150)
-            if (tx >= 10 && tx <= 110 && ty >= 110 && ty <= 150) {
+            if (tx >= 50 && tx <= 150 && ty >= 112 && ty <= 152) {
                 Serial.println("CT: keeping previous step count.");
                 awaitingStepChoice = false;
                 caseCtIsReentry    = false;
                 goHome();
             }
             // RESET (x 130-230, y 110-150)
-            else if (tx >= 130 && tx <= 230 && ty >= 110 && ty <= 150) {
+            else if (tx >= 170 && tx <= 270 && ty >= 112 && ty <= 152) {
                 stepM.resetCount();
                 Serial.println("CT: step count reset to 0.");
                 awaitingStepChoice = false;
@@ -144,7 +144,7 @@ void Calibration_Case() {
             }
         } else {
             // first boot HOME button (x 70-170, y 140-180)
-            if (tx >= 70 && tx <= 170 && ty >= 140 && ty <= 180) {
+            if (tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
                 awaitingStepChoice = false;
                 goHome();
             }
@@ -200,7 +200,7 @@ void SelfTest_Case() {
                            stM.getDeltaX(), stM.getDeltaY(), stM.getDeltaZ());
     }
     // home button (x 70-170, y 260-300)
-    if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+    if (touched && tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
         stRan = false;  // reset so next visit reruns the test
         goHome();
     }
@@ -218,7 +218,7 @@ void StepCountTest_Case(uint32_t now) {
     }
 
     // home button (x 70-170, y 260-300)
-    if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+    if (touched && tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
         goHome();
     }
 }
@@ -232,11 +232,11 @@ void PaceID_Case() {
         tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
         tft.drawString("PACE ID TEST", 10, 10, 2);
 
-        tft.fillRect(70, 260, 100, 40, GB_MID);
-        tft.drawRect(70, 260, 100, 40, GB_DARKEST);
+        tft.fillRect(110, 190, 100, 40, GB_MID);
+        tft.drawRect(110, 190, 100, 40, GB_DARKEST);
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(GB_DARKEST, GB_MID);
-        tft.drawString("HOME", 120, 280, 2);
+        tft.drawString("HOME", 160, 210, 2);
     }
 
     // run step detection and pace update
@@ -254,7 +254,7 @@ void PaceID_Case() {
     if (millis() - lastUpdate >= 500) {
         lastUpdate = millis();
 
-        tft.fillRect(10, 50, 220, 120, GB_LIGHTEST);
+        tft.fillRect(10, 50, 300, 120, GB_LIGHTEST);
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(GB_DARK, GB_LIGHTEST);
         tft.drawString("Current Pace:", 10, 50, 2);
@@ -270,7 +270,7 @@ void PaceID_Case() {
     }
 
     // home button (x 70-170, y 260-300)
-    if (touched && tx >= 70 && tx <= 170 && ty >= 260 && ty <= 300) {
+    if (touched && tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
         drawn = false;
         goHome();
     }
@@ -280,11 +280,11 @@ void PaceID_Case() {
 
 void initDisplay() {
     tft.init();
-    tft.setRotation(0);
+    tft.setRotation(DISPLAY_ROTATION);
     touchSPI.begin(25, 39, 32);
     SPI.begin(25, 39, 32);
     ts.begin();
-    ts.setRotation(2);
+    ts.setRotation(1);
 }
 
 void initCalibration() {
