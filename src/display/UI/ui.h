@@ -47,22 +47,33 @@ static constexpr uint16_t GB_LIGHTEST = 0xC710; // #C8D8A8
 static constexpr uint16_t GB_INACTIVE = 0x9D12; // #B8CCA0
 static constexpr uint16_t HEART_RED   = 0xD020; // #D04040
 
-// layout geometry
+// display orientation and layout geometry
+static constexpr uint8_t  DISPLAY_ROTATION = 3;   // 90 degrees counter-clockwise
+static constexpr int16_t  SCREEN_W         = 320;
+static constexpr int16_t  SCREEN_H         = 240;
+
 static constexpr int16_t TOPBAR_H      = 20;
-static constexpr int16_t SPRITE_X      = 88;
-static constexpr int16_t SPRITE_Y      = 26;
+
+static constexpr int16_t SPRITE_X      = 215;
+static constexpr int16_t SPRITE_Y      = 56;
 static constexpr int16_t SPRITE_W      = 65;
 static constexpr int16_t SPRITE_H      = 75;
-static constexpr int16_t STEPS_BAR_X   = 4;
-static constexpr int16_t STEPS_BAR_Y   = 114;
-static constexpr int16_t STEPS_BAR_W   = 232;
-static constexpr int16_t STEPS_BAR_H   = 44;
-static constexpr int16_t BOTTOM_Y      = 236;  // panels sit near the screen bottom (320 - 80 - 4)
-static constexpr int16_t BOTTOM_H      = 80;
-static constexpr int16_t LEFT_PNL_X    = 4;
+
+static constexpr int16_t STEPS_BAR_X   = 128;
+static constexpr int16_t STEPS_BAR_Y   = 122;
+static constexpr int16_t STEPS_BAR_W   = 180;
+static constexpr int16_t STEPS_BAR_H   = 70;
+
+static constexpr int16_t LEFT_PNL_X    = 8;
+static constexpr int16_t LEFT_PNL_Y    = 122;
 static constexpr int16_t LEFT_PNL_W    = 112;
-static constexpr int16_t RIGHT_PNL_X   = 122;
+static constexpr int16_t LEFT_PNL_H    = 70;
+
+static constexpr int16_t RIGHT_PNL_X   = 8;
+static constexpr int16_t RIGHT_PNL_Y   = 24;
 static constexpr int16_t RIGHT_PNL_W   = 114;
+static constexpr int16_t RIGHT_PNL_H   = 86;
+
 static constexpr int16_t BTN_W         = 50;
 static constexpr int16_t BTN_H         = 34;
 static constexpr int16_t BTN_GAP       = 4;
