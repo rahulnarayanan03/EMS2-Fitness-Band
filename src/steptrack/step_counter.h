@@ -1,3 +1,4 @@
+// step_counter.h
 // Header for the step counter module
 // Handles reading the ADXL335 and counting steps using peak detection
 
@@ -8,37 +9,25 @@
 #include "../calibration/calibration.h"
 
 // tuning values - can be adjusted after physical testing
-static constexpr float    SC_THRESHOLD_G  = 0.20f; // how far above 1g the peak needs to go
-static constexpr float    SC_HYSTERESIS_G = 0.08f; // how far it needs to drop back down to confirm the peak
+static constexpr float    SC_THRESHOLD_G  = 0.45f; // peak must exceed 1.45g to count as a step (1g is gravity at rest)
+static constexpr float    SC_HYSTERESIS_G = 0.15f; // must drop below 1.15g to reset for the next step
 static constexpr uint32_t SC_COOLDOWN_MS  = 375;   // min time between steps (250ms = max 4 steps/sec)
 static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
 
 class StepCounter {
 public:
-    // needs the calibration object so it can call getXG/getYG/getZG
-    StepCounter(Calibration &cal);
+    StepCounter(Calibration &cal); // needs the calibration object so it can call getXG/getYG/getZG
 
-    // call once in setup() - loads saved step count from NVS
-    // note: calibration must be complete before update() will do anything
-    bool begin();
+    bool begin(); // call once in setup() - loads saved step count from NVS. Note: calibration must be complete before update() will do anything
+    void update(); // call every loop() - skips step detection until calibration is done
 
-    // call every loop() - skips step detection until calibration is done
-    void update();
+    uint32_t getStepCount() const; // returns current step count
+    bool wasStepDetected(); // returns true once per new step, then resets - for pacefind integration
 
-    // returns current step count
-    uint32_t getStepCount() const;
+    void saveNow(); // force save to NVS right now, useful before going to sleep
+    void resetCount(); // resets step count back to zero and saves it
 
-    // returns true once per new step, then resets - for pacefind integration
-    bool wasStepDetected();
-
-    // force save to NVS right now, useful before going to sleep
-    void saveNow();
-
-    // resets step count back to zero and saves it
-    void resetCount();
-
-private:
-    // NVS read/write helpers
+private: // NVS read/write helpers
     bool loadFromNVS();
     bool saveToNVS();
 
