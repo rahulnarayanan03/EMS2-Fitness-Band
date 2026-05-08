@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include "Calibration.h"
 
-const int xPin = 26;
+const int xPin = 34;
 const int yPin = 35;
-const int zPin = 34;
+const int zPin = 26;
 
 const int NUM_SAMPLES = 32;
 
