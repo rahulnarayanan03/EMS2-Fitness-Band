@@ -169,3 +169,60 @@ void drawStubScreen(TFT_eSPI &tft, const char *title) {
 
     drawHomeButton(tft);
 }
+
+// ---- setup wizard ----------------------------------------------------------
+
+void drawSetupWelcome(TFT_eSPI &tft) {
+    tft.fillScreen(APP_BG);
+
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.drawString("Welcome to", 160, 60, 4);
+    tft.drawString("EMS2 Fitnessband", 160, 100, 2);
+
+    tft.setTextColor(APP_MUTED, APP_BG);
+    tft.drawString("Let's set up your profile.", 160, 140, 2);
+
+    // tap anywhere to continue
+    tft.setTextColor(APP_BUTTON, APP_BG);
+    tft.drawString("Tap to begin", 160, 195, 2);
+}
+
+void drawSetupQuestion(TFT_eSPI &tft, const char* question,
+                       const char* unit, float value, int decimals) {
+    tft.fillScreen(APP_BG);
+
+    // question label at top
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(APP_MUTED, APP_BG);
+    tft.drawString(question, 160, 30, 2);
+
+    // current value large in centre
+    char valBuf[12];
+    if (decimals == 0) {
+        snprintf(valBuf, sizeof(valBuf), "%d %s", (int)value, unit);
+    } else {
+        snprintf(valBuf, sizeof(valBuf), "%.1f %s", value, unit);
+    }
+
+    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.drawString(valBuf, 160, 100, 4);
+
+    // minus button left
+    tft.fillRect(20, 155, 70, 50, APP_BUTTON);
+    tft.drawRect(20, 155, 70, 50, APP_BORDER);
+    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
+    tft.drawString("-", 55, 180, 4);
+
+    // plus button right
+    tft.fillRect(230, 155, 70, 50, APP_BUTTON);
+    tft.drawRect(230, 155, 70, 50, APP_BORDER);
+    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
+    tft.drawString("+", 265, 180, 4);
+
+    // confirm button centre bottom
+    tft.fillRect(110, 155, 100, 50, APP_BUTTON);
+    tft.drawRect(110, 155, 100, 50, APP_BORDER);
+    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
+    tft.drawString("OK", 160, 180, 2);
+}

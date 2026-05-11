@@ -29,16 +29,15 @@ UI::UI(TFT_eSPI &tft, StepCounter &stepM, Calibration &cal)
 void UI::begin() {
     _gif.begin(GIF_PALETTE_RGB565_BE);
 
-    // Force all dynamic fields to redraw after the static screen is rebuilt.
-    // This prevents stale digits, such as the floating 0 in the steps panel.
-    _lastHour    = 255;
-    _lastMinute  = 255;
-    _lastDay     = 255;
-    _lastMonth   = 255;
-    _lastSteps   = 0xFFFFFFFF;
-    _lastBattPct = -2;
-    _lastBattMv  = 0;
-    _lastBPM     = -2;
+    // force all dynamic fields to redraw after the static screen is rebuilt
+    _lastHour     = 255;
+    _lastMinute   = 255;
+    _lastDay      = 255;
+    _lastMonth    = 255;
+    _lastSteps    = 0xFFFFFFFF;
+    _lastBattPct  = -2;
+    _lastBattMv   = 0;
+    _lastCalories = -1.0f;
 
     _activity     = UIActivity::NONE;
     _lastActivity = UIActivity::NONE;
@@ -59,7 +58,7 @@ void UI::update(uint32_t nowMs, float cv, float cp) {
     refreshTime();
     // refreshDate();
     refreshSteps(steps);
-    refreshBPM();
+    refreshCalories();
     refreshBattery(cv, cp);
 }
 
@@ -73,8 +72,8 @@ void UI::setDate(uint8_t day, uint8_t month) {
     _month = month;
 }
 
-void UI::setBPM(int bpm) {
-    _bpm = bpm;
+void UI::setCalories(float kcal) {
+    _calories = kcal;
 }
 
 void UI::setPace(const char *pace) {
@@ -100,6 +99,14 @@ bool UI::checkStepResetTouch(uint16_t tx, uint16_t ty) const {
            ty <= (uint16_t)(STEP_RESET_BTN_Y + STEP_RESET_BTN_H);
 }
 
+bool UI::checkSettingsTouch(uint16_t tx, uint16_t ty) const {
+    // hitbox covers the gear icon area in the top-right of the top bar
+    return tx >= (uint16_t)GEAR_HIT_X &&
+           tx <= (uint16_t)(GEAR_HIT_X + GEAR_HIT_W) &&
+           ty >= 0 &&
+           ty <= (uint16_t)TOPBAR_H;
+}
+
 // ---- static layout ---------------------------------------------------------
 
 void UI::drawStaticLayout() {
@@ -116,6 +123,22 @@ void UI::drawTopBar() {
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
     _tft.drawString("--:--", 6, 3, 2);
+
+    drawGearIcon();
+}
+
+void UI::drawGearIcon() {
+    // simple gear: outer circle + inner circle + 4 teeth as small rects
+    uint16_t col = GB_DARKEST;
+
+    _tft.fillCircle(GEAR_X, GEAR_Y, 6, col);
+    _tft.fillCircle(GEAR_X, GEAR_Y, 3, GB_LIGHTEST);   // hollow centre
+
+    // four teeth
+    _tft.fillRect(GEAR_X - 1, GEAR_Y - 9, 3, 4, col);  // top
+    _tft.fillRect(GEAR_X - 1, GEAR_Y + 5, 3, 4, col);  // bottom
+    _tft.fillRect(GEAR_X - 9, GEAR_Y - 1, 4, 3, col);  // left
+    _tft.fillRect(GEAR_X + 5, GEAR_Y - 1, 4, 3, col);  // right
 }
 
 void UI::drawStepsBar() {
@@ -128,8 +151,7 @@ void UI::drawStepsBar() {
 
     drawStepResetButton();
 
-    // Do not draw a placeholder "0" here.
-    // The actual number is drawn only by refreshSteps().
+    // do not draw a placeholder "0" here — refreshSteps() handles that
     _tft.fillRect(STEPS_BAR_X + 6,
                   STEPS_BAR_Y + 28,
                   STEP_RESET_BTN_X - STEPS_BAR_X - 12,
@@ -177,11 +199,15 @@ void UI::drawLeftPanel() {
                        LEFT_PNL_W - 6,
                        GB_DARK);
 
-    drawHeartIcon(LEFT_PNL_X + 17, LEFT_PNL_Y + 20);
+    // small flame triangle to indicate calories
+    _tft.fillTriangle(LEFT_PNL_X + 17, LEFT_PNL_Y + 28,
+                      LEFT_PNL_X + 10, LEFT_PNL_Y + 10,
+                      LEFT_PNL_X + 24, LEFT_PNL_Y + 10,
+                      TFT_ORANGE);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-    _tft.drawString("-- BPM", LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
+    _tft.drawString("-- kcal", LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
 
     drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, 0);
     _tft.drawString("--V", LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
@@ -274,32 +300,27 @@ void UI::refreshSteps(uint32_t steps) {
 
     _lastSteps = steps;
 
-    // Clear only the number area, not the RESET button.
-    // This is intentionally taller and wider than before to remove stale digits.
+    // clear only the number area, not the RESET button
     int16_t numberX = STEPS_BAR_X + 8;
     int16_t numberY = STEPS_BAR_Y + 26;
     int16_t numberW = STEP_RESET_BTN_X - numberX - 4;
     int16_t numberH = STEPS_BAR_H - 30;
 
-    _tft.fillRect(numberX,
-                  numberY,
-                  numberW,
-                  numberH,
-                  GB_LIGHT);
+    _tft.fillRect(numberX, numberY, numberW, numberH, GB_LIGHT);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
     char buf[10];
     snprintf(buf, sizeof(buf), "%lu", (unsigned long)steps);
-
     _tft.drawString(buf, numberX, STEPS_BAR_Y + 34, 4);
 }
 
-void UI::refreshBPM() {
-    if (_bpm == _lastBPM) return;
+void UI::refreshCalories() {
+    // only redraw if value changed by more than 0.5 kcal to avoid flicker
+    if (fabsf(_calories - _lastCalories) < 0.5f && _lastCalories >= 0) return;
 
-    _lastBPM = _bpm;
+    _lastCalories = _calories;
 
     _tft.fillRect(LEFT_PNL_X + 32,
                   LEFT_PNL_Y + 8,
@@ -310,19 +331,13 @@ void UI::refreshBPM() {
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
-    char buf[10];
-
-    if (_bpm < 0) {
-        snprintf(buf, sizeof(buf), "-- BPM");
-    } else {
-        snprintf(buf, sizeof(buf), "%d BPM", _bpm);
-    }
-
+    char buf[12];
+    snprintf(buf, sizeof(buf), "%.0f kcal", _calories);
     _tft.drawString(buf, LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
 }
 
 void UI::refreshBattery(float cv, float cp) {
-    int8_t pct = (cp >= 0) ? (int8_t)cp : -1;
+    int8_t   pct    = (cp >= 0) ? (int8_t)cp : -1;
     uint16_t battMv = (uint16_t)(cv * 1000.0f);
 
     if (pct == _lastBattPct && battMv == _lastBattMv) return;
@@ -336,14 +351,12 @@ void UI::refreshBattery(float cv, float cp) {
                   30,
                   GB_LIGHT);
 
-    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58,
-                 (pct >= 0) ? pct : 0);
+    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, (pct >= 0) ? pct : 0);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
 
     char buf[12];
-
     if (pct < 0) {
         snprintf(buf, sizeof(buf), "%.2fV", cv);
     } else {
@@ -465,7 +478,6 @@ void UI::gifDraw(GIFDRAW *pDraw) {
 
         for (int i = 0; i < pDraw->iWidth; i++) {
             uint8_t idx = pDraw->pPixels[i];
-
             if (palette[idx] != 0x0000) {
                 self._tft.drawPixel(x0 + i, y, palette[idx]);
             }

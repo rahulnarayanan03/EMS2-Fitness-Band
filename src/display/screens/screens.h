@@ -16,3 +16,8 @@ void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount);
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
                         float dX, float dY, float dZ);
 void drawStubScreen(TFT_eSPI &tft, const char *title);
+
+// setup wizard screens
+void drawSetupWelcome(TFT_eSPI &tft);
+void drawSetupQuestion(TFT_eSPI &tft, const char* question,
+                       const char* unit, float value, int decimals);

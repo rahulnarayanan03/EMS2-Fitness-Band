@@ -2,16 +2,20 @@
  State machine coordinator for the EMS2 fitness band.
 
  Cases:
-   1 = C.T    - calibration, runs automatically on boot
-   2 = HOME   - main homepage, Red's sprite, steps, app buttons
-   3 = S.T    - self test
-   4 = S.C.T  - step count test
-   5 = P.ID.T - pace ID test
+   0 = SETUP    - first-boot profile setup (height, weight, age)
+   1 = C.T      - calibration, runs automatically on boot
+   2 = HOME     - main homepage, Red's sprite, steps, app buttons
+   3 = S.T      - self test
+   4 = S.C.T    - step count test
+   5 = P.ID.T   - pace ID test
+   6 = SETTINGS - edit age, weight, height from gear icon in top bar
 
  Boot flow:
-   Power on -> Case 1 -> calibration runs -> home button appears -> Case 2
+   Power on -> Case 0 (if no profile) OR Case 1 (if profile exists)
+   -> calibration runs -> home button appears -> Case 2
 
  From Case 2 the user taps app buttons to reach Cases 1/3/4/5.
+ Gear icon in top bar goes to Case 6.
  Every app case has a home button that returns to Case 2.
  Re-entering Case 1 saves current steps, re-calibrates, then asks
  whether to keep or reset the step count.
@@ -29,6 +33,7 @@
 #include "display/screens/screens.h"
 #include "pacefind/pacefind.h"
 #include "selftest/SelfTest.h"
+#include "calories/calories.h"
 #include "Adafruit_MAX1704X.h"
 
 Adafruit_MAX17048 maxlipo;
@@ -62,6 +67,7 @@ Calibration calibM;
 StepCounter stepM(calibM);
 PACEFIND    paceM;
 SelfTest    stM(calibM, ST_PIN);
+Calories    calorieM;
 UI          ui(tft, stepM, calibM);
 
 // ---- shared app screen colours ---------------------------------------------
@@ -75,8 +81,9 @@ static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
 // ---- state machine ----------------------------------------------------------
 
-enum AppCase { CASE_CT = 1, CASE_HOME = 2, CASE_ST = 3, CASE_SCT = 4, CASE_PIDT = 5 };
-AppCase currentCase = CASE_CT;
+enum AppCase { CASE_SETUP = 0, CASE_CT = 1, CASE_HOME = 2,
+               CASE_ST = 3, CASE_SCT = 4, CASE_PIDT = 5, CASE_SETTINGS = 6 };
+AppCase currentCase = CASE_SETUP;
 
 bool     caseCtIsReentry     = false;
 uint32_t savedStepsBeforeCal = 0;
@@ -88,6 +95,25 @@ bool     touched = false;
 
 // timestamp of the last case transition - touched is ignored within 200ms of one
 uint32_t lastTransition = 0;
+
+// ---- setup wizard state -----------------------------------------------------
+
+enum SetupStep { SETUP_WELCOME, SETUP_HEIGHT, SETUP_WEIGHT, SETUP_AGE, SETUP_DONE };
+SetupStep setupStep   = SETUP_WELCOME;
+float     setupHeight = 170.0f;
+float     setupWeight = 70.0f;
+int       setupAge    = 25;
+
+// ---- settings state ---------------------------------------------------------
+
+// reuses SetupStep enum but skips SETUP_WELCOME — starts at SETUP_HEIGHT
+SetupStep settingsStep   = SETUP_HEIGHT;
+float     settingsHeight = 170.0f;
+float     settingsWeight = 70.0f;
+int       settingsAge    = 25;
+
+// forward declaration so Setup_Case() can call initCalibration()
+void initCalibration();
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -172,7 +198,7 @@ void goHome() {
     ui.begin();
 }
 
-// update step count and pace if calibration is done
+// update step count, pace and calories if calibration is done
 void updateStepAndPace(uint32_t now) {
     if (!calibM.isCalibrated()) return;
 
@@ -180,12 +206,138 @@ void updateStepAndPace(uint32_t now) {
 
     if (stepM.wasStepDetected()) {
         paceM.update(now);
+        calorieM.onStep(paceM.getPace());
     } else {
         paceM.checkTimeout(now);
     }
 }
 
 // ---- case functions ---------------------------------------------------------
+
+void Setup_Case() {
+    if (!touched) return;
+
+    switch (setupStep) {
+
+        case SETUP_WELCOME:
+            // any tap moves to height question
+            setupStep      = SETUP_HEIGHT;
+            lastTransition = millis();
+            drawSetupQuestion(tft, "What is your height?", "cm", setupHeight, 0);
+            break;
+
+        case SETUP_HEIGHT:
+            if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
+                setupHeight = max(100.0f, setupHeight - 1.0f);
+                drawSetupQuestion(tft, "What is your height?", "cm", setupHeight, 0);
+            } else if (tx >= 230 && tx <= 300 && ty >= 155 && ty <= 205) {
+                setupHeight = min(220.0f, setupHeight + 1.0f);
+                drawSetupQuestion(tft, "What is your height?", "cm", setupHeight, 0);
+            } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
+                setupStep      = SETUP_WEIGHT;
+                lastTransition = millis();
+                drawSetupQuestion(tft, "What is your weight?", "kg", setupWeight, 1);
+            }
+            break;
+
+        case SETUP_WEIGHT:
+            if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
+                setupWeight = max(30.0f, setupWeight - 0.5f);
+                drawSetupQuestion(tft, "What is your weight?", "kg", setupWeight, 1);
+            } else if (tx >= 230 && tx <= 300 && ty >= 155 && ty <= 205) {
+                setupWeight = min(200.0f, setupWeight + 0.5f);
+                drawSetupQuestion(tft, "What is your weight?", "kg", setupWeight, 1);
+            } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
+                setupStep      = SETUP_AGE;
+                lastTransition = millis();
+                drawSetupQuestion(tft, "What is your age?", "yrs", (float)setupAge, 0);
+            }
+            break;
+
+        case SETUP_AGE:
+            if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
+                setupAge = max(10, setupAge - 1);
+                drawSetupQuestion(tft, "What is your age?", "yrs", (float)setupAge, 0);
+            } else if (tx >= 230 && tx <= 300 && ty >= 155 && ty <= 205) {
+                setupAge = min(100, setupAge + 1);
+                drawSetupQuestion(tft, "What is your age?", "yrs", (float)setupAge, 0);
+            } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
+                calorieM.saveProfile(setupAge, setupWeight, setupHeight);
+                setupStep      = SETUP_DONE;
+                lastTransition = millis();
+                currentCase    = CASE_CT;
+
+                initCalibration();
+
+                Serial.printf("[Setup] Done — age=%d weight=%.1f height=%.1f\n",
+                              setupAge, setupWeight, setupHeight);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+// settings case - same +/- picker flow but pre-filled with saved values
+// saves on OK at the age step and returns home
+void Settings_Case() {
+    if (!touched) return;
+
+    switch (settingsStep) {
+
+        case SETUP_HEIGHT:
+            if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
+                settingsHeight = max(100.0f, settingsHeight - 1.0f);
+                drawSetupQuestion(tft, "Height", "cm", settingsHeight, 0);
+            } else if (tx >= 230 && tx <= 300 && ty >= 155 && ty <= 205) {
+                settingsHeight = min(220.0f, settingsHeight + 1.0f);
+                drawSetupQuestion(tft, "Height", "cm", settingsHeight, 0);
+            } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
+                settingsStep   = SETUP_WEIGHT;
+                lastTransition = millis();
+                drawSetupQuestion(tft, "Weight", "kg", settingsWeight, 1);
+            }
+            break;
+
+        case SETUP_WEIGHT:
+            if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
+                settingsWeight = max(30.0f, settingsWeight - 0.5f);
+                drawSetupQuestion(tft, "Weight", "kg", settingsWeight, 1);
+            } else if (tx >= 230 && tx <= 300 && ty >= 155 && ty <= 205) {
+                settingsWeight = min(200.0f, settingsWeight + 0.5f);
+                drawSetupQuestion(tft, "Weight", "kg", settingsWeight, 1);
+            } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
+                settingsStep   = SETUP_AGE;
+                lastTransition = millis();
+                drawSetupQuestion(tft, "Age", "yrs", (float)settingsAge, 0);
+            }
+            break;
+
+        case SETUP_AGE:
+            if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
+                settingsAge = max(10, settingsAge - 1);
+                drawSetupQuestion(tft, "Age", "yrs", (float)settingsAge, 0);
+            } else if (tx >= 230 && tx <= 300 && ty >= 155 && ty <= 205) {
+                settingsAge = min(100, settingsAge + 1);
+                drawSetupQuestion(tft, "Age", "yrs", (float)settingsAge, 0);
+            } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
+                // save updated profile — calorie calc will use new weight immediately
+                calorieM.saveProfile(settingsAge, settingsWeight, settingsHeight);
+                lastTransition = millis();
+
+                Serial.printf("[Settings] Updated — age=%d weight=%.1f height=%.1f\n",
+                              settingsAge, settingsWeight, settingsHeight);
+
+                goHome();
+            }
+            break;
+
+        default:
+            goHome();
+            break;
+    }
+}
 
 void Calibration_Case() {
     calibM.update();
@@ -257,6 +409,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
     ui.setTime(0, 0);
     ui.setDate(1, 1);
     ui.setPace(paceM.getPace());
+    ui.setCalories(calorieM.getKcal());
     ui.update(now, cv, cp);
 
     // Only handle the first loop tick of a press.
@@ -269,8 +422,24 @@ void Home_Case(uint32_t now, float cv, float cp) {
     if (homeTouchHandled) return;
     homeTouchHandled = true;
 
+    // check gear icon first — it sits in the top bar
+    if (ui.checkSettingsTouch(tx, ty)) {
+        // pre-fill settings with current saved values
+        settingsHeight = calorieM.getHeightCm();
+        settingsWeight = calorieM.getWeightKg();
+        settingsAge    = calorieM.getAge();
+        settingsStep   = SETUP_HEIGHT;
+        lastTransition = millis();
+        currentCase    = CASE_SETTINGS;
+
+        drawSetupQuestion(tft, "Height", "cm", settingsHeight, 0);
+        return;
+    }
+
     if (ui.checkStepResetTouch(tx, ty)) {
         stepM.resetCount();
+        calorieM.reset();
+
         lastTransition = millis();
 
         Serial.println("Home: step count reset to 0.");
@@ -291,6 +460,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
                 currentCase         = CASE_CT;
 
                 calibM.startCalibration();
+                calorieM.reset();
                 drawCalibrationScreen(tft);
 
                 Serial.println("Re-entering calibration.");
@@ -450,7 +620,18 @@ void setup() {
     stM.begin();
     initDisplay();
     stepM.begin();
-    initCalibration();
+
+    // load saved profile - skip setup wizard if already done
+    calorieM.begin();
+
+    if (calorieM.isProfileSet()) {
+        currentCase = CASE_CT;
+        initCalibration();
+    } else {
+        currentCase = CASE_SETUP;
+        setupStep   = SETUP_WELCOME;
+        drawSetupWelcome(tft);
+    }
 }
 
 // ---- loop -------------------------------------------------------------------
@@ -461,6 +642,10 @@ void loop() {
     touched = (millis() - lastTransition >= 200) && readTouch(tx, ty);
 
     switch (currentCase) {
+        case CASE_SETUP:
+            Setup_Case();
+            break;
+
         case CASE_CT:
             Calibration_Case();
             break;
@@ -479,6 +664,10 @@ void loop() {
 
         case CASE_PIDT:
             PaceID_Case();
+            break;
+
+        case CASE_SETTINGS:
+            Settings_Case();
             break;
     }
 }

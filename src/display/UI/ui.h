@@ -15,11 +15,11 @@
 #include "../../calibration/calibration.h"
 
 // battery config - swap BATT_ADC_PIN and BATT_DIVIDER_RATIO once PCB schematic confirmed
-static constexpr uint8_t  BATT_ADC_PIN        = 34;
-static constexpr float    BATT_DIVIDER_RATIO  = 2.0f;
-static constexpr float    BATT_MAX_V          = 4.2f;
-static constexpr float    BATT_MIN_V          = 3.3f;
-static constexpr float    BATT_USB_THRESHOLD  = 4.25f;
+static constexpr uint8_t  BATT_ADC_PIN       = 34;
+static constexpr float    BATT_DIVIDER_RATIO = 2.0f;
+static constexpr float    BATT_MAX_V         = 4.2f;
+static constexpr float    BATT_MIN_V         = 3.3f;
+static constexpr float    BATT_USB_THRESHOLD = 4.25f;
 
 // how long each GIF frame is shown, in ms
 static constexpr uint32_t UI_WALK_FRAME_MS = 120;
@@ -35,9 +35,9 @@ static constexpr uint16_t GB_INACTIVE = 0x9D12;
 static constexpr uint16_t HEART_RED   = 0xD020;
 
 // stronger reset button colour
-static constexpr uint16_t RESET_RED   = 0xD000;
-static constexpr uint16_t RESET_DARK  = 0x7000;
-static constexpr uint16_t RESET_TEXT  = TFT_WHITE;
+static constexpr uint16_t RESET_RED  = 0xD000;
+static constexpr uint16_t RESET_DARK = 0x7000;
+static constexpr uint16_t RESET_TEXT = TFT_WHITE;
 
 // display orientation and layout geometry
 static constexpr uint8_t  DISPLAY_ROTATION = 3;   // 90 degrees counter-clockwise
@@ -45,6 +45,12 @@ static constexpr int16_t  SCREEN_W         = 320;
 static constexpr int16_t  SCREEN_H         = 240;
 
 static constexpr int16_t TOPBAR_H = 20;
+
+// gear icon sits in the top-right corner of the top bar
+static constexpr int16_t GEAR_X = 298;   // centre x
+static constexpr int16_t GEAR_Y = 10;    // centre y
+static constexpr int16_t GEAR_HIT_X = 284;  // touch hitbox left edge
+static constexpr int16_t GEAR_HIT_W = 32;   // touch hitbox width
 
 // layout constants
 static constexpr int16_t SPRITE_X = 215;
@@ -57,7 +63,7 @@ static constexpr int16_t STEPS_BAR_Y = 150;
 static constexpr int16_t STEPS_BAR_W = 130;
 static constexpr int16_t STEPS_BAR_H = 70;
 
-// Bigger reset button inside the steps panel
+// bigger reset button inside the steps panel
 static constexpr int16_t STEP_RESET_BTN_W = 66;
 static constexpr int16_t STEP_RESET_BTN_H = 32;
 static constexpr int16_t STEP_RESET_BTN_X = STEPS_BAR_X + STEPS_BAR_W - STEP_RESET_BTN_W - 6;
@@ -88,11 +94,12 @@ public:
 
     void setTime(uint8_t hour, uint8_t minute);
     void setDate(uint8_t day, uint8_t month);
-    void setBPM(int bpm);
     void setPace(const char *pace);
+    void setCalories(float kcal);
 
     bool checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex);
     bool checkStepResetTouch(uint16_t tx, uint16_t ty) const;
+    bool checkSettingsTouch(uint16_t tx, uint16_t ty) const;   // gear icon
 
 private:
     TFT_eSPI    &_tft;
@@ -108,23 +115,24 @@ private:
 
     const char *_pace = "STANDING";
 
-    uint8_t  _lastHour    = 255;
-    uint8_t  _lastMinute  = 255;
-    uint8_t  _lastDay     = 255;
-    uint8_t  _lastMonth   = 255;
-    uint32_t _lastSteps   = 0xFFFFFFFF;
-    int8_t   _lastBattPct = -2;
-    uint16_t _lastBattMv  = 0;
-    int      _lastBPM     = -2;
+    uint8_t  _lastHour     = 255;
+    uint8_t  _lastMinute   = 255;
+    uint8_t  _lastDay      = 255;
+    uint8_t  _lastMonth    = 255;
+    uint32_t _lastSteps    = 0xFFFFFFFF;
+    int8_t   _lastBattPct  = -2;
+    uint16_t _lastBattMv   = 0;
+    float    _lastCalories = -1.0f;
 
-    uint8_t _hour   = 0;
-    uint8_t _minute = 0;
-    uint8_t _day    = 1;
-    uint8_t _month  = 1;
-    int     _bpm    = -1;
+    uint8_t _hour     = 0;
+    uint8_t _minute   = 0;
+    uint8_t _day      = 1;
+    uint8_t _month    = 1;
+    float   _calories = 0.0f;
 
     void drawStaticLayout();
     void drawTopBar();
+    void drawGearIcon();
     void drawStepsBar();
     void drawStepResetButton();
     void drawLeftPanel();
@@ -136,7 +144,7 @@ private:
     void refreshTime();
     void refreshDate();
     void refreshSteps(uint32_t steps);
-    void refreshBPM();
+    void refreshCalories();
     void refreshBattery(float cv, float cp);
 
     void updateActivity();
