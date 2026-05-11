@@ -193,6 +193,8 @@ void drawPaceIdHomeButton() {
 
 // go to homepage and mark the transition time for debounce
 void goHome() {
+    stepM.resumeCounting();
+
     currentCase    = CASE_HOME;
     lastTransition = millis();
     ui.begin();
@@ -454,6 +456,8 @@ void Home_Case(uint32_t now, float cv, float cp) {
         switch (btnIndex) {
             case 0:
                 stepM.saveNow();
+                stepM.pauseCounting();
+
                 savedStepsBeforeCal = stepM.getStepCount();
                 caseCtIsReentry     = true;
                 awaitingStepChoice  = false;
@@ -596,6 +600,8 @@ void initDisplay() {
 }
 
 void initCalibration() {
+    stepM.pauseCounting();
+
     calibM.begin();
     calibM.startCalibration();
     drawCalibrationScreen(tft);

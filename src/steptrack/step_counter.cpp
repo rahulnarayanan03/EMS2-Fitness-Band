@@ -1,6 +1,6 @@
 // step_counter.cpp
 // Reads acceleration from the ADXL335 and counts steps.
-// Uses magnitude-based peak detection with hysteresis and rhythm confirmation.
+// Uses magnitude-based peak detection with hysteresis.
 // Relies on calibration.getXG/getYG/getZG() for corrected g values.
 
 #include "step_counter.h"
@@ -22,18 +22,15 @@ bool StepCounter::begin() {
         _stepCount = 0;
     }
 
+    _paused = false;
     resetDetectionState();
     _initialised = true;
 
     Serial.printf("[StepCounter] Started! Step count loaded: %u\n", _stepCount);
-    Serial.printf("[StepCounter] highLine=%.2fg  lowLine=%.2fg\n",
+    Serial.printf("[StepCounter] highLine=%.2fg  lowLine=%.2fg  cooldown=%lums\n",
                   1.0f + SC_THRESHOLD_G,
-                  1.0f + SC_HYSTERESIS_G);
-
-    Serial.printf("[StepCounter] valid interval=%lums to %lums  minSPM=%lu\n",
-                  (unsigned long)SC_MIN_STEP_INTERVAL_MS,
-                  (unsigned long)SC_MAX_STEP_INTERVAL_MS,
-                  (unsigned long)SC_MIN_STEP_SPM);
+                  1.0f + SC_HYSTERESIS_G,
+                  (unsigned long)SC_COOLDOWN_MS);
 
     return true;
 }
@@ -41,6 +38,10 @@ bool StepCounter::begin() {
 // main update function - call this every loop()
 void StepCounter::update() {
     if (!_initialised) return;
+
+    // Hard pause. Used during calibration.
+    // While paused, step messages are ignored completely.
+    if (_paused) return;
 
     // don't do anything until calibration is complete
     if (!_cal.isCalibrated()) return;
@@ -62,14 +63,26 @@ void StepCounter::update() {
     // Peak detection with hysteresis:
     // 1. Wait for magnitude to cross above highLine.
     // 2. Wait for it to fall below lowLine.
-    // 3. Treat that as a peak candidate.
-    // 4. Count it only if it forms a realistic step rhythm.
+    // 3. Count one step if the cooldown has passed.
     if (!_aboveThreshold && magnitude > highLine) {
         _aboveThreshold = true;
 
     } else if (_aboveThreshold && magnitude < lowLine) {
         _aboveThreshold = false;
-        handleStepPeak(now, magnitude);
+
+        if ((now - _lastStepTimeMs) >= SC_COOLDOWN_MS) {
+            _lastStepTimeMs = now;
+            _stepCount++;
+            _stepDetected = true;
+
+            Serial.printf("[StepCounter] Step counted! Total: %u  mag=%.3fg\n",
+                          _stepCount,
+                          magnitude);
+
+            if (_stepCount % SC_NVS_BATCH == 0) {
+                saveToNVS();
+            }
+        }
     }
 
     // update display every 300ms
@@ -81,66 +94,12 @@ void StepCounter::update() {
     if (now - _lastSerialMs >= 500) {
         _lastSerialMs = now;
 
-        Serial.printf("[StepCounter] mag=%.3fg high=%.2fg low=%.2fg steps=%u candidate=%s above=%s\n",
+        Serial.printf("[StepCounter] mag=%.3fg  high=%.2fg  low=%.2fg  steps=%u  aboveThreshold=%s\n",
                       magnitude,
                       highLine,
                       lowLine,
                       _stepCount,
-                      _candidateActive ? "yes" : "no",
                       _aboveThreshold ? "yes" : "no");
-    }
-}
-
-// Handles a completed acceleration peak.
-// A single peak is not enough to count as a step.
-// It must be followed by another peak within a realistic step interval.
-void StepCounter::handleStepPeak(uint32_t now, float magnitude) {
-    if (!_candidateActive) {
-        _candidateActive     = true;
-        _candidateStepTimeMs = now;
-
-        Serial.printf("[StepCounter] Step candidate stored. mag=%.3fg\n", magnitude);
-        return;
-    }
-
-    uint32_t interval = now - _candidateStepTimeMs;
-
-    if (interval < SC_MIN_STEP_INTERVAL_MS) {
-        // Too fast to be a normal step. Likely vibration/noise.
-        // Move the candidate forward so repeated fast vibration does not accumulate.
-        _candidateStepTimeMs = now;
-
-        Serial.printf("[StepCounter] Rejected fast vibration. interval=%lums\n",
-                      (unsigned long)interval);
-        return;
-    }
-
-    if (interval > SC_MAX_STEP_INTERVAL_MS) {
-        // Too slow to be a walking rhythm. Treat this peak as the new candidate,
-        // but do not count it.
-        _candidateStepTimeMs = now;
-
-        Serial.printf("[StepCounter] Too slow for walking rhythm. interval=%lums max=%lums\n",
-                      (unsigned long)interval,
-                      (unsigned long)SC_MAX_STEP_INTERVAL_MS);
-        return;
-    }
-
-    // The peak timing looks like a plausible step rhythm, so count this step.
-    _lastStepTimeMs = now;
-    _stepCount++;
-    _stepDetected = true;
-
-    // Current confirmed peak becomes the candidate for the next interval.
-    _candidateStepTimeMs = now;
-
-    Serial.printf("[StepCounter] Step counted! Total=%u interval=%lums mag=%.3fg\n",
-                  _stepCount,
-                  (unsigned long)interval,
-                  magnitude);
-
-    if (_stepCount % SC_NVS_BATCH == 0) {
-        saveToNVS();
     }
 }
 
@@ -151,6 +110,7 @@ uint32_t StepCounter::getStepCount() const {
 
 // returns true the first time it's called after a new step, then false until the next one
 bool StepCounter::wasStepDetected() {
+    if (_paused) return false;
     if (!_stepDetected) return false;
 
     _stepDetected = false;
@@ -169,17 +129,35 @@ void StepCounter::resetCount() {
     Serial.println("[StepCounter] Step count reset to 0 and saved to NVS.");
 }
 
+void StepCounter::pauseCounting() {
+    if (_paused) return;
+
+    _paused = true;
+    resetDetectionState();
+
+    Serial.println("[StepCounter] Step counting paused.");
+}
+
+void StepCounter::resumeCounting() {
+    if (!_paused) return;
+
+    _paused = false;
+    resetDetectionState();
+
+    Serial.println("[StepCounter] Step counting resumed.");
+}
+
+bool StepCounter::isPaused() const {
+    return _paused;
+}
+
 void StepCounter::resetDetectionState() {
-    _stepDetected = false;
-
     _aboveThreshold = false;
+    _stepDetected   = false;
+    _lastStepTimeMs = millis();
 
-    _candidateActive     = false;
-    _candidateStepTimeMs = 0;
-    _lastStepTimeMs      = 0;
-
-    _lastDisplayMs = 0;
-    _lastSerialMs  = 0;
+    _lastDisplayMs  = 0;
+    _lastSerialMs   = 0;
 }
 
 // load step count from NVS flash
