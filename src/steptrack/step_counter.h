@@ -8,10 +8,20 @@
 #include <Arduino.h>
 #include "../calibration/calibration.h"
 
-// tuning values - can be adjusted after physical testing
-static constexpr float    SC_THRESHOLD_G  = 0.30f; // peak must exceed 1.45g to count as a step
-static constexpr float    SC_HYSTERESIS_G = 0.15f; // must drop below 1.15g to reset for the next step
-static constexpr uint32_t SC_COOLDOWN_MS  = 375;   // min time between steps
+// Step counter tuning.
+// The detector uses acceleration magnitude:
+// magnitude = sqrt(x^2 + y^2 + z^2)
+//
+// At rest, magnitude should sit around 1.0g because of gravity.
+// A step is detected when magnitude rises above 1.0g + SC_THRESHOLD_G,
+// then drops below 1.0g + SC_HYSTERESIS_G.
+//
+// These values are intentionally more sensitive than the previous settings.
+// The previous 0.30f threshold required about 1.30g, which was too high
+// for normal wrist-worn walking and caused undercounting.
+static constexpr float    SC_THRESHOLD_G  = 0.22f; // peak must exceed about 1.22g
+static constexpr float    SC_HYSTERESIS_G = 0.10f; // must drop below about 1.10g to reset
+static constexpr uint32_t SC_COOLDOWN_MS  = 325;   // min time between steps, max about 185 SPM
 static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
 
 class StepCounter {

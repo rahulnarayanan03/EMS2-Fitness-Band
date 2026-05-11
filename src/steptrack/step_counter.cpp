@@ -1,7 +1,7 @@
 // step_counter.cpp
-// Reads acceleration from the ADXL335 and counts steps
-// Uses a peak detection approach with hysteresis to avoid false counts
-// Relies on calibration.getXG/getYG/getZG() for corrected g values
+// Reads acceleration from the ADXL335 and counts steps.
+// Uses magnitude-based peak detection with hysteresis.
+// Relies on calibration.getXG/getYG/getZG() for corrected g values.
 
 #include "step_counter.h"
 #include <math.h>
@@ -16,7 +16,6 @@ StepCounter::StepCounter(Calibration &cal) : _cal(cal) {}
 
 // sets up and loads the last saved step count from flash
 bool StepCounter::begin() {
-
     // try to load previous step count, start from 0 if nothing saved yet
     if (!loadFromNVS()) {
         Serial.println("[StepCounter] Nothing in NVS, starting fresh.");
@@ -31,6 +30,11 @@ bool StepCounter::begin() {
     _initialised    = true;
 
     Serial.printf("[StepCounter] Started! Step count loaded: %u\n", _stepCount);
+    Serial.printf("[StepCounter] highLine=%.2fg  lowLine=%.2fg  cooldown=%lums\n",
+                  1.0f + SC_THRESHOLD_G,
+                  1.0f + SC_HYSTERESIS_G,
+                  (unsigned long)SC_COOLDOWN_MS);
+
     return true;
 }
 
@@ -55,7 +59,10 @@ void StepCounter::update() {
 
     uint32_t now = millis();
 
-    // peak detection with hysteresis
+    // Peak detection with hysteresis:
+    // 1. Wait for magnitude to cross above highLine.
+    // 2. Wait for it to fall below lowLine.
+    // 3. Count one step if the cooldown has passed.
     if (!_aboveThreshold && magnitude > highLine) {
         _aboveThreshold = true;
 
@@ -67,7 +74,9 @@ void StepCounter::update() {
             _stepCount++;
             _stepDetected = true;
 
-            Serial.printf("[StepCounter] Step counted! Total: %u\n", _stepCount);
+            Serial.printf("[StepCounter] Step counted! Total: %u  mag=%.3fg\n",
+                          _stepCount,
+                          magnitude);
 
             if (_stepCount % SC_NVS_BATCH == 0) {
                 saveToNVS();
@@ -83,8 +92,13 @@ void StepCounter::update() {
     // print debug info to serial every 500ms
     if (now - _lastSerialMs >= 500) {
         _lastSerialMs = now;
-        Serial.printf("[StepCounter] mag=%.3fg  steps=%u  aboveThreshold=%s\n",
-                      magnitude, _stepCount, _aboveThreshold ? "yes" : "no");
+
+        Serial.printf("[StepCounter] mag=%.3fg  high=%.2fg  low=%.2fg  steps=%u  aboveThreshold=%s\n",
+                      magnitude,
+                      highLine,
+                      lowLine,
+                      _stepCount,
+                      _aboveThreshold ? "yes" : "no");
     }
 }
 
