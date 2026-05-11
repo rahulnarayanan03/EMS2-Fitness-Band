@@ -28,6 +28,23 @@ UI::UI(TFT_eSPI &tft, StepCounter &stepM, Calibration &cal)
 
 void UI::begin() {
     _gif.begin(GIF_PALETTE_RGB565_BE);
+
+    // Force all dynamic fields to redraw after the static screen is rebuilt.
+    // This prevents stale digits, such as the floating 0 in the steps panel.
+    _lastHour    = 255;
+    _lastMinute  = 255;
+    _lastDay     = 255;
+    _lastMonth   = 255;
+    _lastSteps   = 0xFFFFFFFF;
+    _lastBattPct = -2;
+    _lastBattMv  = 0;
+    _lastBPM     = -2;
+
+    _activity     = UIActivity::NONE;
+    _lastActivity = UIActivity::NONE;
+    _gifFrame     = 0;
+    _lastFrameMs  = 0;
+
     _tft.fillScreen(GB_LIGHTEST);
     drawStaticLayout();
     drawStandingGif();
@@ -111,8 +128,13 @@ void UI::drawStepsBar() {
 
     drawStepResetButton();
 
-    _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-    _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 30, 4);
+    // Do not draw a placeholder "0" here.
+    // The actual number is drawn only by refreshSteps().
+    _tft.fillRect(STEPS_BAR_X + 6,
+                  STEPS_BAR_Y + 28,
+                  STEP_RESET_BTN_X - STEPS_BAR_X - 12,
+                  STEPS_BAR_H - 34,
+                  GB_LIGHT);
 
     // _tft.setTextDatum(TR_DATUM);
     // _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 8,
@@ -120,13 +142,26 @@ void UI::drawStepsBar() {
 }
 
 void UI::drawStepResetButton() {
-    _tft.fillRect(STEP_RESET_BTN_X, STEP_RESET_BTN_Y,
-                  STEP_RESET_BTN_W, STEP_RESET_BTN_H, GB_DARKEST);
-    _tft.drawRect(STEP_RESET_BTN_X, STEP_RESET_BTN_Y,
-                  STEP_RESET_BTN_W, STEP_RESET_BTN_H, GB_LIGHTEST);
+    _tft.fillRect(STEP_RESET_BTN_X,
+                  STEP_RESET_BTN_Y,
+                  STEP_RESET_BTN_W,
+                  STEP_RESET_BTN_H,
+                  RESET_RED);
+
+    _tft.drawRect(STEP_RESET_BTN_X,
+                  STEP_RESET_BTN_Y,
+                  STEP_RESET_BTN_W,
+                  STEP_RESET_BTN_H,
+                  RESET_DARK);
+
+    _tft.drawRect(STEP_RESET_BTN_X + 1,
+                  STEP_RESET_BTN_Y + 1,
+                  STEP_RESET_BTN_W - 2,
+                  STEP_RESET_BTN_H - 2,
+                  RESET_TEXT);
 
     _tft.setTextDatum(MC_DATUM);
-    _tft.setTextColor(GB_LIGHTEST, GB_DARKEST);
+    _tft.setTextColor(RESET_TEXT, RESET_RED);
     _tft.drawString("RESET",
                     STEP_RESET_BTN_X + STEP_RESET_BTN_W / 2,
                     STEP_RESET_BTN_Y + STEP_RESET_BTN_H / 2,
@@ -239,10 +274,17 @@ void UI::refreshSteps(uint32_t steps) {
 
     _lastSteps = steps;
 
-    _tft.fillRect(STEPS_BAR_X + 6,
-                  STEPS_BAR_Y + 28,
-                  STEPS_BAR_W - 12,
-                  34,
+    // Clear only the number area, not the RESET button.
+    // This is intentionally taller and wider than before to remove stale digits.
+    int16_t numberX = STEPS_BAR_X + 8;
+    int16_t numberY = STEPS_BAR_Y + 26;
+    int16_t numberW = STEP_RESET_BTN_X - numberX - 4;
+    int16_t numberH = STEPS_BAR_H - 30;
+
+    _tft.fillRect(numberX,
+                  numberY,
+                  numberW,
+                  numberH,
                   GB_LIGHT);
 
     _tft.setTextDatum(TL_DATUM);
@@ -251,7 +293,7 @@ void UI::refreshSteps(uint32_t steps) {
     char buf[10];
     snprintf(buf, sizeof(buf), "%lu", (unsigned long)steps);
 
-    _tft.drawString(buf, STEPS_BAR_X + 8, STEPS_BAR_Y + 30, 4);
+    _tft.drawString(buf, numberX, STEPS_BAR_Y + 34, 4);
 }
 
 void UI::refreshBPM() {

@@ -25,15 +25,19 @@ static constexpr float    BATT_USB_THRESHOLD  = 4.25f;
 static constexpr uint32_t UI_WALK_FRAME_MS = 120;
 static constexpr uint32_t UI_RUN_FRAME_MS  = 80;
 
-// brighter but still green GB-style palette RGB565
-// This avoids pure white so the screen does not look washed out.
-static constexpr uint16_t GB_DARKEST  = 0x0000; // black text/borders for strong contrast
-static constexpr uint16_t GB_DARK     = 0x2144; // dark green-grey
-static constexpr uint16_t GB_MID      = 0x5360; // mid green
-static constexpr uint16_t GB_LIGHT    = 0x9CF0; // brighter green panel
-static constexpr uint16_t GB_LIGHTEST = 0xD792; // pale green background, not white
-static constexpr uint16_t GB_INACTIVE = 0x8C71; // muted inactive button
-static constexpr uint16_t HEART_RED   = 0xE800; // stronger red, not overly harsh
+// GB palette RGB565
+static constexpr uint16_t GB_DARKEST  = 0x1923;
+static constexpr uint16_t GB_DARK     = 0x2945;
+static constexpr uint16_t GB_MID      = 0x5360;
+static constexpr uint16_t GB_LIGHT    = 0x8C10;
+static constexpr uint16_t GB_LIGHTEST = 0xC710;
+static constexpr uint16_t GB_INACTIVE = 0x9D12;
+static constexpr uint16_t HEART_RED   = 0xD020;
+
+// stronger reset button colour
+static constexpr uint16_t RESET_RED   = 0xD000;
+static constexpr uint16_t RESET_DARK  = 0x7000;
+static constexpr uint16_t RESET_TEXT  = TFT_WHITE;
 
 // display orientation and layout geometry
 static constexpr uint8_t  DISPLAY_ROTATION = 3;   // 90 degrees counter-clockwise
@@ -53,10 +57,11 @@ static constexpr int16_t STEPS_BAR_Y = 150;
 static constexpr int16_t STEPS_BAR_W = 130;
 static constexpr int16_t STEPS_BAR_H = 70;
 
-static constexpr int16_t STEP_RESET_BTN_W = 52;
-static constexpr int16_t STEP_RESET_BTN_H = 22;
+// Bigger reset button inside the steps panel
+static constexpr int16_t STEP_RESET_BTN_W = 66;
+static constexpr int16_t STEP_RESET_BTN_H = 32;
 static constexpr int16_t STEP_RESET_BTN_X = STEPS_BAR_X + STEPS_BAR_W - STEP_RESET_BTN_W - 6;
-static constexpr int16_t STEP_RESET_BTN_Y = STEPS_BAR_Y + 5;
+static constexpr int16_t STEP_RESET_BTN_Y = STEPS_BAR_Y + 8;
 
 static constexpr int16_t LEFT_PNL_X = 8;
 static constexpr int16_t LEFT_PNL_Y = 150;
