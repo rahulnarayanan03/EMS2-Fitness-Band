@@ -190,15 +190,28 @@ void updateStepAndPace(uint32_t now) {
 void Calibration_Case() {
     calibM.update();
 
-    static unsigned long lastTick = 0;
+    // draw guided prompt while still running through directions
+    if (!awaitingStepChoice && !calibM.isCalibrated()) {
+        static Calibration::Stage lastStage = Calibration::Stage::IDLE;
+        static int                lastSecs  = -1;
+        static int                lastDir   = -1;
 
-    if (!awaitingStepChoice && millis() - lastTick >= 1000) {
-        lastTick = millis();
+        auto stage    = calibM.getStage();
+        int  secs     = calibM.getSecsLeft();
+        int  dir      = calibM.getDirIndex();
+        bool sampling = (stage == Calibration::Stage::SAMPLING);
 
-        tft.fillRect(0, 76, SCREEN_W, 24, APP_BG);
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(APP_MUTED, APP_BG);
-        tft.drawString("Sampling...", 10, 80, 2);
+        // only redraw when something actually changed to avoid flicker
+        if (stage != lastStage || secs != lastSecs || dir != lastDir) {
+            drawCalibrationGuided(tft,
+                                  Calibration::DIR_LABEL[dir],
+                                  sampling,
+                                  secs,
+                                  dir);
+            lastStage = stage;
+            lastSecs  = secs;
+            lastDir   = dir;
+        }
     }
 
     if (!awaitingStepChoice && calibM.isCalibrated()) {

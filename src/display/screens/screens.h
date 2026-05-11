@@ -9,6 +9,8 @@
 
 void drawCalibrationScreen(TFT_eSPI &tft);
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
+void drawCalibrationGuided(TFT_eSPI &tft, const char* dirLabel,
+                           bool isSampling, int secsLeft, int dirIndex);
 void drawSCTScreen(TFT_eSPI &tft);
 void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount);
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,

@@ -35,11 +35,11 @@ void drawCalibrationScreen(TFT_eSPI &tft) {
     tft.drawString("CALIBRATION", 10, 10, 4);
 
     tft.setTextColor(APP_MUTED, APP_BG);
-    tft.drawString("Move the band slowly", 10, 52, 2);
-    tft.drawString("in all directions.", 10, 74, 2);
+    tft.drawString("Follow the on-screen", 10, 52, 2);
+    tft.drawString("directions to calibrate.", 10, 74, 2);
 
     tft.setTextColor(APP_TEXT, APP_BG);
-    tft.drawString("Sampling...", 10, 112, 4);
+    tft.drawString("Starting...", 10, 112, 4);
 }
 
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
@@ -72,6 +72,35 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
     } else {
         drawHomeButton(tft);
     }
+}
+
+void drawCalibrationGuided(TFT_eSPI &tft, const char* dirLabel,
+                           bool isSampling, int secsLeft, int dirIndex) {
+    tft.fillScreen(APP_BG);
+
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.drawString("CALIBRATION", 10, 10, 4);
+
+    // direction label
+    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.drawString(dirLabel, 10, 56, 2);
+
+    // status line changes colour depending on whether we're sampling or prepping
+    tft.setTextColor(isSampling ? TFT_GREEN : TFT_YELLOW, APP_BG);
+    tft.drawString(isSampling ? "Hold still!" : "Get ready...", 10, 80, 2);
+
+    // countdown
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%ds", secsLeft);
+    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.drawString(buf, 10, 120, 4);
+
+    // e.g. "3 / 6"
+    char prog[12];
+    snprintf(prog, sizeof(prog), "%d / 6", dirIndex + 1);
+    tft.setTextColor(APP_MUTED, APP_BG);
+    tft.drawString(prog, 10, 190, 2);
 }
 
 void drawSCTScreen(TFT_eSPI &tft) {

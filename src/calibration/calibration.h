@@ -1,14 +1,22 @@
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
+#include <Arduino.h>
+
 class Calibration {
 public:
+    enum class Stage { IDLE, PREP, SAMPLING, DONE };
 
-    void begin();
-    void startCalibration();
-    void update();
+    static const char* DIR_LABEL[6];  // "Point X+ UP" etc, readable by main/screens
 
-    bool isCalibrated();
+    void  begin();
+    void  startCalibration();
+    void  update();
+
+    bool  isCalibrated();
+    Stage getStage();
+    int   getDirIndex();    // 0-5, which direction we're currently on
+    int   getSecsLeft();    // countdown seconds left in current stage
 
     float getXOffset();
     float getYOffset();
@@ -19,23 +27,27 @@ public:
     float getZG();
 
 private:
-    bool calibrating = false;
-    bool calibrated = false;
-    unsigned long startTime = 0;
+    static constexpr int   NUM_DIRECTIONS = 6;
+    static constexpr int   NUM_SAMPLES    = 32;
+    static constexpr float SCALE_FLOOR    = 0.05f;
+    static constexpr float PREP_MS        = 2000;
+    static constexpr float SAMPLE_MS      = 4000;
 
-    float xOffset = 0;
-    float yOffset = 0;
-    float zOffset = 0;
+    int        dirIndex  = 0;
+    Stage      stage     = Stage::IDLE;
+    bool       calibrated = false;
+    uint32_t   stageStart = 0;
 
-    float xScale = 1;
-    float yScale = 1;
-    float zScale = 1;
+    float      dirSum[3] = {};
+    int        dirCount  = 0;
 
-    float xMin, xMax;
-    float yMin, yMax;
-    float zMin, zMax;
+    float      means[NUM_DIRECTIONS][3] = {};
+
+    float xOffset = 0, yOffset = 0, zOffset = 0;
+    float xScale  = 1, yScale  = 1, zScale  = 1;
 
     float readVoltage(int pin);
+    void  finalise();
 };
 
 #endif

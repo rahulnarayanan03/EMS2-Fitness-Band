@@ -1,12 +1,20 @@
-#include <Arduino.h>
-#include "Calibration.h"
+#include "calibration.h"
 
 const int xPin = 34;
 const int yPin = 35;
 const int zPin = 26;
 
-const int NUM_SAMPLES = 32;
+// labels for each of the 6 directions shown on screen
+const char* Calibration::DIR_LABEL[6] = {
+    "Point X+ UP",
+    "Point X- UP",
+    "Point Y+ UP",
+    "Point Y- UP",
+    "Point Z+ UP",
+    "Point Z- UP"
+};
 
+// average a bunch of ADC reads to smooth out noise
 float Calibration::readVoltage(int pin) {
     long sum = 0;
     for (int i = 0; i < NUM_SAMPLES; i++) {
@@ -17,87 +25,128 @@ float Calibration::readVoltage(int pin) {
 }
 
 void Calibration::begin() {
-    calibrating = false;
-    calibrated = false;
-
     pinMode(xPin, INPUT);
     pinMode(yPin, INPUT);
     pinMode(zPin, INPUT);
-
     analogSetAttenuation(ADC_11db);
+
+    stage      = Stage::IDLE;
+    calibrated = false;
 }
 
 void Calibration::startCalibration() {
-    calibrating = true;
+    dirIndex   = 0;
+    stage      = Stage::PREP;
     calibrated = false;
-    startTime = millis();
+    stageStart = millis();
 
-    xMin = yMin = zMin = 9999;
-    xMax = yMax = zMax = -9999;
+    memset(means,  0, sizeof(means));
+    memset(dirSum, 0, sizeof(dirSum));
+    dirCount = 0;
 
-    Serial.println("Calibration started...");
-    Serial.println("Move sensor in ALL directions!");
+    Serial.println("[CAL] Starting guided calibration, 6 directions.");
+    Serial.printf("[CAL]  Direction 1: %s\n", DIR_LABEL[0]);
 }
 
 void Calibration::update() {
+    if (stage == Stage::IDLE || stage == Stage::DONE) return;
 
-    if (calibrating) {
+    uint32_t elapsed = millis() - stageStart;
 
-        float voltageX = readVoltage(xPin);
-        float voltageY = readVoltage(yPin);
-        float voltageZ = readVoltage(zPin);
+    if (stage == Stage::PREP) {
+        // just waiting for the user to get into position
+        if (elapsed >= PREP_MS) {
+            stage      = Stage::SAMPLING;
+            stageStart = millis();
+            dirSum[0] = dirSum[1] = dirSum[2] = 0;
+            dirCount  = 0;
+            Serial.printf("[CAL] Sampling dir %d: %s\n", dirIndex + 1, DIR_LABEL[dirIndex]);
+        }
 
-        if (voltageX < xMin) xMin = voltageX;
-        if (voltageX > xMax) xMax = voltageX;
+    } else if (stage == Stage::SAMPLING) {
+        // keep accumulating readings while the user holds still
+        dirSum[0] += readVoltage(xPin);
+        dirSum[1] += readVoltage(yPin);
+        dirSum[2] += readVoltage(zPin);
+        dirCount++;
 
-        if (voltageY < yMin) yMin = voltageY;
-        if (voltageY > yMax) yMax = voltageY;
+        if (elapsed >= SAMPLE_MS) {
+            // save the mean for this direction then move on
+            means[dirIndex][0] = dirSum[0] / dirCount;
+            means[dirIndex][1] = dirSum[1] / dirCount;
+            means[dirIndex][2] = dirSum[2] / dirCount;
 
-        if (voltageZ < zMin) zMin = voltageZ;
-        if (voltageZ > zMax) zMax = voltageZ;
+            Serial.printf("[CAL] Dir %d done  X=%.3f Y=%.3f Z=%.3f  (n=%d)\n",
+                          dirIndex + 1,
+                          means[dirIndex][0],
+                          means[dirIndex][1],
+                          means[dirIndex][2],
+                          dirCount);
 
-        Serial.print("X: "); Serial.print(voltageX);
-        Serial.print(" | Y: "); Serial.print(voltageY);
-        Serial.print(" | Z: "); Serial.println(voltageZ);
+            dirIndex++;
 
-        if (millis() - startTime > 20000) {
-
-            xOffset = (xMax + xMin) / 2.0f;
-            yOffset = (yMax + yMin) / 2.0f;
-            zOffset = (zMax + zMin) / 2.0f;
-
-            xScale = (xMax - xMin) / 2.0f;
-            yScale = (yMax - yMin) / 2.0f;
-            zScale = (zMax - zMin) / 2.0f;
-
-            // ADC2 on GPIO26 has limited voltage swing
-            // clamp xScale to minimum so getXG() doesn't produce crazy values
-            if (xScale < 0.05f) xScale = 0.05f;
-
-            calibrating = false;
-            calibrated = true;
-
-            Serial.println("----- CALIBRATION COMPLETE -----");
-            Serial.print("X Min: "); Serial.println(xMin);
-            Serial.print("X Max: "); Serial.println(xMax);
-            Serial.print("Y Min: "); Serial.println(yMin);
-            Serial.print("Y Max: "); Serial.println(yMax);
-            Serial.print("Z Min: "); Serial.println(zMin);
-            Serial.print("Z Max: "); Serial.println(zMax);
-            Serial.println("---- OFFSETS & SCALES ----");
-            Serial.print("X Offset: "); Serial.print(xOffset); Serial.print("  Scale: "); Serial.println(xScale);
-            Serial.print("Y Offset: "); Serial.print(yOffset); Serial.print("  Scale: "); Serial.println(yScale);
-            Serial.print("Z Offset: "); Serial.print(zOffset); Serial.print("  Scale: "); Serial.println(zScale);
+            if (dirIndex >= NUM_DIRECTIONS) {
+                finalise();
+            } else {
+                // prep window for next direction
+                stage      = Stage::PREP;
+                stageStart = millis();
+                memset(dirSum, 0, sizeof(dirSum));
+                dirCount = 0;
+                Serial.printf("[CAL] Next: %s\n", DIR_LABEL[dirIndex]);
+            }
         }
     }
 }
 
-bool Calibration::isCalibrated() { return calibrated; }
+bool               Calibration::isCalibrated() { return calibrated; }
+Calibration::Stage Calibration::getStage()     { return stage; }
+int                Calibration::getDirIndex()   { return dirIndex; }
+
+int Calibration::getSecsLeft() {
+    uint32_t elapsed = millis() - stageStart;
+    float    total   = (stage == Stage::PREP) ? PREP_MS : SAMPLE_MS;
+    int      left    = (int)((total - elapsed) / 1000) + 1;
+    return max(0, left);
+}
 
 float Calibration::getXOffset() { return xOffset; }
 float Calibration::getYOffset() { return yOffset; }
 float Calibration::getZOffset() { return zOffset; }
+float Calibration::getXG()      { return (readVoltage(xPin) - xOffset) / xScale; }
+float Calibration::getYG()      { return (readVoltage(yPin) - yOffset) / yScale; }
+float Calibration::getZG()      { return (readVoltage(zPin) - zOffset) / zScale; }
 
-float Calibration::getXG() { return (readVoltage(xPin) - xOffset) / xScale; }
-float Calibration::getYG() { return (readVoltage(yPin) - yOffset) / yScale; }
-float Calibration::getZG() { return (readVoltage(zPin) - zOffset) / zScale; }
+void Calibration::finalise() {
+    // find the min/max across all 6 direction means for each axis
+    float xMin =  9999, xMax = -9999;
+    float yMin =  9999, yMax = -9999;
+    float zMin =  9999, zMax = -9999;
+
+    for (int d = 0; d < NUM_DIRECTIONS; d++) {
+        if (means[d][0] < xMin) xMin = means[d][0];
+        if (means[d][0] > xMax) xMax = means[d][0];
+        if (means[d][1] < yMin) yMin = means[d][1];
+        if (means[d][1] > yMax) yMax = means[d][1];
+        if (means[d][2] < zMin) zMin = means[d][2];
+        if (means[d][2] > zMax) zMax = means[d][2];
+    }
+
+    // midpoint = offset, half-range = scale
+    xOffset = (xMax + xMin) / 2.0f;
+    yOffset = (yMax + yMin) / 2.0f;
+    zOffset = (zMax + zMin) / 2.0f;
+
+    // clamp scale so getXG/Y/Z don't blow up on dodgy ADC pins
+    xScale = max((xMax - xMin) / 2.0f, SCALE_FLOOR);
+    yScale = max((yMax - yMin) / 2.0f, SCALE_FLOOR);
+    zScale = max((zMax - zMin) / 2.0f, SCALE_FLOOR);
+
+    calibrated = true;
+    stage      = Stage::DONE;
+
+    Serial.println("[CAL] ---- COMPLETE ----");
+    Serial.printf("[CAL] X  min=%.3f max=%.3f  offset=%.3f scale=%.3f\n", xMin, xMax, xOffset, xScale);
+    Serial.printf("[CAL] Y  min=%.3f max=%.3f  offset=%.3f scale=%.3f\n", yMin, yMax, yOffset, yScale);
+    Serial.printf("[CAL] Z  min=%.3f max=%.3f  offset=%.3f scale=%.3f\n", zMin, zMax, zOffset, zScale);
+}
