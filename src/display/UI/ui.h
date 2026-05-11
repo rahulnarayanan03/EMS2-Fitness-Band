@@ -25,14 +25,15 @@ static constexpr float    BATT_USB_THRESHOLD  = 4.25f;
 static constexpr uint32_t UI_WALK_FRAME_MS = 120;
 static constexpr uint32_t UI_RUN_FRAME_MS  = 80;
 
-// GB palette RGB565
-static constexpr uint16_t GB_DARKEST  = 0x1923;
-static constexpr uint16_t GB_DARK     = 0x2945;
-static constexpr uint16_t GB_MID      = 0x5360;
-static constexpr uint16_t GB_LIGHT    = 0x8C10;
-static constexpr uint16_t GB_LIGHTEST = 0xC710;
-static constexpr uint16_t GB_INACTIVE = 0x9D12;
-static constexpr uint16_t HEART_RED   = 0xD020;
+// brighter but still green GB-style palette RGB565
+// This avoids pure white so the screen does not look washed out.
+static constexpr uint16_t GB_DARKEST  = 0x0000; // black text/borders for strong contrast
+static constexpr uint16_t GB_DARK     = 0x2144; // dark green-grey
+static constexpr uint16_t GB_MID      = 0x5360; // mid green
+static constexpr uint16_t GB_LIGHT    = 0x9CF0; // brighter green panel
+static constexpr uint16_t GB_LIGHTEST = 0xD792; // pale green background, not white
+static constexpr uint16_t GB_INACTIVE = 0x8C71; // muted inactive button
+static constexpr uint16_t HEART_RED   = 0xE800; // stronger red, not overly harsh
 
 // display orientation and layout geometry
 static constexpr uint8_t  DISPLAY_ROTATION = 3;   // 90 degrees counter-clockwise

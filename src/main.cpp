@@ -47,6 +47,15 @@ XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);
 uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3700;
 uint16_t touchScreenMinimumY = 240, touchScreenMaximumY = 3800;
 
+// ---- display brightness -----------------------------------------------------
+// This only works if TFT_BL is defined in your TFT_eSPI User_Setup.
+// 70 is a safer starting point because 90 made the greens wash out.
+
+static constexpr uint8_t  SCREEN_BRIGHTNESS_PERCENT = 70;
+static constexpr uint32_t BACKLIGHT_PWM_FREQ         = 5000;
+static constexpr uint8_t  BACKLIGHT_PWM_RES_BITS     = 8;
+static constexpr uint8_t  BACKLIGHT_PWM_CHANNEL      = 0;
+
 // ---- module objects ---------------------------------------------------------
 
 Calibration calibM;
@@ -106,6 +115,45 @@ bool readTouch(uint16_t &tx, uint16_t &ty) {
     ty = map(sumY / count, touchScreenMinimumY, touchScreenMaximumY, 0, tft.height());
 
     return true;
+}
+
+void setScreenBrightness(uint8_t percent) {
+    percent = constrain(percent, 0, 100);
+
+#if defined(TFT_BL)
+    uint8_t duty = map(percent, 0, 100, 0, 255);
+
+    // Some TFT backlight circuits are active-low.
+    // If yours is active-low, define TFT_BACKLIGHT_ON as LOW in TFT_eSPI setup.
+    #if defined(TFT_BACKLIGHT_ON) && TFT_BACKLIGHT_ON == LOW
+        duty = 255 - duty;
+    #endif
+
+    #if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
+        ledcWrite(TFT_BL, duty);
+    #else
+        ledcWrite(BACKLIGHT_PWM_CHANNEL, duty);
+    #endif
+#else
+    Serial.println("[Display] TFT_BL is not defined, so backlight brightness cannot be controlled in software.");
+#endif
+}
+
+void initBacklight() {
+#if defined(TFT_BL)
+    #if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
+        ledcAttach(TFT_BL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES_BITS);
+    #else
+        ledcSetup(BACKLIGHT_PWM_CHANNEL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES_BITS);
+        ledcAttachPin(TFT_BL, BACKLIGHT_PWM_CHANNEL);
+    #endif
+
+    setScreenBrightness(SCREEN_BRIGHTNESS_PERCENT);
+
+    Serial.printf("[Display] Backlight brightness set to %u%%.\n", SCREEN_BRIGHTNESS_PERCENT);
+#else
+    Serial.println("[Display] TFT_BL is not defined. Check TFT_eSPI User_Setup if the backlight pin is wired to ESP32.");
+#endif
 }
 
 void drawPaceIdHomeButton() {
@@ -354,6 +402,8 @@ void PaceID_Case() {
 void initDisplay() {
     tft.init();
     tft.setRotation(DISPLAY_ROTATION);
+
+    initBacklight();
 
     touchSPI.begin(25, 39, 32);
     SPI.begin(25, 39, 32);
