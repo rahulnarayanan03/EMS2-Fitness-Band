@@ -9,7 +9,7 @@
 #include "../calibration/calibration.h"
 
 // tuning values - can be adjusted after physical testing
-static constexpr float    SC_THRESHOLD_G  = 1.45f; // peak must exceed 1.45g to count as a step (1g is gravity at rest)
+static constexpr float    SC_THRESHOLD_G  = 0.45f; // peak must exceed 1.45g to count as a step (1g is gravity at rest)
 static constexpr float    SC_HYSTERESIS_G = 0.15f; // must drop below 1.15g to reset for the next step
 static constexpr uint32_t SC_COOLDOWN_MS  = 375;   // min time between steps (250ms = max 4 steps/sec)
 static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
