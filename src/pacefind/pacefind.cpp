@@ -1,93 +1,193 @@
-#include "PACEFIND.h"
+#include "pacefind.h"
 
-// USAGE: call pacefind.update(millis()) in main.cpp ONLY when after a new step is detected (by Karthik's code)!!!!!
+// Call this only when StepCounter reports a newly detected step.
 void PACEFIND::update(unsigned long currentTime) {
-    // This if-statement runs when this function is first called.
+    // First detected step after boot or after standing.
+    // Do not immediately switch to WALKING, because this could be a vibration.
     if (lastStepTime == 0) {
         lastStepTime = currentTime;
+
+        resetIntervals();
+
+        walkCandidateSteps    = 1;
+        runCandidateIntervals = 0;
+
+        currentPace = "STANDING";
+        setStablePace("STANDING");
+
+        Serial.println("[PACEFIND] First step candidate -> still STANDING");
         return;
     }
 
-    // This interval is the time between each detection, will have to rely on
-    // Karthik's detection stability to function properly.
     unsigned long interval = currentTime - lastStepTime;
 
-    if (interval < MIN_STEP_INTERVAL) {
-    // Potential noisy detection if this statement is true. This is quite similar to pushbutton debouncing.
-    // We return here to stop any further processing.
+    // Reject unrealistically short intervals.
+    if (interval < MIN_STEP_INTERVAL_MS) {
+        Serial.printf("[PACEFIND] Ignored short interval: %lums\n", interval);
         return;
     }
 
-    if (interval > MAX_STEP_INTERVAL) {
-    // The wearer might very potentially be standing. Reset the pace to standing.
-    // In case this function isn't called when the user suddenly halted when running,
-    // we'll have to do another standing check in main.cpp via checkTimeout().
-        intervalCount = 0;
-        intervalHead  = 0;
-        currentPace   = "STANDING";
-        stablePace    = "STANDING";
-        pendingPace   = "STANDING";
-        return;
-    }
-
-    // After passing all 2 if-statements, we will register the step to be legit. Karthik/Rahul might have already done this legit
-    // check when counting the steps??
+    // This is now the latest accepted step event.
     lastStepTime = currentTime;
 
-    // Store interval in circular buffer.
-    // Working principle: Given PACEFIND_SMOOTHING_WINDOW = 4. The intervalHead will keep cycling: 0-1-2-3-0-1-2-3
-    // due to the remainder math. If PACEFIND_SMOOTHING_WINDOW = 5, the sequence will be: 0-1-2-3-4-0-1-2-3-4.
-    // PACEFIND_SMOOTHING_WINDOW will need to be tuned experimentally to find the most suitable value.
+    // If the gap is too long, treat this as a new candidate movement,
+    // not a continuation of walking.
+    if (interval > MAX_TRACKED_INTERVAL_MS) {
+        resetIntervals();
+
+        walkCandidateSteps    = 1;
+        runCandidateIntervals = 0;
+
+        currentPace = "STANDING";
+        setStablePace("STANDING");
+
+        Serial.printf("[PACEFIND] Long gap %lums -> new candidate, still STANDING\n", interval);
+        return;
+    }
+
+    unsigned int instantSpm = (unsigned int)(60000UL / interval);
+
+    // Lower walking threshold.
+    // If the rhythm is too slow, keep it as standing.
+    if (instantSpm < WALK_SPM_MIN) {
+        resetIntervals();
+
+        walkCandidateSteps    = 1;
+        runCandidateIntervals = 0;
+
+        currentPace = "STANDING";
+        setStablePace("STANDING");
+
+        Serial.printf("[PACEFIND] Too slow for walking: interval=%lums spm=%u -> STANDING\n",
+                      interval,
+                      instantSpm);
+        return;
+    }
+
+    // Passed the lower walking threshold, so this is a plausible walking step.
+    addInterval(interval);
+
+    if (walkCandidateSteps < 255) {
+        walkCandidateSteps++;
+    }
+
+    // Require enough plausible steps before showing WALKING.
+    if (walkCandidateSteps < WALK_CONFIRM_STEPS) {
+        currentPace = "STANDING";
+        setStablePace("STANDING");
+
+        Serial.printf("[PACEFIND] Waiting for walking confirmation: %u/%u\n",
+                      walkCandidateSteps,
+                      WALK_CONFIRM_STEPS);
+        return;
+    }
+
+    unsigned long avgInterval = getAverageInterval();
+
+    if (avgInterval == 0) {
+        currentPace = "WALKING";
+        setStablePace("WALKING");
+        return;
+    }
+
+    unsigned int avgSpm = (unsigned int)(60000UL / avgInterval);
+
+    // Running needs a fast average step rate and repeated confirmation.
+    if (avgSpm >= RUN_SPM_MIN) {
+        currentPace = "RUNNING";
+
+        if (runCandidateIntervals < 255) {
+            runCandidateIntervals++;
+        }
+
+        if (runCandidateIntervals >= RUN_CONFIRM_INTERVALS) {
+            setStablePace("RUNNING");
+        } else {
+            // Movement has been confirmed, but running has not.
+            // Keep the animation walking instead of flicking instantly to running.
+            setStablePace("WALKING");
+        }
+
+    } else {
+        runCandidateIntervals = 0;
+
+        currentPace = "WALKING";
+        setStablePace("WALKING");
+    }
+
+    Serial.printf("[PACEFIND] interval=%lums instant=%uSPM avg=%lums avg=%uSPM pace=%s stable=%s\n",
+                  interval,
+                  instantSpm,
+                  avgInterval,
+                  avgSpm,
+                  currentPace,
+                  stablePace);
+}
+
+// Called every loop when no step is detected.
+void PACEFIND::checkTimeout(unsigned long currentTime) {
+    if (lastStepTime == 0) return;
+
+    if (currentTime - lastStepTime > STAND_TIMEOUT_MS) {
+        resetToStanding(true);
+
+        Serial.println("[PACEFIND] No recent steps -> STANDING");
+    }
+}
+
+const char* PACEFIND::getPace() {
+    return stablePace;
+}
+
+void PACEFIND::resetIntervals() {
+    for (int i = 0; i < PACEFIND_SMOOTHING_WINDOW; i++) {
+        stepIntervals[i] = 0;
+    }
+
+    intervalCount = 0;
+    intervalHead  = 0;
+}
+
+void PACEFIND::resetToStanding(bool clearLastStepTime) {
+    resetIntervals();
+
+    if (clearLastStepTime) {
+        lastStepTime = 0;
+    }
+
+    walkCandidateSteps    = 0;
+    runCandidateIntervals = 0;
+
+    currentPace = "STANDING";
+    setStablePace("STANDING");
+}
+
+void PACEFIND::addInterval(unsigned long interval) {
     stepIntervals[intervalHead] = interval;
     intervalHead = (intervalHead + 1) % PACEFIND_SMOOTHING_WINDOW;
 
-    // Since we are not zero-ing the circular buffer, we use this intervalCount variable to keep track of the number of legit
-    // elements (When the pace got reverted to standing, we start a new cycle, and this variable will help the program to disregard readings
-    // from the previous cycle)
-    if (intervalCount < PACEFIND_SMOOTHING_WINDOW) intervalCount++;
+    if (intervalCount < PACEFIND_SMOOTHING_WINDOW) {
+        intervalCount++;
+    }
+}
 
-    // Compute average step interval
+unsigned long PACEFIND::getAverageInterval() const {
+    if (intervalCount == 0) return 0;
+
     unsigned long sum = 0;
-    for (int i = 0; i < intervalCount; i++) sum += stepIntervals[i];
-    unsigned long avgInterval = sum / intervalCount;
 
-    // Convert to steps per minute and classify
-    unsigned int spm = (unsigned int)(60000UL / avgInterval);
-    if (spm >= RUN_SPM_MIN) {
-        currentPace = "RUNNING";
-    } else if (spm >= WALK_SPM_MIN) {
-        currentPace = "WALKING";
-    } else {
-        currentPace = "STANDING";
+    for (int i = 0; i < intervalCount; i++) {
+        sum += stepIntervals[i];
     }
 
-    // Anti-flicker: only set the stablePace after two consecutive matching readings.
-    // The number of consecutive readings can also be experimentally tuned
-    if (currentPace == stablePace) {
-        pendingPace = currentPace;
-    } else if (currentPace == pendingPace) {
-        stablePace  = currentPace;
-    } else {
-        pendingPace = currentPace;
-    }
+    return sum / intervalCount;
 }
 
-// Called every loop when no step is detected - checks if user has stopped moving
-// and resets pace to standing if MAX_STEP_INTERVAL has passed since last step.
-// This handles the case where the user suddenly stops and update() is never called.
-void PACEFIND::checkTimeout(unsigned long currentTime) {
-    if (lastStepTime == 0) return;
-    if (currentTime - lastStepTime > MAX_STEP_INTERVAL) {
-        intervalCount = 0;
-        intervalHead  = 0;
-        lastStepTime  = 0;
-        currentPace   = "STANDING";
-        stablePace    = "STANDING";
-        pendingPace   = "STANDING";
+void PACEFIND::setStablePace(const char* newPace) {
+    if (strcmp(stablePace, newPace) == 0) {
+        return;
     }
-}
 
-// This is for the display to update
-const char* PACEFIND::getPace() {
-    return stablePace;
+    Serial.printf("[PACEFIND] Pace changed: %s -> %s\n", stablePace, newPace);
+    stablePace = newPace;
 }

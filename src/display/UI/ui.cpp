@@ -369,57 +369,73 @@ void UI::refreshBattery(float cv, float cp) {
 // ---- sprite / activity -----------------------------------------------------
 
 void UI::updateActivity() {
-    UIActivity newActivity;
+    UIActivity newActivity = UIActivity::STANDING;
 
     if (strcmp(_pace, "RUNNING") == 0) {
         newActivity = UIActivity::RUNNING;
     } else if (strcmp(_pace, "WALKING") == 0) {
         newActivity = UIActivity::WALKING;
-    } else {
-        newActivity = UIActivity::STANDING;
     }
 
-    if (newActivity != _activity) {
-        _activity     = newActivity;
-        _gifFrame     = 0;
-        _lastFrameMs  = 0;
-        _lastActivity = UIActivity::NONE;
+    // Do nothing if the pace has not changed.
+    // This prevents the animation from restarting every loop.
+    if (newActivity == _activity) {
+        return;
+    }
 
-        _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
+    // Pace changed, so reset the sprite animation once.
+    _activity     = newActivity;
+    _gifFrame     = 0;
+    _lastFrameMs  = 0;
+    _lastActivity = UIActivity::NONE;
+
+    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
+
+    Serial.print("[UI] Activity changed to: ");
+    if (_activity == UIActivity::RUNNING) {
+        Serial.println("RUNNING");
+    } else if (_activity == UIActivity::WALKING) {
+        Serial.println("WALKING");
+    } else {
+        Serial.println("STANDING");
     }
 }
 
 void UI::advanceSprite(uint32_t nowMs) {
-    if (_activity == _lastActivity && _activity != UIActivity::NONE) {
-        if (_activity == UIActivity::RUNNING) {
-            drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
-        } else if (_activity == UIActivity::WALKING) {
-            drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
+    // If this is a newly selected activity, draw the first frame/image now.
+    if (_activity != _lastActivity) {
+        _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
+
+        switch (_activity) {
+            case UIActivity::STANDING:
+                drawStandingGif();
+                break;
+
+            case UIActivity::WALKING:
+                drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
+                break;
+
+            case UIActivity::RUNNING:
+                drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
+                break;
+
+            case UIActivity::NONE:
+                drawStandingGif();
+                break;
         }
+
+        _lastActivity = _activity;
         return;
     }
 
-    _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
+    // If the activity has not changed, only animate walking/running.
+    // Standing is a static image, so leave it alone.
+    if (_activity == UIActivity::WALKING) {
+        drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
 
-    switch (_activity) {
-        case UIActivity::STANDING:
-            drawStandingGif();
-            break;
-
-        case UIActivity::RUNNING:
-            drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
-            break;
-
-        case UIActivity::WALKING:
-            drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
-            break;
-
-        case UIActivity::NONE:
-            drawStandingGif();
-            break;
+    } else if (_activity == UIActivity::RUNNING) {
+        drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
     }
-
-    _lastActivity = _activity;
 }
 
 void UI::drawStandingGif() {
