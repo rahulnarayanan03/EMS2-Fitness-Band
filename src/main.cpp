@@ -56,7 +56,7 @@ uint16_t touchScreenMinimumY = 240, touchScreenMaximumY = 3800;
 // This only works if TFT_BL is defined in your TFT_eSPI User_Setup.
 // 70 is a safer starting point because 90 made the greens wash out.
 
-static constexpr uint8_t  SCREEN_BRIGHTNESS_PERCENT = 70;
+static constexpr uint8_t  SCREEN_BRIGHTNESS_PERCENT = 100;
 static constexpr uint32_t BACKLIGHT_PWM_FREQ         = 5000;
 static constexpr uint8_t  BACKLIGHT_PWM_RES_BITS     = 8;
 static constexpr uint8_t  BACKLIGHT_PWM_CHANNEL      = 0;
