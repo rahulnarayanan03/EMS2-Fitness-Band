@@ -9,16 +9,6 @@
    4 = S.C.T    - step count test
    5 = P.ID.T   - pace ID test
    6 = SETTINGS - edit age, weight, height from gear icon in top bar
-
- Boot flow:
-   Power on -> Case 0 (if no profile) OR Case 1 (if profile exists)
-   -> calibration runs -> home button appears -> Case 2
-
- From Case 2 the user taps app buttons to reach Cases 1/3/4/5.
- Gear icon in top bar goes to Case 6.
- Every app case has a home button that returns to Case 2.
- Re-entering Case 1 saves current steps, re-calibrates, then asks
- whether to keep or reset the step count.
 */
 
 #include <Arduino.h>
@@ -53,8 +43,6 @@ uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3700;
 uint16_t touchScreenMinimumY = 240, touchScreenMaximumY = 3800;
 
 // ---- display brightness -----------------------------------------------------
-// This only works if TFT_BL is defined in your TFT_eSPI User_Setup.
-// 70 is a safer starting point because 90 made the greens wash out.
 
 static constexpr uint8_t  SCREEN_BRIGHTNESS_PERCENT = 100;
 static constexpr uint32_t BACKLIGHT_PWM_FREQ         = 5000;
@@ -81,24 +69,37 @@ static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
 // ---- state machine ----------------------------------------------------------
 
-enum AppCase { CASE_SETUP = 0, CASE_CT = 1, CASE_HOME = 2,
-               CASE_ST = 3, CASE_SCT = 4, CASE_PIDT = 5, CASE_SETTINGS = 6 };
+enum AppCase {
+    CASE_SETUP = 0,
+    CASE_CT = 1,
+    CASE_HOME = 2,
+    CASE_ST = 3,
+    CASE_SCT = 4,
+    CASE_PIDT = 5,
+    CASE_SETTINGS = 6
+};
+
 AppCase currentCase = CASE_SETUP;
 
 bool     caseCtIsReentry     = false;
 uint32_t savedStepsBeforeCal = 0;
 bool     awaitingStepChoice  = false;
 
-// touch state, populated once per loop tick and shared across case functions
 uint16_t tx = 0, ty = 0;
 bool     touched = false;
 
-// timestamp of the last case transition - touched is ignored within 200ms of one
 uint32_t lastTransition = 0;
 
 // ---- setup wizard state -----------------------------------------------------
 
-enum SetupStep { SETUP_WELCOME, SETUP_HEIGHT, SETUP_WEIGHT, SETUP_AGE, SETUP_DONE };
+enum SetupStep {
+    SETUP_WELCOME,
+    SETUP_HEIGHT,
+    SETUP_WEIGHT,
+    SETUP_AGE,
+    SETUP_DONE
+};
+
 SetupStep setupStep   = SETUP_WELCOME;
 float     setupHeight = 170.0f;
 float     setupWeight = 70.0f;
@@ -106,14 +107,16 @@ int       setupAge    = 25;
 
 // ---- settings state ---------------------------------------------------------
 
-// reuses SetupStep enum but skips SETUP_WELCOME — starts at SETUP_HEIGHT
 SetupStep settingsStep   = SETUP_HEIGHT;
 float     settingsHeight = 170.0f;
 float     settingsWeight = 70.0f;
 int       settingsAge    = 25;
 
-// forward declaration so Setup_Case() can call initCalibration()
 void initCalibration();
+
+// ---- screen redraw flags ----------------------------------------------------
+
+bool paceIdDrawn = false;
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -149,8 +152,6 @@ void setScreenBrightness(uint8_t percent) {
 #if defined(TFT_BL)
     uint8_t duty = map(percent, 0, 100, 0, 255);
 
-    // Some TFT backlight circuits are active-low.
-    // If yours is active-low, define TFT_BACKLIGHT_ON as LOW in TFT_eSPI setup.
     #if defined(TFT_BACKLIGHT_ON) && TFT_BACKLIGHT_ON == LOW
         duty = 255 - duty;
     #endif
@@ -183,24 +184,25 @@ void initBacklight() {
 }
 
 void drawPaceIdHomeButton() {
-    tft.fillRect(110, 190, 100, 40, APP_BUTTON);
-    tft.drawRect(110, 190, 100, 40, APP_BORDER);
+    tft.fillRect(95, 184, 130, 48, APP_BUTTON);
+    tft.drawRect(95, 184, 130, 48, APP_BORDER);
 
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
-    tft.drawString("HOME", 160, 210, 2);
+    tft.drawString("HOME", 160, 208, 4);
 }
 
-// go to homepage and mark the transition time for debounce
 void goHome() {
     stepM.resumeCounting();
 
     currentCase    = CASE_HOME;
     lastTransition = millis();
+
+    paceIdDrawn = false;
+
     ui.begin();
 }
 
-// update step count, pace and calories if calibration is done
 void updateStepAndPace(uint32_t now) {
     if (!calibM.isCalibrated()) return;
 
@@ -220,9 +222,7 @@ void Setup_Case() {
     if (!touched) return;
 
     switch (setupStep) {
-
         case SETUP_WELCOME:
-            // any tap moves to height question
             setupStep      = SETUP_HEIGHT;
             lastTransition = millis();
             drawSetupQuestion(tft, "What is your height?", "cm", setupHeight, 0);
@@ -265,13 +265,14 @@ void Setup_Case() {
                 drawSetupQuestion(tft, "What is your age?", "yrs", (float)setupAge, 0);
             } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
                 calorieM.saveProfile(setupAge, setupWeight, setupHeight);
+
                 setupStep      = SETUP_DONE;
                 lastTransition = millis();
                 currentCase    = CASE_CT;
 
                 initCalibration();
 
-                Serial.printf("[Setup] Done — age=%d weight=%.1f height=%.1f\n",
+                Serial.printf("[Setup] Done - age=%d weight=%.1f height=%.1f\n",
                               setupAge, setupWeight, setupHeight);
             }
             break;
@@ -281,13 +282,10 @@ void Setup_Case() {
     }
 }
 
-// settings case - same +/- picker flow but pre-filled with saved values
-// saves on OK at the age step and returns home
 void Settings_Case() {
     if (!touched) return;
 
     switch (settingsStep) {
-
         case SETUP_HEIGHT:
             if (tx >= 20 && tx <= 90 && ty >= 155 && ty <= 205) {
                 settingsHeight = max(100.0f, settingsHeight - 1.0f);
@@ -324,11 +322,10 @@ void Settings_Case() {
                 settingsAge = min(100, settingsAge + 1);
                 drawSetupQuestion(tft, "Age", "yrs", (float)settingsAge, 0);
             } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
-                // save updated profile — calorie calc will use new weight immediately
                 calorieM.saveProfile(settingsAge, settingsWeight, settingsHeight);
                 lastTransition = millis();
 
-                Serial.printf("[Settings] Updated — age=%d weight=%.1f height=%.1f\n",
+                Serial.printf("[Settings] Updated - age=%d weight=%.1f height=%.1f\n",
                               settingsAge, settingsWeight, settingsHeight);
 
                 goHome();
@@ -344,7 +341,6 @@ void Settings_Case() {
 void Calibration_Case() {
     calibM.update();
 
-    // draw guided prompt while still running through directions
     if (!awaitingStepChoice && !calibM.isCalibrated()) {
         static Calibration::Stage lastStage = Calibration::Stage::IDLE;
         static int                lastSecs  = -1;
@@ -355,7 +351,6 @@ void Calibration_Case() {
         int  dir      = calibM.getDirIndex();
         bool sampling = (stage == Calibration::Stage::SAMPLING);
 
-        // only redraw when something actually changed to avoid flicker
         if (stage != lastStage || secs != lastSecs || dir != lastDir) {
             drawCalibrationGuided(tft,
                                   Calibration::DIR_LABEL[dir],
@@ -414,8 +409,6 @@ void Home_Case(uint32_t now, float cv, float cp) {
     ui.setCalories(calorieM.getKcal());
     ui.update(now, cv, cp);
 
-    // Only handle the first loop tick of a press.
-    // This stops a held reset button from repeatedly writing 0 to NVS.
     if (!touched) {
         homeTouchHandled = false;
         return;
@@ -424,9 +417,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
     if (homeTouchHandled) return;
     homeTouchHandled = true;
 
-    // check gear icon first — it sits in the top bar
     if (ui.checkSettingsTouch(tx, ty)) {
-        // pre-fill settings with current saved values
         settingsHeight = calorieM.getHeightCm();
         settingsWeight = calorieM.getWeightKg();
         settingsAge    = calorieM.getAge();
@@ -481,6 +472,8 @@ void Home_Case(uint32_t now, float cv, float cp) {
 
             case 3:
                 currentCase = CASE_PIDT;
+                paceIdDrawn = false;
+                tft.fillScreen(APP_BG);
                 break;
         }
     }
@@ -522,22 +515,20 @@ void StepCountTest_Case(uint32_t now) {
         Serial.println(stepM.getStepCount());
     }
 
-    if (touched && tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
+    if (touched && tx >= 95 && tx <= 225 && ty >= 184 && ty <= 232) {
         goHome();
     }
 }
 
 void PaceID_Case() {
-    static bool drawn = false;
-
-    if (!drawn) {
-        drawn = true;
+    if (!paceIdDrawn) {
+        paceIdDrawn = true;
 
         tft.fillScreen(APP_BG);
 
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(APP_TEXT, APP_BG);
-        tft.drawString("PACE ID TEST", 10, 10, 2);
+        tft.drawString("PACE ID TEST", 10, 10, 4);
 
         drawPaceIdHomeButton();
     }
@@ -559,27 +550,28 @@ void PaceID_Case() {
     if (millis() - lastUpdate >= 500) {
         lastUpdate = millis();
 
-        tft.fillRect(10, 50, 300, 120, APP_BG);
+        tft.fillRect(10, 58, 300, 120, APP_BG);
 
         tft.setTextDatum(TL_DATUM);
+
         tft.setTextColor(APP_MUTED, APP_BG);
-        tft.drawString("Current Pace:", 10, 50, 2);
+        tft.drawString("Pace:", 10, 58, 4);
 
         tft.setTextColor(APP_TEXT, APP_BG);
-        tft.drawString(paceM.getPace(), 10, 80, 4);
+        tft.drawString(paceM.getPace(), 10, 92, 4);
 
         tft.setTextColor(APP_MUTED, APP_BG);
-        tft.drawString("Steps:", 10, 150, 2);
+        tft.drawString("Steps:", 10, 130, 4);
 
         char buf[12];
         snprintf(buf, sizeof(buf), "%lu", (unsigned long)stepM.getStepCount());
 
         tft.setTextColor(APP_TEXT, APP_BG);
-        tft.drawString(buf, 10, 175, 2);
+        tft.drawString(buf, 120, 130, 4);
     }
 
-    if (touched && tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
-        drawn = false;
+    if (touched && tx >= 95 && tx <= 225 && ty >= 184 && ty <= 232) {
+        paceIdDrawn = false;
         goHome();
     }
 }
@@ -627,7 +619,6 @@ void setup() {
     initDisplay();
     stepM.begin();
 
-    // load saved profile - skip setup wizard if already done
     calorieM.begin();
 
     if (calorieM.isProfileSet()) {
