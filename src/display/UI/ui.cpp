@@ -38,7 +38,7 @@ void UI::update(uint32_t nowMs, float cv, float cp) {
 
     updateActivity();
     advanceSprite(nowMs);
-    
+
     refreshTime();
     // refreshDate();
     refreshSteps(steps);
@@ -76,6 +76,13 @@ bool UI::checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex) {
     return false;
 }
 
+bool UI::checkStepResetTouch(uint16_t tx, uint16_t ty) const {
+    return tx >= (uint16_t)STEP_RESET_BTN_X &&
+           tx <= (uint16_t)(STEP_RESET_BTN_X + STEP_RESET_BTN_W) &&
+           ty >= (uint16_t)STEP_RESET_BTN_Y &&
+           ty <= (uint16_t)(STEP_RESET_BTN_Y + STEP_RESET_BTN_H);
+}
+
 // ---- static layout ---------------------------------------------------------
 
 void UI::drawStaticLayout() {
@@ -102,12 +109,28 @@ void UI::drawStepsBar() {
     _tft.setTextColor(GB_DARK, GB_LIGHT);
     _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 6, 2);
 
+    drawStepResetButton();
+
     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-    _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 28, 4);
+    _tft.drawString("0", STEPS_BAR_X + 8, STEPS_BAR_Y + 30, 4);
 
     // _tft.setTextDatum(TR_DATUM);
     // _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 8,
                     // STEPS_BAR_Y + STEPS_BAR_H - 22, 2);
+}
+
+void UI::drawStepResetButton() {
+    _tft.fillRect(STEP_RESET_BTN_X, STEP_RESET_BTN_Y,
+                  STEP_RESET_BTN_W, STEP_RESET_BTN_H, GB_DARKEST);
+    _tft.drawRect(STEP_RESET_BTN_X, STEP_RESET_BTN_Y,
+                  STEP_RESET_BTN_W, STEP_RESET_BTN_H, GB_LIGHTEST);
+
+    _tft.setTextDatum(MC_DATUM);
+    _tft.setTextColor(GB_LIGHTEST, GB_DARKEST);
+    _tft.drawString("RESET",
+                    STEP_RESET_BTN_X + STEP_RESET_BTN_W / 2,
+                    STEP_RESET_BTN_Y + STEP_RESET_BTN_H / 2,
+                    2);
 }
 
 void UI::drawLeftPanel() {
@@ -217,7 +240,7 @@ void UI::refreshSteps(uint32_t steps) {
     _lastSteps = steps;
 
     _tft.fillRect(STEPS_BAR_X + 6,
-                  STEPS_BAR_Y + 26,
+                  STEPS_BAR_Y + 28,
                   STEPS_BAR_W - 12,
                   34,
                   GB_LIGHT);
@@ -228,7 +251,7 @@ void UI::refreshSteps(uint32_t steps) {
     char buf[10];
     snprintf(buf, sizeof(buf), "%lu", (unsigned long)steps);
 
-    _tft.drawString(buf, STEPS_BAR_X + 8, STEPS_BAR_Y + 28, 4);
+    _tft.drawString(buf, STEPS_BAR_X + 8, STEPS_BAR_Y + 30, 4);
 }
 
 void UI::refreshBPM() {
@@ -260,7 +283,6 @@ void UI::refreshBattery(float cv, float cp) {
     int8_t pct = (cp >= 0) ? (int8_t)cp : -1;
     uint16_t battMv = (uint16_t)(cv * 1000.0f);
 
-    // Avoid unnecessary redraw
     if (pct == _lastBattPct && battMv == _lastBattMv) return;
 
     _lastBattPct = pct;
@@ -272,7 +294,6 @@ void UI::refreshBattery(float cv, float cp) {
                   30,
                   GB_LIGHT);
 
-    // Draw icon (fallback to 0% if invalid)
     drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58,
                  (pct >= 0) ? pct : 0);
 
@@ -282,7 +303,6 @@ void UI::refreshBattery(float cv, float cp) {
     char buf[12];
 
     if (pct < 0) {
-        // If percentage invalid → show voltage
         snprintf(buf, sizeof(buf), "%.2fV", cv);
     } else {
         snprintf(buf, sizeof(buf), "%d%%", pct);
@@ -290,6 +310,7 @@ void UI::refreshBattery(float cv, float cp) {
 
     _tft.drawString(buf, LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
 }
+
 // ---- sprite / activity -----------------------------------------------------
 
 void UI::updateActivity() {

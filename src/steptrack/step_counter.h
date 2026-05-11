@@ -9,25 +9,25 @@
 #include "../calibration/calibration.h"
 
 // tuning values - can be adjusted after physical testing
-static constexpr float    SC_THRESHOLD_G  = 0.25f; // peak must exceed 1.45g to count as a step (1g is gravity at rest)
+static constexpr float    SC_THRESHOLD_G  = 0.30f; // peak must exceed 1.45g to count as a step
 static constexpr float    SC_HYSTERESIS_G = 0.15f; // must drop below 1.15g to reset for the next step
-static constexpr uint32_t SC_COOLDOWN_MS  = 375;   // min time between steps (250ms = max 4 steps/sec)
+static constexpr uint32_t SC_COOLDOWN_MS  = 375;   // min time between steps
 static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
 
 class StepCounter {
 public:
-    StepCounter(Calibration &cal); // needs the calibration object so it can call getXG/getYG/getZG
+    StepCounter(Calibration &cal);
 
-    bool begin(); // call once in setup() - loads saved step count from NVS. Note: calibration must be complete before update() will do anything
-    void update(); // call every loop() - skips step detection until calibration is done
+    bool begin();
+    void update();
 
-    uint32_t getStepCount() const; // returns current step count
-    bool wasStepDetected(); // returns true once per new step, then resets - for pacefind integration
+    uint32_t getStepCount() const;
+    bool wasStepDetected();
 
-    void saveNow(); // force save to NVS right now, useful before going to sleep
-    void resetCount(); // resets step count back to zero and saves it
+    void saveNow();
+    void resetCount();
 
-private: // NVS read/write helpers
+private:
     bool loadFromNVS();
     bool saveToNVS();
 
@@ -35,7 +35,7 @@ private: // NVS read/write helpers
 
     uint32_t _stepCount      = 0;
     bool     _aboveThreshold = false;
-    bool     _stepDetected   = false;  // set true each time a step is counted, cleared by wasStepDetected()
+    bool     _stepDetected   = false;
     uint32_t _lastStepTimeMs = 0;
 
     uint32_t _lastDisplayMs  = 0;

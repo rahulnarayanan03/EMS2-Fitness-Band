@@ -21,7 +21,7 @@ static constexpr float    BATT_MAX_V          = 4.2f;
 static constexpr float    BATT_MIN_V          = 3.3f;
 static constexpr float    BATT_USB_THRESHOLD  = 4.25f;
 
-// how long each GIF frame is shown (ms)
+// how long each GIF frame is shown, in ms
 static constexpr uint32_t UI_WALK_FRAME_MS = 120;
 static constexpr uint32_t UI_RUN_FRAME_MS  = 80;
 
@@ -41,7 +41,7 @@ static constexpr int16_t  SCREEN_H         = 240;
 
 static constexpr int16_t TOPBAR_H = 20;
 
-//layout constants
+// layout constants
 static constexpr int16_t SPRITE_X = 215;
 static constexpr int16_t SPRITE_Y = 56;
 static constexpr int16_t SPRITE_W = 65;
@@ -51,6 +51,11 @@ static constexpr int16_t STEPS_BAR_X = 178;
 static constexpr int16_t STEPS_BAR_Y = 150;
 static constexpr int16_t STEPS_BAR_W = 130;
 static constexpr int16_t STEPS_BAR_H = 70;
+
+static constexpr int16_t STEP_RESET_BTN_W = 52;
+static constexpr int16_t STEP_RESET_BTN_H = 22;
+static constexpr int16_t STEP_RESET_BTN_X = STEPS_BAR_X + STEPS_BAR_W - STEP_RESET_BTN_W - 6;
+static constexpr int16_t STEP_RESET_BTN_Y = STEPS_BAR_Y + 5;
 
 static constexpr int16_t LEFT_PNL_X = 8;
 static constexpr int16_t LEFT_PNL_Y = 150;
@@ -81,6 +86,7 @@ public:
     void setPace(const char *pace);
 
     bool checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex);
+    bool checkStepResetTouch(uint16_t tx, uint16_t ty) const;
 
 private:
     TFT_eSPI    &_tft;
@@ -114,6 +120,7 @@ private:
     void drawStaticLayout();
     void drawTopBar();
     void drawStepsBar();
+    void drawStepResetButton();
     void drawLeftPanel();
     void drawRightPanel();
     void drawButton(int16_t x, int16_t y, const char *label, bool active);

@@ -2,19 +2,20 @@
  State machine coordinator for the EMS2 fitness band.
 
  Cases:
-   1 = C.T   - calibration, runs automatically on boot
-   2 = HOME  - main homepage (UI.h/cpp), Red's sprite, steps, app buttons
-   3 = S.T   - self test (stub, not yet implemented)
-   4 = S.C.T - step count test (live counter + serial output)
-   5 = P.ID.T - pace ID test (stub, not yet implemented)
+   1 = C.T    - calibration, runs automatically on boot
+   2 = HOME   - main homepage, Red's sprite, steps, app buttons
+   3 = S.T    - self test
+   4 = S.C.T  - step count test
+   5 = P.ID.T - pace ID test
 
  Boot flow:
-   Power on -> Case 1 (calibration runs) -> home button appears -> Case 2
+   Power on -> Case 1 -> calibration runs -> home button appears -> Case 2
 
  From Case 2 the user taps app buttons to reach Cases 1/3/4/5.
  Every app case has a home button that returns to Case 2.
  Re-entering Case 1 saves current steps, re-calibrates, then asks
- whether to keep or reset the step count. */
+ whether to keep or reset the step count.
+*/
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
@@ -54,7 +55,7 @@ PACEFIND    paceM;
 SelfTest    stM(calibM, ST_PIN);
 UI          ui(tft, stepM, calibM);
 
-// ---- shared app screen colours ----------------------------------------------
+// ---- shared app screen colours ---------------------------------------------
 
 static constexpr uint16_t APP_BG          = TFT_BLACK;
 static constexpr uint16_t APP_TEXT        = TFT_WHITE;
@@ -84,8 +85,10 @@ uint32_t lastTransition = 0;
 bool readTouch(uint16_t &tx, uint16_t &ty) {
     if (!ts.touched()) return false;
 
-    long sumX = 0, sumY = 0;
+    long sumX = 0;
+    long sumY = 0;
     int count = 0;
+
     for (int i = 0; i < 5; i++) {
         if (ts.touched()) {
             TS_Point p = ts.getPoint();
@@ -93,6 +96,7 @@ bool readTouch(uint16_t &tx, uint16_t &ty) {
             sumY += p.y;
             count++;
         }
+
         delay(10);
     }
 
@@ -159,16 +163,22 @@ void Calibration_Case() {
         if (caseCtIsReentry) {
             if (tx >= 50 && tx <= 150 && ty >= 150 && ty <= 190) {
                 Serial.println("CT: keeping previous step count.");
+
                 awaitingStepChoice = false;
                 caseCtIsReentry    = false;
+
                 goHome();
+
             } else if (tx >= 170 && tx <= 270 && ty >= 150 && ty <= 190) {
                 stepM.resetCount();
                 Serial.println("CT: step count reset to 0.");
+
                 awaitingStepChoice = false;
                 caseCtIsReentry    = false;
+
                 goHome();
             }
+
         } else {
             if (tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
                 awaitingStepChoice = false;
@@ -179,6 +189,8 @@ void Calibration_Case() {
 }
 
 void Home_Case(uint32_t now, float cv, float cp) {
+    static bool homeTouchHandled = false;
+
     updateStepAndPace(now);
 
     ui.setTime(0, 0);
@@ -186,37 +198,55 @@ void Home_Case(uint32_t now, float cv, float cp) {
     ui.setPace(paceM.getPace());
     ui.update(now, cv, cp);
 
-    if (touched) {
-        uint8_t btnIndex = 0;
+    // Only handle the first loop tick of a press.
+    // This stops a held reset button from repeatedly writing 0 to NVS.
+    if (!touched) {
+        homeTouchHandled = false;
+        return;
+    }
 
-        if (ui.checkButtonTouch(tx, ty, btnIndex)) {
-            lastTransition = millis();
+    if (homeTouchHandled) return;
+    homeTouchHandled = true;
 
-            switch (btnIndex) {
-                case 0:
-                    stepM.saveNow();
-                    savedStepsBeforeCal = stepM.getStepCount();
-                    caseCtIsReentry     = true;
-                    awaitingStepChoice  = false;
-                    currentCase         = CASE_CT;
-                    calibM.startCalibration();
-                    drawCalibrationScreen(tft);
-                    Serial.println("Re-entering calibration.");
-                    break;
+    if (ui.checkStepResetTouch(tx, ty)) {
+        stepM.resetCount();
+        lastTransition = millis();
 
-                case 1:
-                    currentCase = CASE_ST;
-                    break;
+        Serial.println("Home: step count reset to 0.");
+        return;
+    }
 
-                case 2:
-                    currentCase = CASE_SCT;
-                    drawSCTScreen(tft);
-                    break;
+    uint8_t btnIndex = 0;
 
-                case 3:
-                    currentCase = CASE_PIDT;
-                    break;
-            }
+    if (ui.checkButtonTouch(tx, ty, btnIndex)) {
+        lastTransition = millis();
+
+        switch (btnIndex) {
+            case 0:
+                stepM.saveNow();
+                savedStepsBeforeCal = stepM.getStepCount();
+                caseCtIsReentry     = true;
+                awaitingStepChoice  = false;
+                currentCase         = CASE_CT;
+
+                calibM.startCalibration();
+                drawCalibrationScreen(tft);
+
+                Serial.println("Re-entering calibration.");
+                break;
+
+            case 1:
+                currentCase = CASE_ST;
+                break;
+
+            case 2:
+                currentCase = CASE_SCT;
+                drawSCTScreen(tft);
+                break;
+
+            case 3:
+                currentCase = CASE_PIDT;
+                break;
         }
     }
 }
@@ -225,11 +255,16 @@ void SelfTest_Case() {
     static bool stRan = false;
 
     if (!stRan) {
-        stRan       = true;
+        stRan = true;
+
         bool passed = stM.run();
 
-        drawSelfTestScreen(tft, passed, stM.getResultStr(),
-                           stM.getDeltaX(), stM.getDeltaY(), stM.getDeltaZ());
+        drawSelfTestScreen(tft,
+                           passed,
+                           stM.getResultStr(),
+                           stM.getDeltaX(),
+                           stM.getDeltaY(),
+                           stM.getDeltaZ());
     }
 
     if (touched && tx >= 110 && tx <= 210 && ty >= 190 && ty <= 230) {
