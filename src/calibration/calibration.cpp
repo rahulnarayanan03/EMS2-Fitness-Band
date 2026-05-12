@@ -117,6 +117,18 @@ float Calibration::getXG()      { return (readVoltage(xPin) - xOffset) / xScale;
 float Calibration::getYG()      { return (readVoltage(yPin) - yOffset) / yScale; }
 float Calibration::getZG()      { return (readVoltage(zPin) - zOffset) / zScale; }
 
+float Calibration::getRawX() {
+    return (readVoltage(xPin));
+}
+
+float Calibration::getRawY() {
+    return (readVoltage(yPin));
+}
+
+float Calibration::getRawZ() {
+    return (readVoltage(zPin));
+}
+
 void Calibration::finalise() {
     // find the min/max across all 6 direction means for each axis
     float xMin =  9999, xMax = -9999;

@@ -26,6 +26,10 @@ public:
     float getYG();
     float getZG();
 
+    float getRawX();    // Get raw ADXL acceleration from the x-axis
+    float getRawY();    // Get raw ADXL acceleration from the y-axis
+    float getRawZ();    // Get raw ADXL acceleration from the z-axis
+
 private:
     static constexpr int   NUM_DIRECTIONS = 6;
     static constexpr int   NUM_SAMPLES    = 32;
