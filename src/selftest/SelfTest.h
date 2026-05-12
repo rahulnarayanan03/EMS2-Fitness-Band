@@ -7,7 +7,7 @@
 static constexpr float ST_X_EXPECTED = -432.6f;
 static constexpr float ST_Y_EXPECTED = 432.6f;
 static constexpr float ST_Z_EXPECTED = 732.1f;
-static constexpr float ST_TOLERANCE  = 0.1f;    // 1% tolerance
+static constexpr float ST_TOLERANCE  = 0.01f;    // 1% tolerance
 
 enum class STResult { PASS, FAIL_X, FAIL_Y, FAIL_Z, NOT_RUN };
 
