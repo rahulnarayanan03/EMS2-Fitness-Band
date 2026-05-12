@@ -26,9 +26,9 @@ public:
     float getYG();
     float getZG();
 
-    float getRawX();    // Get raw ADXL acceleration from the x-axis
-    float getRawY();    // Get raw ADXL acceleration from the y-axis
-    float getRawZ();    // Get raw ADXL acceleration from the z-axis
+    float getX_mV();    // Get raw ADXL acceleration from the x-axis in millivolts
+    float getY_mV();    // Get raw ADXL acceleration from the y-axis in millivolts
+    float getZ_mV();    // Get raw ADXL acceleration from the z-axis in millivolts
 
 private:
     static constexpr int   NUM_DIRECTIONS = 6;
