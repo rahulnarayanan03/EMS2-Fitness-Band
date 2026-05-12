@@ -42,10 +42,10 @@ bool SelfTest::run() {
     // done - return ST high immediately
     digitalWrite(_stPin, HIGH);
 
-    // delta = baseline - active, per spec (expected values are signed accordingly)
-    _deltaX = baseX - stX;
-    _deltaY = baseY - stY;
-    _deltaZ = baseZ - stZ;
+    // Find change in acceleration (final - initial)
+    _deltaX = stX - baseX;
+    _deltaY = stY - baseY;
+    _deltaZ = stZ - baseZ;
     Serial.print("[ST] Delta X: "); Serial.print(_deltaX, 3);
     Serial.print(" Y: "); Serial.print(_deltaY, 3);
     Serial.print(" Z: "); Serial.println(_deltaZ, 3);
