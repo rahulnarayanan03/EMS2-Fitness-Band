@@ -19,8 +19,8 @@ float SelfTest::sampleAxis(float (Calibration::*getter)(), int samples) {
     return sum / samples;
 }
 
-bool SelfTest::axisPassed(float st_accel, float base_accel, float delta_expected) {
-    
+bool SelfTest::axisPassed(float st_accel, float base_accel, float delta_expected, float tolerance) {
+
 }
 
 bool SelfTest::run() {

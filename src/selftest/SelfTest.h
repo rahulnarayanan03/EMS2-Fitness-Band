@@ -22,7 +22,7 @@ public:
     // run the full self test - returns true if all axes pass
     bool run();
 
-    bool axisPassed(float st_accel, float base_accel, float delta_expected);
+    bool axisPassed(float st_accel, float base_accel, float delta_expected, float tolerance);
 
     STResult    getResult();
     float       getDeltaX();
