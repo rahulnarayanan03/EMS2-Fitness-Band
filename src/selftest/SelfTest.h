@@ -2,12 +2,12 @@
 #define SELFTEST_H
 #include "../calibration/calibration.h"
 
-// expected changes when ST pin is pulled low (datasheet: X = -1.08g, Y = +1.08g, Z = +1.83g at Vs=3V)
-// we allow +/-50% tolerance since our supply voltage differs
-static constexpr float ST_X_EXPECTED = -1.08f;
-static constexpr float ST_Y_EXPECTED =  1.08f;
-static constexpr float ST_Z_EXPECTED =  1.83f;
-static constexpr float ST_TOLERANCE  =  0.50f;  // 50% tolerance
+// Expected accel. changes when running ST: X = -432.6mV, Y = +432.6mV, Z = +732.1mV (at Vs=3.3V)
+// We allow a 1% tolerance
+static constexpr float ST_X_EXPECTED = -432.6f;
+static constexpr float ST_Y_EXPECTED = 432.6f;
+static constexpr float ST_Z_EXPECTED = 732.1f;
+static constexpr float ST_TOLERANCE  = 0.1f;    // 1% tolerance
 
 enum class STResult { PASS, FAIL_X, FAIL_Y, FAIL_Z, NOT_RUN };
 
@@ -32,11 +32,11 @@ public:
 
 private:
     Calibration &_cal;
-    int      _stPin;
+    int _stPin;
     STResult _result = STResult::NOT_RUN;
-    float    _deltaX = 0;
-    float    _deltaY = 0;
-    float    _deltaZ = 0;
+    float _deltaX = 0;
+    float _deltaY = 0;
+    float _deltaZ = 0;
     float sampleAxis(float (Calibration::*getter)(), int samples = 32);
 };
 
