@@ -20,7 +20,11 @@ float SelfTest::sampleAxis(float (Calibration::*getter)(), int samples) {
 }
 
 bool SelfTest::axisPassed(float delta_accel, float delta_expected, float tolerance) {
-    
+    if ((abs(delta_expected - delta_accel) < tolerance)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool SelfTest::run() {
