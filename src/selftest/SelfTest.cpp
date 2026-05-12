@@ -6,15 +6,15 @@ SelfTest::SelfTest(Calibration &cal, int stPin)
 
 void SelfTest::begin() {
     pinMode(_stPin, OUTPUT);
-    digitalWrite(_stPin, HIGH);  // ST idle high - keep it here until the test runs
+    digitalWrite(_stPin, HIGH); // ST pin is active low, so keep it high before running the self test
 }
 
-// averages multiple readings from one axis to reduce noise
+// Averages multiple readings from one axis to reduce noise
 float SelfTest::sampleAxis(float (Calibration::*getter)(), int samples) {
     float sum = 0.0;
     for (int i = 0; i < samples; i++) {
         sum += (_cal.*getter)();
-        delay(5);  // small gap between samples
+        delay(5);  // 5ms delay between samples
     }
     return sum / samples;
 }
@@ -30,24 +30,24 @@ bool SelfTest::axisPassed(float delta_accel, float delta_expected, float toleran
 bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
 
-    // average baseline readings with ST pin still high
-    float baseX = sampleAxis(&Calibration::getRawX);
-    float baseY = sampleAxis(&Calibration::getRawY);
-    float baseZ = sampleAxis(&Calibration::getRawZ);
+    // Average baseline readings just before starting the self test
+    float baseX = sampleAxis(&Calibration::getX_mV);
+    float baseY = sampleAxis(&Calibration::getY_mV);
+    float baseZ = sampleAxis(&Calibration::getZ_mV);
     Serial.print("[ST] Baseline X: "); Serial.print(baseX, 3);
     Serial.print(" Y: "); Serial.print(baseY, 3);
     Serial.print(" Z: "); Serial.println(baseZ, 3);
 
-    // pull ST low - applies electrostatic force to the beam
+    // Pull ST pin low to activate the self test
     digitalWrite(_stPin, LOW);
-    delay(10);  // let the beam settle before sampling
+    delay(10);  // Small 10ms delay to let the ADXL settle
 
-    // average readings with ST active
-    float stX = sampleAxis(&Calibration::getRawX);
-    float stY = sampleAxis(&Calibration::getRawY);
-    float stZ = sampleAxis(&Calibration::getRawZ);
+    // Average readings with ST active
+    float stX = sampleAxis(&Calibration::getX_mV);
+    float stY = sampleAxis(&Calibration::getY_mV);
+    float stZ = sampleAxis(&Calibration::getZ_mV);
 
-    // done - return ST high immediately
+    // Once readings are sampled, deactivate ST
     digitalWrite(_stPin, HIGH);
 
     // Find change in acceleration (final - initial)
