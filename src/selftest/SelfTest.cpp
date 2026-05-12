@@ -23,9 +23,9 @@ bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
 
     // average baseline readings with ST pin still high
-    float baseX = sampleAxis(&Calibration::getXG);
-    float baseY = sampleAxis(&Calibration::getYG);
-    float baseZ = sampleAxis(&Calibration::getZG);
+    float baseX = sampleAxis(&Calibration::getRawX);
+    float baseY = sampleAxis(&Calibration::getRawY);
+    float baseZ = sampleAxis(&Calibration::getRawZ);
     Serial.print("[ST] Baseline X: "); Serial.print(baseX, 3);
     Serial.print(" Y: "); Serial.print(baseY, 3);
     Serial.print(" Z: "); Serial.println(baseZ, 3);
@@ -35,9 +35,9 @@ bool SelfTest::run() {
     delay(10);  // let the beam settle before sampling
 
     // average readings with ST active
-    float stX = sampleAxis(&Calibration::getXG);
-    float stY = sampleAxis(&Calibration::getYG);
-    float stZ = sampleAxis(&Calibration::getZG);
+    float stX = sampleAxis(&Calibration::getRawX);
+    float stY = sampleAxis(&Calibration::getRawY);
+    float stZ = sampleAxis(&Calibration::getRawZ);
 
     // done - return ST high immediately
     digitalWrite(_stPin, HIGH);
