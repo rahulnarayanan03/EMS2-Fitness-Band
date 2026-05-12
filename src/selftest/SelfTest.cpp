@@ -58,10 +58,10 @@ bool SelfTest::run() {
     Serial.print(" Y: "); Serial.print(_deltaY, 3);
     Serial.print(" Z: "); Serial.println(_deltaZ, 3);
 
-    // check each axis is in the right direction and above the minimum expected threshold
-    bool passX = (_deltaX < 0) && (abs(_deltaX) > abs(ST_X_EXPECTED) * (1.0f - ST_TOLERANCE));
-    bool passY = (_deltaY > 0) && (_deltaY > ST_Y_EXPECTED * (1.0f - ST_TOLERANCE));
-    bool passZ = (_deltaZ > 0) && (_deltaZ > ST_Z_EXPECTED * (1.0f - ST_TOLERANCE));
+    // Check each axis' change in acceleration is expected (within tolerance)
+    bool passX = axisPassed(_deltaX, ST_X_EXPECTED, ST_TOLERANCE);
+    bool passY = axisPassed(_deltaY, ST_Y_EXPECTED, ST_TOLERANCE);
+    bool passZ = axisPassed(_deltaZ, ST_Z_EXPECTED, ST_TOLERANCE);
 
     if (!passX) {
         _result = STResult::FAIL_X;
