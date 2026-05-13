@@ -230,13 +230,13 @@ void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
 
     char buf[32];
 
-    snprintf(buf, sizeof(buf), "dX %.2f g", dX);
+    snprintf(buf, sizeof(buf), "dX = %.2f mV", dX);
     tft.drawString(buf, 10, 92, 4);
 
-    snprintf(buf, sizeof(buf), "dY %.2f g", dY);
+    snprintf(buf, sizeof(buf), "dY = %.2f mV", dY);
     tft.drawString(buf, 10, 126, 4);
 
-    snprintf(buf, sizeof(buf), "dZ %.2f g", dZ);
+    snprintf(buf, sizeof(buf), "dZ = %.2f mV", dZ);
     tft.drawString(buf, 10, 160, 4);
 
     drawHomeButton(tft);

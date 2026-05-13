@@ -46,6 +46,9 @@ bool SelfTest::run() {
     float stX = sampleAxis(&Calibration::getX_mV);
     float stY = sampleAxis(&Calibration::getY_mV);
     float stZ = sampleAxis(&Calibration::getZ_mV);
+    Serial.print("[ST] New X: "); Serial.print(stX, 3);
+    Serial.print(" Y: "); Serial.print(stY, 3);
+    Serial.print(" Z: "); Serial.println(stZ, 3);
 
     // Once readings are sampled, deactivate ST
     digitalWrite(_stPin, HIGH);

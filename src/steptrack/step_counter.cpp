@@ -51,6 +51,11 @@ void StepCounter::update() {
     float y = _cal.getYG();
     float z = _cal.getZG();
 
+    // x,y,z values in mV
+    float x_mV = _cal.getX_mV();
+    float y_mV = _cal.getY_mV();
+    float z_mV = _cal.getZ_mV();
+
     // compute total magnitude across all 3 axes
     // at rest this should sit around 1g due to gravity
     float magnitude = sqrtf(x * x + y * y + z * z);
@@ -98,6 +103,12 @@ void StepCounter::update() {
                       magnitude,
                       highLine,
                       lowLine,
+                      _stepCount,
+                      _aboveThreshold ? "yes" : "no");
+        Serial.printf("[StepCounter] x=%.3fmV  y=%.3fmV  z=%.3fmV  steps=%u  aboveThreshold=%s\n",
+                      x_mV,
+                      y_mV,
+                      z_mV,
                       _stepCount,
                       _aboveThreshold ? "yes" : "no");
     }
