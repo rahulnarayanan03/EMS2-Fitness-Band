@@ -141,15 +141,17 @@ void UI::drawStepsBar() {
     _tft.drawRect(STEPS_BAR_X, STEPS_BAR_Y, STEPS_BAR_W, STEPS_BAR_H, GB_DARKEST);
 
     _tft.setTextDatum(TL_DATUM);
-    _tft.setTextColor(GB_DARK, GB_LIGHTEST);
-    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 6, 2);
+    _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+
+    // Bigger STEPS label
+    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 4, 2);
 
     drawStepResetButton();
 
     _tft.fillRect(STEPS_BAR_X + 6,
-                  STEPS_BAR_Y + 28,
+                  STEPS_BAR_Y + 34,
                   STEP_RESET_BTN_X - STEPS_BAR_X - 12,
-                  STEPS_BAR_H - 34,
+                  STEPS_BAR_H - 40,
                   GB_LIGHTEST);
 }
 
@@ -160,7 +162,6 @@ void UI::drawStepResetButton() {
                   STEP_RESET_BTN_H,
                   RESET_RED);
 
-    // Border is now the same red as the RESET button.
     _tft.drawRect(STEP_RESET_BTN_X,
                   STEP_RESET_BTN_Y,
                   STEP_RESET_BTN_W,
@@ -197,10 +198,14 @@ void UI::drawLeftPanel() {
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
-    _tft.drawString("-- kcal", LEFT_PNL_X + 56, LEFT_PNL_Y + 14, 2);
+
+    // Bigger calorie placeholder
+    _tft.drawString("-- kcal", LEFT_PNL_X + 56, LEFT_PNL_Y + 8, 2);
 
     drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 54, 0);
-    _tft.drawString("--V", LEFT_PNL_X + 62, LEFT_PNL_Y + 52, 2);
+
+    // Bigger battery placeholder
+    _tft.drawString("--%", LEFT_PNL_X + 62, LEFT_PNL_Y + 46, 2);
 }
 
 void UI::drawRightPanel() {
@@ -214,10 +219,9 @@ void UI::drawRightPanel() {
 }
 
 void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
-    // App screen buttons now use the existing leaf-green colour from UI.h.
-    uint16_t bg  = GB_LIGHTEST;
+    uint16_t bg  = LEAF_GREEN;
     uint16_t bor = active ? GB_DARKEST : GB_DARK;
-    uint16_t txt = active ? GB_DARKEST : GB_DARK;
+    uint16_t txt = GB_DARKEST;
 
     _tft.fillRect(x, y, BTN_W, BTN_H, bg);
     _tft.drawRect(x, y, BTN_W, BTN_H, bor);
@@ -269,9 +273,9 @@ void UI::refreshSteps(uint32_t steps) {
     _lastSteps = steps;
 
     int16_t numberX = STEPS_BAR_X + 8;
-    int16_t numberY = STEPS_BAR_Y + 28;
+    int16_t numberY = STEPS_BAR_Y + 34;
     int16_t numberW = STEP_RESET_BTN_X - numberX - 4;
-    int16_t numberH = STEPS_BAR_H - 32;
+    int16_t numberH = STEPS_BAR_H - 38;
 
     _tft.fillRect(numberX, numberY, numberW, numberH, GB_LIGHTEST);
 
@@ -289,9 +293,9 @@ void UI::refreshCalories() {
     _lastCalories = _calories;
 
     _tft.fillRect(LEFT_PNL_X + 52,
-                  LEFT_PNL_Y + 8,
+                  LEFT_PNL_Y + 6,
                   LEFT_PNL_W - 58,
-                  28,
+                  30,
                   GB_LIGHTEST);
 
     _tft.setTextDatum(TL_DATUM);
@@ -299,7 +303,7 @@ void UI::refreshCalories() {
 
     char buf[12];
     snprintf(buf, sizeof(buf), "%.0f kcal", _calories);
-    _tft.drawString(buf, LEFT_PNL_X + 56, LEFT_PNL_Y + 14, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 56, LEFT_PNL_Y + 8, 2);
 }
 
 void UI::refreshBattery(float cv, float cp) {
@@ -312,9 +316,9 @@ void UI::refreshBattery(float cv, float cp) {
     _lastBattMv  = battMv;
 
     _tft.fillRect(LEFT_PNL_X + 8,
-                  LEFT_PNL_Y + 44,
+                  LEFT_PNL_Y + 42,
                   LEFT_PNL_W - 16,
-                  26,
+                  28,
                   GB_LIGHTEST);
 
     drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 54, (pct >= 0) ? pct : 0);
@@ -329,7 +333,7 @@ void UI::refreshBattery(float cv, float cp) {
         snprintf(buf, sizeof(buf), "%d%%", pct);
     }
 
-    _tft.drawString(buf, LEFT_PNL_X + 62, LEFT_PNL_Y + 52, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 62, LEFT_PNL_Y + 46, 2);
 }
 
 // ---- sprite / activity -----------------------------------------------------

@@ -33,6 +33,7 @@ static constexpr uint16_t GB_LIGHT    = 0x8C10;
 static constexpr uint16_t GB_LIGHTEST = 0xC710;
 static constexpr uint16_t GB_INACTIVE = 0x9D12;
 static constexpr uint16_t HEART_RED   = 0xD020;
+static constexpr uint16_t LEAF_GREEN = 0x5DE7;
 
 // stronger reset button colour
 static constexpr uint16_t RESET_RED  = 0xD000;
