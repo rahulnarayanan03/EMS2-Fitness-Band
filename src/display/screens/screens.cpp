@@ -196,15 +196,15 @@ void drawSCTScreen(TFT_eSPI &tft) {
     tft.drawString("", 10, 46, 4);
 
     tft.setTextColor(APP_TEXT, APP_BG);
-    tft.drawString("STEPS", 10, 120, 4);
+    tft.drawString("STEPS", 10, 70, 4);
 
     drawHomeButton(tft);
 }
 
 void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount) {
     // Clear only the step number area.
-    // Do not clear over the HOME button.
-    tft.fillRect(10, 154, 80, 28, APP_BG);
+    // Positioned under the STEPS label and above the HOME button.
+    tft.fillRect(10, 105, 100, 36, APP_BG);
 
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(APP_TEXT, APP_BG);
@@ -212,7 +212,7 @@ void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount) {
     char buf[12];
     snprintf(buf, sizeof(buf), "%lu", (unsigned long)stepCount);
 
-    tft.drawString(buf, 10, 154, 4);
+    tft.drawString(buf, 10, 105, 4);
 }
 
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,

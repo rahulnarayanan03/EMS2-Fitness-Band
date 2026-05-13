@@ -33,6 +33,7 @@ static constexpr uint16_t GB_LIGHT    = 0x8C10;
 static constexpr uint16_t GB_LIGHTEST = 0xC710;
 static constexpr uint16_t GB_INACTIVE = 0x9D12;
 static constexpr uint16_t HEART_RED   = 0xD020;
+static constexpr uint16_t LEAF_GREEN = 0x5DE7;
 
 // stronger reset button colour
 static constexpr uint16_t RESET_RED  = 0xD000;
@@ -40,47 +41,46 @@ static constexpr uint16_t RESET_DARK = 0x7000;
 static constexpr uint16_t RESET_TEXT = TFT_WHITE;
 
 // display orientation and layout geometry
-static constexpr uint8_t  DISPLAY_ROTATION = 3;   // 90 degrees counter-clockwise
+static constexpr uint8_t  DISPLAY_ROTATION = 3;
 static constexpr int16_t  SCREEN_W         = 320;
 static constexpr int16_t  SCREEN_H         = 240;
 
-static constexpr int16_t TOPBAR_H = 20;
+static constexpr int16_t TOPBAR_H = 34;
 
-// gear icon sits in the top-right corner of the top bar
-static constexpr int16_t GEAR_X = 298;   // centre x
-static constexpr int16_t GEAR_Y = 10;    // centre y
-static constexpr int16_t GEAR_HIT_X = 284;  // touch hitbox left edge
-static constexpr int16_t GEAR_HIT_W = 32;   // touch hitbox width
+// gear icon
+static constexpr int16_t GEAR_X = 300;
+static constexpr int16_t GEAR_Y = 17;
+static constexpr int16_t GEAR_HIT_X = 282;
+static constexpr int16_t GEAR_HIT_W = 36;
 
 // layout constants
-static constexpr int16_t SPRITE_X = 215;
-static constexpr int16_t SPRITE_Y = 56;
-static constexpr int16_t SPRITE_W = 65;
-static constexpr int16_t SPRITE_H = 75;
+static constexpr int16_t SPRITE_X = 235;
+static constexpr int16_t SPRITE_Y = 62;
+static constexpr int16_t SPRITE_W = 70;
+static constexpr int16_t SPRITE_H = 78;
 
-static constexpr int16_t STEPS_BAR_X = 178;
-static constexpr int16_t STEPS_BAR_Y = 150;
-static constexpr int16_t STEPS_BAR_W = 130;
-static constexpr int16_t STEPS_BAR_H = 70;
+static constexpr int16_t STEPS_BAR_X = 176;
+static constexpr int16_t STEPS_BAR_Y = 158;
+static constexpr int16_t STEPS_BAR_W = 136;
+static constexpr int16_t STEPS_BAR_H = 72;
 
-// bigger reset button inside the steps panel
-static constexpr int16_t STEP_RESET_BTN_W = 66;
-static constexpr int16_t STEP_RESET_BTN_H = 32;
-static constexpr int16_t STEP_RESET_BTN_X = STEPS_BAR_X + STEPS_BAR_W - STEP_RESET_BTN_W - 6;
-static constexpr int16_t STEP_RESET_BTN_Y = STEPS_BAR_Y + 8;
+static constexpr int16_t STEP_RESET_BTN_W = 68;
+static constexpr int16_t STEP_RESET_BTN_H = 34;
+static constexpr int16_t STEP_RESET_BTN_X = STEPS_BAR_X + STEPS_BAR_W - STEP_RESET_BTN_W - 7;
+static constexpr int16_t STEP_RESET_BTN_Y = STEPS_BAR_Y + 16;
 
 static constexpr int16_t LEFT_PNL_X = 8;
-static constexpr int16_t LEFT_PNL_Y = 150;
-static constexpr int16_t LEFT_PNL_W = 112;
-static constexpr int16_t LEFT_PNL_H = 70;
+static constexpr int16_t LEFT_PNL_Y = 158;
+static constexpr int16_t LEFT_PNL_W = 160;
+static constexpr int16_t LEFT_PNL_H = 72;
 
 static constexpr int16_t RIGHT_PNL_X = 8;
-static constexpr int16_t RIGHT_PNL_Y = 24;
-static constexpr int16_t RIGHT_PNL_W = 150;
-static constexpr int16_t RIGHT_PNL_H = 112;
+static constexpr int16_t RIGHT_PNL_Y = 42;
+static constexpr int16_t RIGHT_PNL_W = 198;
+static constexpr int16_t RIGHT_PNL_H = 106;
 
-static constexpr int16_t BTN_W   = 68;
-static constexpr int16_t BTN_H   = 45;
+static constexpr int16_t BTN_W   = 94;
+static constexpr int16_t BTN_H   = 48;
 static constexpr int16_t BTN_GAP = 6;
 
 enum class UIActivity { NONE, STANDING, WALKING, RUNNING };
@@ -99,7 +99,7 @@ public:
 
     bool checkButtonTouch(uint16_t tx, uint16_t ty, uint8_t &btnIndex);
     bool checkStepResetTouch(uint16_t tx, uint16_t ty) const;
-    bool checkSettingsTouch(uint16_t tx, uint16_t ty) const;   // gear icon
+    bool checkSettingsTouch(uint16_t tx, uint16_t ty) const;
 
 private:
     TFT_eSPI    &_tft;
@@ -124,11 +124,11 @@ private:
     uint16_t _lastBattMv   = 0;
     float    _lastCalories = -1.0f;
 
-    uint8_t _hour     = 0;
-    uint8_t _minute   = 0;
-    uint8_t _day      = 1;
-    uint8_t _month    = 1;
-    float   _calories = 0.0f;
+    uint8_t  _hour     = 0;
+    uint8_t  _minute   = 0;
+    uint8_t  _day      = 1;
+    uint8_t  _month    = 1;
+    float    _calories = 0.0f;
 
     void drawStaticLayout();
     void drawTopBar();
@@ -160,4 +160,4 @@ private:
     static UI  *_instance;
 };
 
-#endif // UI_H
+#endif

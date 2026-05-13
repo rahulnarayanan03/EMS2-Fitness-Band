@@ -1,4 +1,3 @@
-// Date parts commented out, not deleted. check lines 43, 108-110, 190-212
 // UI.cpp
 // See UI.h for layout description, geometry and colour constants.
 
@@ -7,10 +6,10 @@
 UI *UI::_instance = nullptr;
 
 // button positions inside the right panel
-static const int16_t BTN_COL1_X = RIGHT_PNL_X + 6;
-static const int16_t BTN_COL2_X = RIGHT_PNL_X + 6 + BTN_W + BTN_GAP;
-static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 8;
-static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 8 + BTN_H + BTN_GAP;
+static const int16_t BTN_COL1_X = RIGHT_PNL_X + 4;
+static const int16_t BTN_COL2_X = RIGHT_PNL_X + 4 + BTN_W + BTN_GAP;
+static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 4;
+static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 4 + BTN_H + BTN_GAP;
 
 static const char   *BTN_LABEL[4]  = { "C.T", "S.T", "S.C.T", "P.ID.T" };
 static const bool    BTN_ACTIVE[4] = { true, false, true, false };
@@ -29,7 +28,6 @@ UI::UI(TFT_eSPI &tft, StepCounter &stepM, Calibration &cal)
 void UI::begin() {
     _gif.begin(GIF_PALETTE_RGB565_BE);
 
-    // force all dynamic fields to redraw after the static screen is rebuilt
     _lastHour     = 255;
     _lastMinute   = 255;
     _lastDay      = 255;
@@ -100,7 +98,6 @@ bool UI::checkStepResetTouch(uint16_t tx, uint16_t ty) const {
 }
 
 bool UI::checkSettingsTouch(uint16_t tx, uint16_t ty) const {
-    // hitbox covers the gear icon area in the top-right of the top bar
     return tx >= (uint16_t)GEAR_HIT_X &&
            tx <= (uint16_t)(GEAR_HIT_X + GEAR_HIT_W) &&
            ty >= 0 &&
@@ -122,45 +119,40 @@ void UI::drawTopBar() {
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
-    _tft.drawString("--:--", 6, 3, 2);
+    _tft.drawString("00:00", 8, 2, 4);
 
     drawGearIcon();
 }
 
 void UI::drawGearIcon() {
-    // simple gear: outer circle + inner circle + 4 teeth as small rects
     uint16_t col = GB_DARKEST;
 
-    _tft.fillCircle(GEAR_X, GEAR_Y, 6, col);
-    _tft.fillCircle(GEAR_X, GEAR_Y, 3, GB_LIGHTEST);   // hollow centre
+    _tft.fillCircle(GEAR_X, GEAR_Y, 7, col);
+    _tft.fillCircle(GEAR_X, GEAR_Y, 4, GB_LIGHTEST);
 
-    // four teeth
-    _tft.fillRect(GEAR_X - 1, GEAR_Y - 9, 3, 4, col);  // top
-    _tft.fillRect(GEAR_X - 1, GEAR_Y + 5, 3, 4, col);  // bottom
-    _tft.fillRect(GEAR_X - 9, GEAR_Y - 1, 4, 3, col);  // left
-    _tft.fillRect(GEAR_X + 5, GEAR_Y - 1, 4, 3, col);  // right
+    _tft.fillRect(GEAR_X - 1, GEAR_Y - 11, 3, 5, col);
+    _tft.fillRect(GEAR_X - 1, GEAR_Y + 6, 3, 5, col);
+    _tft.fillRect(GEAR_X - 11, GEAR_Y - 1, 5, 3, col);
+    _tft.fillRect(GEAR_X + 6, GEAR_Y - 1, 5, 3, col);
 }
 
 void UI::drawStepsBar() {
-    _tft.fillRect(STEPS_BAR_X, STEPS_BAR_Y, STEPS_BAR_W, STEPS_BAR_H, GB_LIGHT);
+    _tft.fillRect(STEPS_BAR_X, STEPS_BAR_Y, STEPS_BAR_W, STEPS_BAR_H, GB_LIGHTEST);
     _tft.drawRect(STEPS_BAR_X, STEPS_BAR_Y, STEPS_BAR_W, STEPS_BAR_H, GB_DARKEST);
 
     _tft.setTextDatum(TL_DATUM);
-    _tft.setTextColor(GB_DARK, GB_LIGHT);
-    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 6, 2);
+    _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
+
+    // Bigger STEPS label
+    _tft.drawString("STEPS", STEPS_BAR_X + 8, STEPS_BAR_Y + 4, 2);
 
     drawStepResetButton();
 
-    // do not draw a placeholder "0" here — refreshSteps() handles that
     _tft.fillRect(STEPS_BAR_X + 6,
-                  STEPS_BAR_Y + 28,
+                  STEPS_BAR_Y + 34,
                   STEP_RESET_BTN_X - STEPS_BAR_X - 12,
-                  STEPS_BAR_H - 34,
-                  GB_LIGHT);
-
-    // _tft.setTextDatum(TR_DATUM);
-    // _tft.drawString("--/--", STEPS_BAR_X + STEPS_BAR_W - 8,
-                    // STEPS_BAR_Y + STEPS_BAR_H - 22, 2);
+                  STEPS_BAR_H - 40,
+                  GB_LIGHTEST);
 }
 
 void UI::drawStepResetButton() {
@@ -174,13 +166,13 @@ void UI::drawStepResetButton() {
                   STEP_RESET_BTN_Y,
                   STEP_RESET_BTN_W,
                   STEP_RESET_BTN_H,
-                  RESET_DARK);
+                  RESET_RED);
 
     _tft.drawRect(STEP_RESET_BTN_X + 1,
                   STEP_RESET_BTN_Y + 1,
                   STEP_RESET_BTN_W - 2,
                   STEP_RESET_BTN_H - 2,
-                  RESET_TEXT);
+                  RESET_RED);
 
     _tft.setTextDatum(MC_DATUM);
     _tft.setTextColor(RESET_TEXT, RESET_RED);
@@ -191,31 +183,35 @@ void UI::drawStepResetButton() {
 }
 
 void UI::drawLeftPanel() {
-    _tft.fillRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_LIGHT);
+    _tft.fillRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_LIGHTEST);
     _tft.drawRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_DARKEST);
 
-    _tft.drawFastHLine(LEFT_PNL_X + 3,
-                       LEFT_PNL_Y + LEFT_PNL_H / 2,
-                       LEFT_PNL_W - 6,
+    _tft.drawFastHLine(LEFT_PNL_X + 6,
+                       LEFT_PNL_Y + LEFT_PNL_H / 2 + 2,
+                       LEFT_PNL_W - 12,
                        GB_DARK);
 
-    // small flame triangle to indicate calories
-    _tft.fillTriangle(LEFT_PNL_X + 17, LEFT_PNL_Y + 28,
-                      LEFT_PNL_X + 10, LEFT_PNL_Y + 10,
-                      LEFT_PNL_X + 24, LEFT_PNL_Y + 10,
+    _tft.fillTriangle(LEFT_PNL_X + 24, LEFT_PNL_Y + 32,
+                      LEFT_PNL_X + 12, LEFT_PNL_Y + 12,
+                      LEFT_PNL_X + 36, LEFT_PNL_Y + 12,
                       TFT_ORANGE);
 
     _tft.setTextDatum(TL_DATUM);
-    _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-    _tft.drawString("-- kcal", LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
+    _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
 
-    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, 0);
-    _tft.drawString("--V", LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
+    // Bigger calorie placeholder
+    _tft.drawString("-- kcal", LEFT_PNL_X + 56, LEFT_PNL_Y + 8, 2);
+
+    drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 54, 0);
+
+    // Bigger battery placeholder
+    _tft.drawString("--%", LEFT_PNL_X + 62, LEFT_PNL_Y + 46, 2);
 }
 
 void UI::drawRightPanel() {
-    _tft.fillRect(RIGHT_PNL_X, RIGHT_PNL_Y, RIGHT_PNL_W, RIGHT_PNL_H, GB_LIGHT);
-    _tft.drawRect(RIGHT_PNL_X, RIGHT_PNL_Y, RIGHT_PNL_W, RIGHT_PNL_H, GB_DARKEST);
+    // Clear the app button area using the main background colour.
+    // No outer border, so the app folder does not look double-bordered.
+    _tft.fillRect(RIGHT_PNL_X, RIGHT_PNL_Y, RIGHT_PNL_W, RIGHT_PNL_H, GB_LIGHTEST);
 
     for (uint8_t i = 0; i < 4; i++) {
         drawButton(BTN_X[i], BTN_Y[i], BTN_LABEL[i], BTN_ACTIVE[i]);
@@ -223,16 +219,16 @@ void UI::drawRightPanel() {
 }
 
 void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
-    uint16_t bg  = active ? GB_LIGHT   : GB_INACTIVE;
+    uint16_t bg  = LEAF_GREEN;
     uint16_t bor = active ? GB_DARKEST : GB_DARK;
-    uint16_t txt = active ? GB_DARKEST : GB_DARK;
+    uint16_t txt = GB_DARKEST;
 
     _tft.fillRect(x, y, BTN_W, BTN_H, bg);
     _tft.drawRect(x, y, BTN_W, BTN_H, bor);
 
     _tft.setTextDatum(MC_DATUM);
     _tft.setTextColor(txt, bg);
-    _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 2);
+    _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 4);
 }
 
 void UI::drawHeartIcon(int16_t cx, int16_t cy) {
@@ -262,78 +258,52 @@ void UI::refreshTime() {
     _lastHour   = _hour;
     _lastMinute = _minute;
 
-    _tft.fillRect(4, 2, 80, TOPBAR_H - 2, GB_LIGHTEST);
+    _tft.fillRect(6, 2, 105, TOPBAR_H - 4, GB_LIGHTEST);
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
 
     char buf[6];
     snprintf(buf, sizeof(buf), "%02d:%02d", _hour, _minute);
-    _tft.drawString(buf, 6, 3, 2);
+    _tft.drawString(buf, 8, 2, 4);
 }
-
-// void UI::refreshDate() {
-//     if (_day == _lastDay && _month == _lastMonth) return;
-
-//     _lastDay   = _day;
-//     _lastMonth = _month;
-
-//     _tft.fillRect(STEPS_BAR_X + STEPS_BAR_W - 70,
-//                   STEPS_BAR_Y + STEPS_BAR_H - 24,
-//                   64,
-//                   20,
-//                   GB_LIGHT);
-
-//     _tft.setTextDatum(TR_DATUM);
-//     _tft.setTextColor(GB_DARKEST, GB_LIGHT);
-
-//     char buf[6];
-//     snprintf(buf, sizeof(buf), "%02d/%02d", _day, _month);
-
-//     _tft.drawString(buf,
-//                     STEPS_BAR_X + STEPS_BAR_W - 8,
-//                     STEPS_BAR_Y + STEPS_BAR_H - 22,
-//                     2);
-// }
 
 void UI::refreshSteps(uint32_t steps) {
     if (steps == _lastSteps) return;
 
     _lastSteps = steps;
 
-    // clear only the number area, not the RESET button
     int16_t numberX = STEPS_BAR_X + 8;
-    int16_t numberY = STEPS_BAR_Y + 26;
+    int16_t numberY = STEPS_BAR_Y + 34;
     int16_t numberW = STEP_RESET_BTN_X - numberX - 4;
-    int16_t numberH = STEPS_BAR_H - 30;
+    int16_t numberH = STEPS_BAR_H - 38;
 
-    _tft.fillRect(numberX, numberY, numberW, numberH, GB_LIGHT);
+    _tft.fillRect(numberX, numberY, numberW, numberH, GB_LIGHTEST);
 
     _tft.setTextDatum(TL_DATUM);
-    _tft.setTextColor(GB_DARKEST, GB_LIGHT);
+    _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
 
     char buf[10];
     snprintf(buf, sizeof(buf), "%lu", (unsigned long)steps);
-    _tft.drawString(buf, numberX, STEPS_BAR_Y + 34, 4);
+    _tft.drawString(buf, numberX, STEPS_BAR_Y + 36, 4);
 }
 
 void UI::refreshCalories() {
-    // only redraw if value changed by more than 0.5 kcal to avoid flicker
     if (fabsf(_calories - _lastCalories) < 0.5f && _lastCalories >= 0) return;
 
     _lastCalories = _calories;
 
-    _tft.fillRect(LEFT_PNL_X + 32,
-                  LEFT_PNL_Y + 8,
-                  LEFT_PNL_W - 38,
-                  28,
-                  GB_LIGHT);
+    _tft.fillRect(LEFT_PNL_X + 52,
+                  LEFT_PNL_Y + 6,
+                  LEFT_PNL_W - 58,
+                  30,
+                  GB_LIGHTEST);
 
     _tft.setTextDatum(TL_DATUM);
-    _tft.setTextColor(GB_DARKEST, GB_LIGHT);
+    _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
 
     char buf[12];
     snprintf(buf, sizeof(buf), "%.0f kcal", _calories);
-    _tft.drawString(buf, LEFT_PNL_X + 34, LEFT_PNL_Y + 12, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 56, LEFT_PNL_Y + 8, 2);
 }
 
 void UI::refreshBattery(float cv, float cp) {
@@ -345,16 +315,16 @@ void UI::refreshBattery(float cv, float cp) {
     _lastBattPct = pct;
     _lastBattMv  = battMv;
 
-    _tft.fillRect(LEFT_PNL_X + 4,
-                  LEFT_PNL_Y + 47,
-                  LEFT_PNL_W - 8,
-                  30,
-                  GB_LIGHT);
+    _tft.fillRect(LEFT_PNL_X + 8,
+                  LEFT_PNL_Y + 42,
+                  LEFT_PNL_W - 16,
+                  28,
+                  GB_LIGHTEST);
 
-    drawBattIcon(LEFT_PNL_X + 12, LEFT_PNL_Y + 58, (pct >= 0) ? pct : 0);
+    drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 54, (pct >= 0) ? pct : 0);
 
     _tft.setTextDatum(TL_DATUM);
-    _tft.setTextColor(GB_DARKEST, GB_LIGHT);
+    _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
 
     char buf[12];
     if (pct < 0) {
@@ -363,7 +333,7 @@ void UI::refreshBattery(float cv, float cp) {
         snprintf(buf, sizeof(buf), "%d%%", pct);
     }
 
-    _tft.drawString(buf, LEFT_PNL_X + 42, LEFT_PNL_Y + 54, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 62, LEFT_PNL_Y + 46, 2);
 }
 
 // ---- sprite / activity -----------------------------------------------------
@@ -377,13 +347,10 @@ void UI::updateActivity() {
         newActivity = UIActivity::WALKING;
     }
 
-    // Do nothing if the pace has not changed.
-    // This prevents the animation from restarting every loop.
     if (newActivity == _activity) {
         return;
     }
 
-    // Pace changed, so reset the sprite animation once.
     _activity     = newActivity;
     _gifFrame     = 0;
     _lastFrameMs  = 0;
@@ -402,7 +369,6 @@ void UI::updateActivity() {
 }
 
 void UI::advanceSprite(uint32_t nowMs) {
-    // If this is a newly selected activity, draw the first frame/image now.
     if (_activity != _lastActivity) {
         _tft.fillRect(SPRITE_X, SPRITE_Y, SPRITE_W, SPRITE_H, GB_LIGHTEST);
 
@@ -428,11 +394,8 @@ void UI::advanceSprite(uint32_t nowMs) {
         return;
     }
 
-    // If the activity has not changed, only animate walking/running.
-    // Standing is a static image, so leave it alone.
     if (_activity == UIActivity::WALKING) {
         drawGifFrame(walk_gif, walk_gif_len, UI_WALK_FRAME_MS, nowMs);
-
     } else if (_activity == UIActivity::RUNNING) {
         drawGifFrame(run_gif, run_gif_len, UI_RUN_FRAME_MS, nowMs);
     }

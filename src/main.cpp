@@ -3,7 +3,7 @@
 
  Cases:
    0 = SETUP    - first-boot profile setup (height, weight, age)
-   1 = C.T      - calibration, runs automatically on boot
+   1 = C.T      - manual calibration test
    2 = HOME     - main homepage, Red's sprite, steps, app buttons
    3 = S.T      - self test
    4 = S.C.T    - step count test
@@ -266,14 +266,12 @@ void Setup_Case() {
             } else if (tx >= 110 && tx <= 210 && ty >= 155 && ty <= 205) {
                 calorieM.saveProfile(setupAge, setupWeight, setupHeight);
 
-                setupStep      = SETUP_DONE;
-                lastTransition = millis();
-                currentCase    = CASE_CT;
-
-                initCalibration();
+                setupStep = SETUP_DONE;
 
                 Serial.printf("[Setup] Done - age=%d weight=%.1f height=%.1f\n",
                               setupAge, setupWeight, setupHeight);
+
+                goHome();
             }
             break;
 
@@ -598,7 +596,7 @@ void initCalibration() {
     calibM.startCalibration();
     drawCalibrationScreen(tft);
 
-    Serial.println("Boot: calibration started.");
+    Serial.println("Manual calibration started.");
 }
 
 // ---- setup ------------------------------------------------------------------
@@ -617,17 +615,22 @@ void setup() {
 
     stM.begin();
     initDisplay();
-    stepM.begin();
 
+    calibM.begin();
+    stepM.begin();
     calorieM.begin();
 
     if (calorieM.isProfileSet()) {
-        currentCase = CASE_CT;
-        initCalibration();
+        currentCase = CASE_HOME;
+        ui.begin();
+
+        Serial.println("Boot: profile found, going straight to Home.");
     } else {
         currentCase = CASE_SETUP;
         setupStep   = SETUP_WELCOME;
         drawSetupWelcome(tft);
+
+        Serial.println("Boot: no profile found, starting setup wizard.");
     }
 }
 
