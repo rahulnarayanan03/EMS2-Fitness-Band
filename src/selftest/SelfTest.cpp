@@ -9,11 +9,11 @@ void SelfTest::begin() {
     digitalWrite(_stPin, HIGH); // ST pin is active low, so keep it high before running the self test
 }
 
-// Averages multiple readings from one axis to reduce noise
+// Averages multiple readings from one axis to reduce noise, returns in mV
 float SelfTest::sampleAxis(int pin, int samples = 32) {
     long sum = 0;
     for (int i = 0; i < samples; i++) {
-        sum += analogRead(pin);
+        sum += analogReadMilliVolts(pin);
         delayMicroseconds(100);
     }
     return (sum / (float)samples) * (3.3f / 4095.0f);
@@ -29,6 +29,7 @@ bool SelfTest::axisPassed(float delta_accel, float delta_expected, float toleran
 
 bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
+    delay(1000);  // 1 second delay to ensure watch is steady after tapping screen
 
     // Average baseline readings just before starting the self test
     float baseX = sampleAxis(_xPin);
@@ -40,7 +41,7 @@ bool SelfTest::run() {
 
     // Pull ST pin low to activate the self test
     digitalWrite(_stPin, LOW);
-    delay(3000);  // Small 10ms delay to let the ADXL settle
+    delay(30);  // 30ms delay to make sure adxl is steady
 
     // Average readings with ST active
     float stX = sampleAxis(_xPin);
