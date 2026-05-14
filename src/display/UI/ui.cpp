@@ -50,6 +50,10 @@ void UI::begin() {
 void UI::update(uint32_t nowMs, float cv, float cp) {
     uint32_t steps = _stepM.getStepCount();
 
+    uint32_t totalSeconds = nowMs / 1000;
+    _hour   = (totalSeconds / 3600) % 24;
+    _minute = (totalSeconds / 60) % 60;
+
     updateActivity();
     advanceSprite(nowMs);
 
