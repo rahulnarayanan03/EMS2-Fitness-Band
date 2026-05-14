@@ -54,7 +54,7 @@ static constexpr uint8_t  BACKLIGHT_PWM_CHANNEL      = 0;
 Calibration calibM;
 StepCounter stepM(calibM);
 PACEFIND    paceM;
-SelfTest    stM(calibM, ST_PIN);
+SelfTest    stM(ST_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
 

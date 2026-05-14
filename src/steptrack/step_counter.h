@@ -15,8 +15,8 @@
 // At rest, magnitude should sit around 1.0g because of gravity.
 // A step is detected when magnitude rises above 1.0g + SC_THRESHOLD_G,
 // then drops below 1.0g + SC_HYSTERESIS_G.
-static constexpr float    SC_THRESHOLD_G  = 0.22f; // peak must exceed about 1.22g
-static constexpr float    SC_HYSTERESIS_G = 0.10f; // must drop below about 1.10g to reset
+static constexpr float    SC_THRESHOLD_G  = 0.3f; // peak must exceed about 1.22g
+static constexpr float    SC_HYSTERESIS_G = 0.15f; // must drop below about 1.10g to reset
 static constexpr uint32_t SC_COOLDOWN_MS  = 325;   // min time between steps, max about 185 SPM
 static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
 
