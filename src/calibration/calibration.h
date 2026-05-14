@@ -7,7 +7,7 @@ class Calibration {
 public:
     enum class Stage { IDLE, PREP, SAMPLING, DONE };
 
-    static const char* DIR_LABEL[6];  // "Point X+ UP" etc, readable by main/screens
+    static const char* DIR_LABEL[6];
 
     void  begin();
     void  startCalibration();
@@ -15,8 +15,8 @@ public:
 
     bool  isCalibrated();
     Stage getStage();
-    int   getDirIndex();    // 0-5, which direction we're currently on
-    int   getSecsLeft();    // countdown seconds left in current stage
+    int   getDirIndex();
+    int   getSecsLeft();
 
     float getXOffset();
     float getYOffset();
@@ -26,9 +26,9 @@ public:
     float getYG();
     float getZG();
 
-    float getX_mV();    // Get raw ADXL acceleration from the x-axis in millivolts
-    float getY_mV();    // Get raw ADXL acceleration from the y-axis in millivolts
-    float getZ_mV();    // Get raw ADXL acceleration from the z-axis in millivolts
+    float getX_mV();
+    float getY_mV();
+    float getZ_mV();
 
 private:
     static constexpr int   NUM_DIRECTIONS = 6;
@@ -37,8 +37,8 @@ private:
     static constexpr float PREP_MS        = 2000;
     static constexpr float SAMPLE_MS      = 4000;
 
-    int        dirIndex  = 0;
-    Stage      stage     = Stage::IDLE;
+    int        dirIndex   = 0;
+    Stage      stage      = Stage::IDLE;
     bool       calibrated = false;
     uint32_t   stageStart = 0;
 
@@ -52,6 +52,9 @@ private:
 
     float readVoltage(int pin);
     void  finalise();
+
+    bool  loadFromNVS();
+    bool  saveToNVS();
 };
 
 #endif
