@@ -118,7 +118,7 @@ float Calibration::getYG()      { return (readVoltage(yPin) - yOffset) / yScale;
 float Calibration::getZG()      { return (readVoltage(zPin) - zOffset) / zScale; }
 
 float Calibration::getX_mV() {
-    return 1000.0f * (readVoltage(xPin) - 1.35);
+    return 1000.0f * (readVoltage(xPin));
 }
 
 float Calibration::getY_mV() {

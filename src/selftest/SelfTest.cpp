@@ -1,78 +1,70 @@
-// SelfTest.cpp 
+#include <Arduino.h>
 #include "SelfTest.h"
 
-SelfTest::SelfTest(int stPin)
-    : _stPin(stPin) {}
+SelfTest::SelfTest(Calibration &cal, int stPin)
+    : _cal(cal), _stPin(stPin) {}
 
 void SelfTest::begin() {
     pinMode(_stPin, OUTPUT);
     digitalWrite(_stPin, HIGH); // ST pin is active low, so keep it high before running the self test
-    analogSetPinAttenuation(34, ADC_11db);
 }
 
-float SelfTest::readAxisMilliVolts(int pin) {
-    float sum = 0.0f;
-
-    for (int i = 0; i < SAMPLE_COUNT; i++) {
-        sum += analogReadMilliVolts(pin);
-        delay(SAMPLE_DELAY_MS);
+// Averages multiple readings from one axis to reduce noise
+float SelfTest::sampleAxis(float (Calibration::*getter)(), int samples) {
+    float sum = 0.0;
+    for (int i = 0; i < samples; i++) {
+        sum += (_cal.*getter)();
+        delay(5);  // 5ms delay between samples
     }
-
-    return sum / SAMPLE_COUNT;
+    return sum / samples;
 }
 
-bool SelfTest::axisPassed(float measuredDelta_mV, float expectedDelta_mV) {
-    return fabs(measuredDelta_mV - expectedDelta_mV) <= ST_TOLERANCE_MV;
+bool SelfTest::axisPassed(float delta_accel, float delta_expected, float tolerance) {
+    if ((abs(delta_expected - delta_accel) < tolerance)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool SelfTest::run() {
-    Serial.println("[ST] Starting ADXL335 self-test...");
+    Serial.println("[ST] Starting ADXL335 self test...");
 
-    _result = STResult::NOT_RUN;
+    // Average baseline readings just before starting the self test
+    float baseX = sampleAxis(&Calibration::getX_mV);
+    float baseY = sampleAxis(&Calibration::getY_mV);
+    float baseZ = sampleAxis(&Calibration::getZ_mV);
+    Serial.print("[ST] Baseline X: "); Serial.print(baseX, 3);
+    Serial.print(" Y: "); Serial.print(baseY, 3);
+    Serial.print(" Z: "); Serial.println(baseZ, 3);
 
-    // Baseline readings with ST inactive.
-    digitalWrite(_stPin, HIGH);
-    delay(SETTLE_DELAY_MS);
-
-    float baseX = readAxisMilliVolts(X_PIN);
-    float baseY = readAxisMilliVolts(Y_PIN);
-    float baseZ = readAxisMilliVolts(Z_PIN);
-
-    Serial.print("[ST] Baseline mV X: "); Serial.print(baseX, 2);
-    Serial.print(" Y: "); Serial.print(baseY, 2);
-    Serial.print(" Z: "); Serial.println(baseZ, 2);
-
-    // Self-test readings with ST active.
+    // Pull ST pin low to activate the self test
     digitalWrite(_stPin, LOW);
     delay(3000);  // Small 10ms delay to let the ADXL settle
 
-    float stX = readAxisMilliVolts(X_PIN);
-    float stY = readAxisMilliVolts(Y_PIN);
-    float stZ = readAxisMilliVolts(Z_PIN);
+    // Average readings with ST active
+    float stX = sampleAxis(&Calibration::getX_mV);
+    float stY = sampleAxis(&Calibration::getY_mV);
+    float stZ = sampleAxis(&Calibration::getZ_mV);
+    Serial.print("[ST] New X: "); Serial.print(stX, 3);
+    Serial.print(" Y: "); Serial.print(stY, 3);
+    Serial.print(" Z: "); Serial.println(stZ, 3);
 
-    Serial.print("[ST] Self-test mV X: "); Serial.print(stX, 2);
-    Serial.print(" Y: "); Serial.print(stY, 2);
-    Serial.print(" Z: "); Serial.println(stZ, 2);
-
-    // Return to normal mode immediately after sampling.
+    // Once readings are sampled, deactivate ST
     digitalWrite(_stPin, HIGH);
 
-    // Delta = self-test active reading - baseline reading.
+    // Find change in acceleration (final - initial)
     _deltaX = stX - baseX;
     _deltaY = stY - baseY;
     _deltaZ = stZ - baseZ;
+    Serial.print("[ST] Delta X: "); Serial.print(_deltaX, 3);
+    Serial.print(" Y: "); Serial.print(_deltaY, 3);
+    Serial.print(" Z: "); Serial.println(_deltaZ, 3);
 
-    Serial.print("[ST] Delta mV X: "); Serial.print(_deltaX, 2);
-    Serial.print(" Y: "); Serial.print(_deltaY, 2);
-    Serial.print(" Z: "); Serial.println(_deltaZ, 2);
-
-    Serial.print("[ST] Expected mV X: "); Serial.print(ST_X_EXPECTED_MV, 2);
-    Serial.print(" Y: "); Serial.print(ST_Y_EXPECTED_MV, 2);
-    Serial.print(" Z: "); Serial.println(ST_Z_EXPECTED_MV, 2);
-
-    bool passX = axisPassed(_deltaX, ST_X_EXPECTED_MV);
-    bool passY = axisPassed(_deltaY, ST_Y_EXPECTED_MV);
-    bool passZ = axisPassed(_deltaZ, ST_Z_EXPECTED_MV);
+    // Check each axis' change in acceleration is expected (within tolerance)
+    bool passX = axisPassed(_deltaX, ST_X_EXPECTED, ST_TOLERANCE);
+    bool passY = axisPassed(_deltaY, ST_Y_EXPECTED, ST_TOLERANCE);
+    bool passZ = axisPassed(_deltaZ, ST_Z_EXPECTED, ST_TOLERANCE);
 
     if (!passX) {
         _result = STResult::FAIL_X;
@@ -88,24 +80,13 @@ bool SelfTest::run() {
         Serial.println("[ST] PASS - all axes within tolerance");
     }
 
-    return _result == STResult::PASS;
+    return (_result == STResult::PASS);
 }
 
-STResult SelfTest::getResult() {
-    return _result;
-}
-
-float SelfTest::getDeltaX() {
-    return _deltaX;
-}
-
-float SelfTest::getDeltaY() {
-    return _deltaY;
-}
-
-float SelfTest::getDeltaZ() {
-    return _deltaZ;
-}
+STResult    SelfTest::getResult() { return _result; }
+float       SelfTest::getDeltaX() { return _deltaX; }
+float       SelfTest::getDeltaY() { return _deltaY; }
+float       SelfTest::getDeltaZ() { return _deltaZ; }
 
 const char* SelfTest::getResultStr() {
     switch (_result) {
