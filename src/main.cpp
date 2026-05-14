@@ -34,7 +34,11 @@ TFT_eSPI tft = TFT_eSPI();
 
 #define TOUCH_CS  33
 #define TOUCH_IRQ 36
-#define ST_PIN    4
+
+static constexpr int ST_PIN = 4;
+static constexpr int X_PIN = 34;
+static constexpr int Y_PIN = 35;
+static constexpr int Z_PIN = 26;
 
 SPIClass touchSPI(HSPI);
 XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);
@@ -54,7 +58,7 @@ static constexpr uint8_t  BACKLIGHT_PWM_CHANNEL      = 0;
 Calibration calibM;
 StepCounter stepM(calibM);
 PACEFIND    paceM;
-SelfTest    stM(ST_PIN);
+SelfTest    stM(ST_PIN, X_PIN, Y_PIN, Z_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
 

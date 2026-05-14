@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "SelfTest.h"
 
-SelfTest::SelfTest(Calibration &cal, int stPin)
-    : _cal(cal), _stPin(stPin) {}
+SelfTest::SelfTest(int stPin, int xPin, int yPin, int zPin)
+    : _stPin(stPin), _xPin(xPin), _yPin(yPin), _zPin(zPin) {}
 
 void SelfTest::begin() {
     pinMode(_stPin, OUTPUT);
@@ -10,13 +10,13 @@ void SelfTest::begin() {
 }
 
 // Averages multiple readings from one axis to reduce noise
-float SelfTest::sampleAxis(float (Calibration::*getter)(), int samples) {
-    float sum = 0.0;
+float SelfTest::sampleAxis(int pin, int samples = 32) {
+    long sum = 0;
     for (int i = 0; i < samples; i++) {
-        sum += (_cal.*getter)();
-        delay(5);  // 5ms delay between samples
+        sum += analogRead(pin);
+        delayMicroseconds(100);
     }
-    return sum / samples;
+    return (sum / (float)samples) * (3.3f / 4095.0f);
 }
 
 bool SelfTest::axisPassed(float delta_accel, float delta_expected, float tolerance) {
@@ -31,9 +31,9 @@ bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
 
     // Average baseline readings just before starting the self test
-    float baseX = sampleAxis(&Calibration::getX_mV);
-    float baseY = sampleAxis(&Calibration::getY_mV);
-    float baseZ = sampleAxis(&Calibration::getZ_mV);
+    float baseX = sampleAxis(_xPin);
+    float baseY = sampleAxis(_yPin);
+    float baseZ = sampleAxis(_zPin);
     Serial.print("[ST] Baseline X: "); Serial.print(baseX, 3);
     Serial.print(" Y: "); Serial.print(baseY, 3);
     Serial.print(" Z: "); Serial.println(baseZ, 3);
@@ -43,9 +43,9 @@ bool SelfTest::run() {
     delay(3000);  // Small 10ms delay to let the ADXL settle
 
     // Average readings with ST active
-    float stX = sampleAxis(&Calibration::getX_mV);
-    float stY = sampleAxis(&Calibration::getY_mV);
-    float stZ = sampleAxis(&Calibration::getZ_mV);
+    float stX = sampleAxis(_xPin);
+    float stY = sampleAxis(_yPin);
+    float stZ = sampleAxis(_zPin);
     Serial.print("[ST] New X: "); Serial.print(stX, 3);
     Serial.print(" Y: "); Serial.print(stY, 3);
     Serial.print(" Z: "); Serial.println(stZ, 3);
