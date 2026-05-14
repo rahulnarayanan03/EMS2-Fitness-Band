@@ -10,13 +10,13 @@ void SelfTest::begin() {
 }
 
 // Averages multiple readings from one axis to reduce noise, returns in mV
-float SelfTest::sampleAxis(int pin, int samples = 32) {
+float SelfTest::sampleAxis(int pin) {
     long sum = 0;
-    for (int i = 0; i < samples; i++) {
+    for (int i = 0; i < number_of_samples; i++) {
         sum += analogReadMilliVolts(pin);
         delayMicroseconds(100);
     }
-    return (sum / (float)samples) * (3.3f / 4095.0f);
+    return (sum / (float)number_of_samples) * (3.3f / 4095.0f);
 }
 
 bool SelfTest::axisPassed(float delta_accel, float delta_expected, float tolerance) {

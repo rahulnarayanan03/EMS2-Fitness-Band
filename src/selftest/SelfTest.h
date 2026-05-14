@@ -13,7 +13,7 @@ enum class STResult { PASS, FAIL_X, FAIL_Y, FAIL_Z, NOT_RUN };
 class SelfTest {
 public:
     // stPin - GPIO connected to ADXL335 ST pin
-    SelfTest::SelfTest(int stPin, int xPin, int yPin, int zPin);
+    SelfTest(int stPin, int xPin, int yPin, int zPin);
 
     // call once at boot - sets ST pin high so it's never floating
     void begin();
@@ -38,7 +38,8 @@ private:
     float _deltaX = 0;
     float _deltaY = 0;
     float _deltaZ = 0;
-    float sampleAxis(int pin, int samples = 32);
+    float sampleAxis(int pin);
+    int number_of_samples = 32;
 };
 
 #endif
