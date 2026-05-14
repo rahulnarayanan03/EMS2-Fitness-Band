@@ -40,7 +40,7 @@ bool SelfTest::run() {
 
     // Pull ST pin low to activate the self test
     digitalWrite(_stPin, LOW);
-    delay(10);  // Small 10ms delay to let the ADXL settle
+    delay(3000);  // Small 10ms delay to let the ADXL settle
 
     // Average readings with ST active
     float stX = sampleAxis(&Calibration::getX_mV);
