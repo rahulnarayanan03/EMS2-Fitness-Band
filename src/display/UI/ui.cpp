@@ -307,7 +307,14 @@ void UI::refreshCalories() {
 }
 
 void UI::refreshBattery(float cv, float cp) {
-    int8_t   pct    = (cp >= 0) ? (int8_t)cp : -1;
+    int8_t pct{0};
+    if ((cp >= 0) && (cp <= 100)) {
+        pct = (int8_t)cp;
+    } else if (cp > 100) {
+        pct = 100;
+    } else {
+        pct = -1;
+    }
     uint16_t battMv = (uint16_t)(cv * 1000.0f);
 
     if (pct == _lastBattPct && battMv == _lastBattMv) return;
