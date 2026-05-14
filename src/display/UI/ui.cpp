@@ -131,13 +131,30 @@ void UI::drawTopBar() {
 void UI::drawGearIcon() {
     uint16_t col = GB_DARKEST;
 
-    _tft.fillCircle(GEAR_X, GEAR_Y, 7, col);
-    _tft.fillCircle(GEAR_X, GEAR_Y, 4, GB_LIGHTEST);
+    // Straight teeth
+    _tft.fillRect(GEAR_X - 2,  GEAR_Y - 14, 4, 7, col); // top
+    _tft.fillRect(GEAR_X - 2,  GEAR_Y + 7,  4, 7, col); // bottom
+    _tft.fillRect(GEAR_X - 14, GEAR_Y - 2,  7, 4, col); // left
+    _tft.fillRect(GEAR_X + 7,  GEAR_Y - 2,  7, 4, col); // right
 
-    _tft.fillRect(GEAR_X - 1, GEAR_Y - 11, 3, 5, col);
-    _tft.fillRect(GEAR_X - 1, GEAR_Y + 6, 3, 5, col);
-    _tft.fillRect(GEAR_X - 11, GEAR_Y - 1, 5, 3, col);
-    _tft.fillRect(GEAR_X + 6, GEAR_Y - 1, 5, 3, col);
+    // Diagonal teeth, drawn as chunky angled 45-degree blocks
+    _tft.fillRect(GEAR_X - 11, GEAR_Y - 11, 4, 4, col);
+    _tft.fillRect(GEAR_X - 9,  GEAR_Y - 9,  4, 4, col);
+
+    _tft.fillRect(GEAR_X + 7,  GEAR_Y - 11, 4, 4, col);
+    _tft.fillRect(GEAR_X + 5,  GEAR_Y - 9,  4, 4, col);
+
+    _tft.fillRect(GEAR_X - 11, GEAR_Y + 7,  4, 4, col);
+    _tft.fillRect(GEAR_X - 9,  GEAR_Y + 5,  4, 4, col);
+
+    _tft.fillRect(GEAR_X + 7,  GEAR_Y + 7,  4, 4, col);
+    _tft.fillRect(GEAR_X + 5,  GEAR_Y + 5,  4, 4, col);
+
+    // Gear body
+    _tft.fillCircle(GEAR_X, GEAR_Y, 8, col);
+
+    // Inner hole
+    _tft.fillCircle(GEAR_X, GEAR_Y, 4, GB_LIGHTEST);
 }
 
 void UI::drawStepsBar() {
