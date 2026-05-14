@@ -7,6 +7,7 @@ SelfTest::SelfTest(Calibration &cal, int stPin)
 void SelfTest::begin() {
     pinMode(_stPin, OUTPUT);
     digitalWrite(_stPin, HIGH); // ST pin is active low, so keep it high before running the self test
+    analogSetPinAttenuation(34, ADC_11db);
 }
 
 // Averages multiple readings from one axis to reduce noise
