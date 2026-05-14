@@ -176,11 +176,11 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
 
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
-        tft.drawString("KEEP", 92, 208, 4);
+        tft.drawString("CANCEL", 92, 208, 4);
 
         tft.fillRect(170, 184, 115, 48, APP_BUTTON);
         tft.drawRect(170, 184, 115, 48, APP_BORDER);
-        tft.drawString("RESET", 227, 208, 4);
+        tft.drawString("USE", 227, 208, 4);
 
     } else {
         drawHomeButton(tft);
