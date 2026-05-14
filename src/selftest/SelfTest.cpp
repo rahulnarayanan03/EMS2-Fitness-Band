@@ -16,15 +16,7 @@ float SelfTest::sampleAxis(int pin) {
         sum += analogReadMilliVolts(pin);
         delayMicroseconds(100);
     }
-    return (sum / (float)number_of_samples) * (3.3f / 4095.0f);
-}
-
-bool SelfTest::axisPassed(float delta_accel, float delta_expected, float tolerance) {
-    if ((abs(delta_expected - delta_accel) < tolerance)) {
-        return true;
-    } else {
-        return false;
-    }
+    return (sum / (float)number_of_samples);
 }
 
 bool SelfTest::run() {
@@ -63,9 +55,9 @@ bool SelfTest::run() {
     Serial.print(" Z: "); Serial.println(_deltaZ, 3);
 
     // Check each axis' change in acceleration is expected (within tolerance)
-    bool passX = axisPassed(_deltaX, ST_X_EXPECTED, ST_TOLERANCE);
-    bool passY = axisPassed(_deltaY, ST_Y_EXPECTED, ST_TOLERANCE);
-    bool passZ = axisPassed(_deltaZ, ST_Z_EXPECTED, ST_TOLERANCE);
+    bool passX = ((_deltaX >= ST_X_MIN) && (_deltaX <= ST_X_MAX));
+    bool passY = ((_deltaY >= ST_Y_MIN) && (_deltaY <= ST_Y_MAX));
+    bool passZ = ((_deltaZ >= ST_Z_MIN) && (_deltaZ <= ST_Z_MAX));
 
     if (!passX) {
         _result = STResult::FAIL_X;
