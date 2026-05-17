@@ -21,36 +21,34 @@ float SelfTest::sampleAxis(int pin) {
 
 bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
-    // delay(1000);  // 1 second delay to ensure watch is steady after tapping screen
+    digitalWrite(_stPin, LOW); // Activate the self test first to fix bug
+    delay(2000);  // 2 second delay to stabilise
 
-    // Average baseline readings just before starting the self test
-    float baseX = sampleAxis(_xPin);
-    float baseY = sampleAxis(_yPin);
-    float baseZ = sampleAxis(_zPin);
-    Serial.print("[ST] Baseline X: "); Serial.print(baseX, 3);
-    Serial.print(" Y: "); Serial.print(baseY, 3);
-    Serial.print(" Z: "); Serial.println(baseZ, 3);
-
-    // Pull ST pin high to activate the self test
-    digitalWrite(_stPin, LOW);
-    delay(300);  // 30ms delay to make sure adxl is steady
-
-    // Average readings with ST active
+    // Average readings from the self test
     float stX = sampleAxis(_xPin);
     float stY = sampleAxis(_yPin);
     float stZ = sampleAxis(_zPin);
-    Serial.print("[ST] New X: "); Serial.print(stX, 3);
+    Serial.print("[Self-test Readings] X: "); Serial.print(stX, 3);
     Serial.print(" Y: "); Serial.print(stY, 3);
     Serial.print(" Z: "); Serial.println(stZ, 3);
 
-    // Once readings are sampled, deactivate ST
+    // Pull ST pin high to stop the self test
     digitalWrite(_stPin, HIGH);
+    delay(300);  // 30ms delay to make sure adxl is steady
 
-    // Find change in acceleration (initial - final)
+    // Average baseline readings without ST
+    float baseX = sampleAxis(_xPin);
+    float baseY = sampleAxis(_yPin);
+    float baseZ = sampleAxis(_zPin);
+    Serial.print("[Baseline Readings] X: "); Serial.print(baseX, 3);
+    Serial.print(" Y: "); Serial.print(baseY, 3);
+    Serial.print(" Z: "); Serial.println(baseZ, 3);
+
+    // Find change from ST readings to baseline readings
     _deltaX = stX - baseX;
     _deltaY = stY - baseY;
     _deltaZ = stZ - baseZ;
-    Serial.print("[ST] Delta X: "); Serial.print(_deltaX, 3);
+    Serial.print("Delta X: "); Serial.print(_deltaX, 3);
     Serial.print(" Y: "); Serial.print(_deltaY, 3);
     Serial.print(" Z: "); Serial.println(_deltaZ, 3);
 
