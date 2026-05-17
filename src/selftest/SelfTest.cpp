@@ -6,7 +6,7 @@ SelfTest::SelfTest(int stPin, int xPin, int yPin, int zPin)
 
 void SelfTest::begin() {
     pinMode(_stPin, OUTPUT);
-    digitalWrite(_stPin, HIGH); // ST pin is active low, so keep it high before running the self test
+    digitalWrite(_stPin, LOW); // ST pin is active high, so keep it low before running the self test
 }
 
 // Averages multiple readings from one axis to reduce noise, returns in mV
@@ -21,7 +21,7 @@ float SelfTest::sampleAxis(int pin) {
 
 bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
-    delay(1000);  // 1 second delay to ensure watch is steady after tapping screen
+    // delay(1000);  // 1 second delay to ensure watch is steady after tapping screen
 
     // Average baseline readings just before starting the self test
     float baseX = sampleAxis(_xPin);
@@ -31,9 +31,9 @@ bool SelfTest::run() {
     Serial.print(" Y: "); Serial.print(baseY, 3);
     Serial.print(" Z: "); Serial.println(baseZ, 3);
 
-    // Pull ST pin low to activate the self test
-    digitalWrite(_stPin, LOW);
-    delay(300);  // 30ms delay to make sure adxl is steady
+    // Pull ST pin high to activate the self test
+    digitalWrite(_stPin, HIGH);
+    // delay(300);  // 30ms delay to make sure adxl is steady
 
     // Average readings with ST active
     float stX = sampleAxis(_xPin);
@@ -44,7 +44,7 @@ bool SelfTest::run() {
     Serial.print(" Z: "); Serial.println(stZ, 3);
 
     // Once readings are sampled, deactivate ST
-    digitalWrite(_stPin, HIGH);
+    digitalWrite(_stPin, LOW);
 
     // Find change in acceleration (final - initial)
     _deltaX = stX - baseX;
