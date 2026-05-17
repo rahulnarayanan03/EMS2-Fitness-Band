@@ -28,7 +28,6 @@ void Calibration::begin() {
     pinMode(xPin, INPUT);
     pinMode(yPin, INPUT);
     pinMode(zPin, INPUT);
-    analogSetAttenuation(ADC_11db);
 
     stage      = Stage::IDLE;
     calibrated = false;
