@@ -1,24 +1,15 @@
-// step_counter.h
-// Header for the step counter module
-// Handles reading the ADXL335 and counting steps using peak detection
-
 #ifndef STEP_COUNTER_H
 #define STEP_COUNTER_H
 
 #include <Arduino.h>
 #include "../calibration/calibration.h"
 
-// Step counter tuning.
-// The detector uses acceleration magnitude:
-// magnitude = sqrt(x^2 + y^2 + z^2)
-//
-// At rest, magnitude should sit around 1.0g because of gravity.
-// A step is detected when magnitude rises above 1.0g + SC_THRESHOLD_G,
-// then drops below 1.0g + SC_HYSTERESIS_G.
-static constexpr float    SC_THRESHOLD_G  = 0.3f; // peak must exceed about 1.22g
-static constexpr float    SC_HYSTERESIS_G = 0.15f; // must drop below about 1.10g to reset
-static constexpr uint32_t SC_COOLDOWN_MS  = 325;   // min time between steps, max about 185 SPM
-static constexpr uint32_t SC_NVS_BATCH    = 10;    // only write to flash every 10 steps to reduce wear
+static constexpr float    SC_THRESHOLD_G  = 0.30f; // highLine = 1.30g
+static constexpr float    SC_HYSTERESIS_G = 0.15f; // lowLine  = 1.20g
+static constexpr uint32_t SC_COOLDOWN_MS  = 225;   // min time between steps, max about 185 SPM
+
+// Save step count to NVS at most once every 5 seconds
+static constexpr uint32_t SC_NVS_SAVE_INTERVAL_MS = 5000;
 
 class StepCounter {
 public:
@@ -52,6 +43,7 @@ private:
 
     uint32_t _lastDisplayMs  = 0;
     uint32_t _lastSerialMs   = 0;
+    uint32_t _lastSaveMs     = 0;
 
     bool     _paused         = false;
     bool     _initialised    = false;
