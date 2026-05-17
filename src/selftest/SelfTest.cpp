@@ -14,16 +14,16 @@ float SelfTest::sampleAxis(int pin) {
     long sum = 0;
     for (int i = 0; i < number_of_samples; i++) {
         sum += analogReadMilliVolts(pin);
-        delay(10);
+        delayMicroseconds(50);
     }
     return (sum / (float)number_of_samples);
 }
 
 bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
-    delay(100);
+    delay(30);
     digitalWrite(_stPin, LOW); // Activate the self test first to fix bug
-    delay(500);  // 500ms delay to stabilise
+    delay(300);  // 300ms delay to stabilise
 
     // Average readings from the self test
     float stX = sampleAxis(_xPin);
@@ -35,7 +35,7 @@ bool SelfTest::run() {
 
     // Pull ST pin high to stop the self test
     digitalWrite(_stPin, HIGH);
-    delay(300);  // 30ms delay to make sure adxl is steady
+    delay(30);  // 30ms delay to make sure adxl is steady
 
     // Average baseline readings without ST
     float baseX = sampleAxis(_xPin);
