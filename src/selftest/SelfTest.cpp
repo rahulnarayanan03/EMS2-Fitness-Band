@@ -14,7 +14,7 @@ float SelfTest::sampleAxis(int pin) {
     long sum = 0;
     for (int i = 0; i < number_of_samples; i++) {
         sum += analogReadMilliVolts(pin);
-        delayMicroseconds(100);
+        delay(10);
     }
     return (sum / (float)number_of_samples);
 }
@@ -33,7 +33,7 @@ bool SelfTest::run() {
 
     // Pull ST pin low to activate the self test
     digitalWrite(_stPin, LOW);
-    delay(30);  // 30ms delay to make sure adxl is steady
+    delay(300);  // 30ms delay to make sure adxl is steady
 
     // Average readings with ST active
     float stX = sampleAxis(_xPin);
