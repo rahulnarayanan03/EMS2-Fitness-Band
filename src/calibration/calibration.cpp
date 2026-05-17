@@ -34,8 +34,6 @@ void Calibration::begin() {
     pinMode(yPin, INPUT);
     pinMode(zPin, INPUT);
 
-    analogSetAttenuation(ADC_11db);
-
     stage = Stage::IDLE;
 
     if (loadFromNVS()) {
