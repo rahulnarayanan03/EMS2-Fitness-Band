@@ -6,7 +6,7 @@ SelfTest::SelfTest(int stPin, int xPin, int yPin, int zPin)
 
 void SelfTest::begin() {
     pinMode(_stPin, OUTPUT);
-    digitalWrite(_stPin, LOW); // ST pin is active high, so keep it low before running the self test
+    digitalWrite(_stPin, HIGH); // ST pin is active low, so keep it high before running the self test
 }
 
 // Averages multiple readings from one axis to reduce noise, returns in mV
@@ -32,8 +32,8 @@ bool SelfTest::run() {
     Serial.print(" Z: "); Serial.println(baseZ, 3);
 
     // Pull ST pin high to activate the self test
-    digitalWrite(_stPin, HIGH);
-    // delay(300);  // 30ms delay to make sure adxl is steady
+    digitalWrite(_stPin, LOW);
+    delay(300);  // 30ms delay to make sure adxl is steady
 
     // Average readings with ST active
     float stX = sampleAxis(_xPin);
@@ -44,12 +44,12 @@ bool SelfTest::run() {
     Serial.print(" Z: "); Serial.println(stZ, 3);
 
     // Once readings are sampled, deactivate ST
-    digitalWrite(_stPin, LOW);
+    digitalWrite(_stPin, HIGH);
 
     // Find change in acceleration (initial - final)
-    _deltaX = baseX - stX;
-    _deltaY = baseY - stY;
-    _deltaZ = baseZ - stZ;
+    _deltaX = stX - baseX;
+    _deltaY = stY - baseY;
+    _deltaZ = stZ - baseZ;
     Serial.print("[ST] Delta X: "); Serial.print(_deltaX, 3);
     Serial.print(" Y: "); Serial.print(_deltaY, 3);
     Serial.print(" Z: "); Serial.println(_deltaZ, 3);
