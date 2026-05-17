@@ -77,6 +77,119 @@ static void drawQuestionText(TFT_eSPI &tft, const char *question) {
     }
 }
 
+// draws a single bold arrow centered at (cx, cy)
+// dir: 0=right, 1=left, 2=up, 3=down, 4=diag up-right ↗, 5=diag down-left ↙
+// size controls how big it is
+static void drawArrow(TFT_eSPI &tft, int cx, int cy, int dir, int size, uint16_t color) {
+    int shaft  = size / 2;
+    int head   = size / 3;
+    int spread = size / 4;
+    int thick  = 4;
+
+    if (dir == 4 || dir == 5) {
+        // diagonal arrows — draw as angled line segments using drawLine
+        // dir 4 = ↗ (up-right),  dir 5 = ↙ (down-left)
+        int diag = (int)(shaft * 0.707f);  // shaft * cos(45)
+
+        // tip and tail for ↗
+        int tx = cx + diag, ty = cy - diag;
+        int bx = cx - diag, by = cy + diag;
+
+        if (dir == 5) {
+            // flip for ↙
+            tx = cx - diag; ty = cy + diag;
+            bx = cx + diag; by = cy - diag;
+        }
+
+        // draw thick shaft by offsetting the line a few pixels
+        for (int t = -thick / 2; t <= thick / 2; t++) {
+            tft.drawLine(bx + t, by - t, tx + t, ty - t, color);
+            tft.drawLine(bx - t, by + t, tx - t, ty + t, color);
+        }
+
+        // arrowhead: two lines branching back from tip at ~90 deg to arrow
+        int hlen = head;
+        if (dir == 4) {
+            // tip is upper-right, head lines go back left and back down
+            tft.fillTriangle(tx, ty,
+                             tx - hlen, ty,
+                             tx, ty + hlen,
+                             color);
+        } else {
+            // tip is lower-left, head lines go back right and back up
+            tft.fillTriangle(tx, ty,
+                             tx + hlen, ty,
+                             tx, ty - hlen,
+                             color);
+        }
+        return;
+    }
+
+    // straight arrows
+    int tx, ty, bx, by;
+
+    if (dir == 0) {
+        tx = cx + shaft; ty = cy;
+        bx = cx - shaft; by = cy;
+    } else if (dir == 1) {
+        tx = cx - shaft; ty = cy;
+        bx = cx + shaft; by = cy;
+    } else if (dir == 2) {
+        tx = cx; ty = cy - shaft;
+        bx = cx; by = cy + shaft;
+    } else {
+        tx = cx; ty = cy + shaft;
+        bx = cx; by = cy - shaft;
+    }
+
+    // shaft
+    if (dir == 0 || dir == 1) {
+        int x1 = min(tx, bx);
+        tft.fillRect(x1, cy - thick / 2, abs(tx - bx), thick, color);
+    } else {
+        int y1 = min(ty, by);
+        tft.fillRect(cx - thick / 2, y1, thick, abs(ty - by), color);
+    }
+
+    // arrowhead
+    if (dir == 0) {
+        tft.fillTriangle(tx, ty,
+                         tx - head, ty - spread,
+                         tx - head, ty + spread,
+                         color);
+    } else if (dir == 1) {
+        tft.fillTriangle(tx, ty,
+                         tx + head, ty - spread,
+                         tx + head, ty + spread,
+                         color);
+    } else if (dir == 2) {
+        tft.fillTriangle(tx, ty,
+                         tx - spread, ty + head,
+                         tx + spread, ty + head,
+                         color);
+    } else {
+        tft.fillTriangle(tx, ty,
+                         tx - spread, ty - head,
+                         tx + spread, ty - head,
+                         color);
+    }
+}
+
+// returns 0=right, 1=left, 2=up, 3=down based on which direction
+// the watch needs to be tilted for each calibration step
+// matches DIR_LABEL order: X+, X-, Y+, Y-, Z+, Z-
+static int arrowDir(int dirIndex) {
+    switch (dirIndex) {
+        case 0: return 5;  // X+ UP → ↙
+        case 1: return 4;  // X- UP → ↗
+        case 2: return 1;  // Y+ UP → ←
+        case 3: return 0;  // Y- UP → →
+        case 4: return 2;  // Z+ UP → face up flat → arrow up
+        case 5: return 3;  // Z- UP → face down flat → arrow down
+        default: return 2;
+    }
+}
+
 void drawSetupWelcome(TFT_eSPI &tft) {
     tft.fillScreen(APP_BG);
 
@@ -151,6 +264,11 @@ void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
 
     tft.setTextColor(APP_MUTED, APP_BG);
     tft.drawString(stepBuf, 10, 194, 4);
+
+    // draw orientation arrow on the right side of the screen
+    // centered in roughly the y=55 to y=175 region, x=230 area
+    int arrowColor = isSampling ? TFT_GREEN : TFT_ORANGE;
+    drawArrow(tft, 245, 120, arrowDir(dirIndex), 90, arrowColor);
 }
 
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
@@ -202,8 +320,7 @@ void drawSCTScreen(TFT_eSPI &tft) {
 }
 
 void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount) {
-    // Clear only the step number area.
-    // Positioned under the STEPS label and above the HOME button.
+    // clear only the step number area
     tft.fillRect(10, 105, 100, 36, APP_BG);
 
     tft.setTextDatum(TL_DATUM);
