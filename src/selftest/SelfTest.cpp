@@ -16,11 +16,7 @@ float SelfTest::sampleAxis(int pin) {
         sum += analogReadMilliVolts(pin);
         delay(10);
     }
-    if (pin == _xPin) {
-        return (41.0f * sum / (71.0f * (float)number_of_samples));
-    } else {
-        return (sum / (float)number_of_samples);
-    }
+    return (sum / (float)number_of_samples);
 }
 
 bool SelfTest::run() {
