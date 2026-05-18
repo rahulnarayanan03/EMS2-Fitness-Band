@@ -373,7 +373,7 @@ void Calibration_Case() {
 
     if (awaitingStepChoice && touched) {
         if (caseCtIsReentry) {
-            if (tx >= 50 && tx <= 150 && ty >= 150 && ty <= 190) {
+            if (tx >= 35 && tx <= 150 && ty >= 184 && ty <= 232) {
                 Serial.println("CT: keeping previous step count.");
 
                 awaitingStepChoice = false;
@@ -381,7 +381,7 @@ void Calibration_Case() {
 
                 goHome();
 
-            } else if (tx >= 170 && tx <= 270 && ty >= 150 && ty <= 190) {
+            } else if (tx >= 170 && tx <= 285 && ty >= 184 && ty <= 232) {
                 stepM.resetCount();
                 Serial.println("CT: step count reset to 0.");
 
