@@ -21,9 +21,9 @@ float SelfTest::sampleAxis(int pin) {
 
 bool SelfTest::run() {
     Serial.println("[ST] Starting ADXL335 self test...");
-    delay(100);
+    delay(500);
     digitalWrite(_stPin, LOW); // Activate the self test first to fix bug
-    delay(500);  // 500ms delay to stabilise
+    delay(5000);  // 5 second delay to stabilise
 
     // Average readings from the self test
     float stX = sampleAxis(_xPin);
