@@ -160,15 +160,15 @@ float Calibration::getZG() {
 }
 
 float Calibration::getX_mV() {
-    return 1000.0f * readVoltage(xPin);
+    return analogReadMilliVolts(xPin);
 }
 
 float Calibration::getY_mV() {
-    return 1000.0f * readVoltage(yPin);
+    return analogReadMilliVolts(yPin);
 }
 
 float Calibration::getZ_mV() {
-    return 1000.0f * readVoltage(zPin);
+    return analogReadMilliVolts(zPin);
 }
 
 void Calibration::finalise() {
