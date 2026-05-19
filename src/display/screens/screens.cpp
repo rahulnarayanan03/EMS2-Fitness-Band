@@ -319,18 +319,24 @@ void drawSWScreen(TFT_eSPI &tft) {
     tft.setTextDatum(TL_DATUM);
 
     // Draw start button
-    tft.fillRoundRect(SW_BTN_X, START_Y, SW_BTN_W, SW_BTN_H, SW_BTN_CR, START_BG);
-
+    tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
     // Draw start text
     tft.setTextColor(START_TEXT, START_BG);
-    tft.drawString("Start", 223, 43+5, 4);
+    tft.drawString("Start", 243, 27+5, 4);
 
     // Draw reset button
-    tft.fillRoundRect(SW_BTN_X, RESET_Y, SW_BTN_W, SW_BTN_H, SW_BTN_CR, RESET_BG);
-
+    tft.fillCircle(SW_BTN_X, RESET_Y, SW_BTN_R, RESET_BG);
     // Draw reset text
     tft.setTextColor(RESET_TEXT, RESET_BG);
-    tft.drawString("Reset", 220, 113+5, 4);
+    tft.drawString("Reset", 240, 105+5, 4);
+
+    // Draw home button
+    tft.fillCircle(SW_BTN_X, SW_HOME_Y, SW_BTN_R, RESET_BG);
+    // Draw home text
+    tft.setTextColor(RESET_TEXT, RESET_BG);
+    tft.drawString("Home", 240, 183+5, 4);
+
+    // Draw test arc for stopwatch
 
     drawHomeButton(tft);
 }

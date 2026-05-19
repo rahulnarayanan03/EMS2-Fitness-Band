@@ -57,13 +57,12 @@ static constexpr int16_t GEAR_HIT_W = 36;
 static constexpr int16_t SW_X = 20;         // X coordinate of stopwatch circle
 static constexpr int16_t SW_Y = 20;         // Y coordinate of stopwatch circle
 static constexpr int16_t SW_RADIUS = 74;    // Radius of stopwatch circle
-static constexpr int16_t SW_BTN_GAP = 20;   // Vertical gap between the start button and the reset button
-static constexpr int16_t SW_BTN_W = 100;    // Width of start/reset buttons
-static constexpr int16_t SW_BTN_H = 50;     // Height of start/reset buttons
-static constexpr int16_t SW_BTN_X = 200;    // X coordinate of start/reset buttons
-static constexpr int16_t SW_BTN_CR = 8;     // Corner radius of start/reset buttons
-static constexpr int16_t START_Y = SW_Y + SW_RADIUS - SW_BTN_GAP/2 - SW_BTN_H;  // Y coordinate of start button
-static constexpr int16_t RESET_Y = SW_Y + SW_RADIUS + SW_BTN_GAP/2;             // Y coordinate of reset button
+static constexpr int16_t SW_BTN_GAP = 8;    // Vertical gap between the buttons
+static constexpr int16_t SW_BTN_R = 35;     // Radius of the buttons
+static constexpr int16_t SW_BTN_X = 235;    // X coordinate of the buttons
+static constexpr int16_t START_Y = 8;       // Y coordinate of start button
+static constexpr int16_t RESET_Y = 86;      // Y coordinate of reset button
+static constexpr int16_t SW_HOME_Y = 164;   // Y coordinate of home button
 
 // layout constants
 static constexpr int16_t SPRITE_X = 235;
