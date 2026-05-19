@@ -12,12 +12,12 @@ public:
     // Stopwatch default constructor (no period)
     Stopwatch(int outer_radius, int thickness, int point_radius);
 
-    // Returns elapsed time formatted in minutes:seconds:milliseconds
+    // Elapsed time formatted in minutes:seconds:milliseconds
     // Minutes range from 0-59, seconds range from 0-59, milliseconds range from 0-99 (99 = 999)
     struct SW_Time {
-        int milliseconds;
-        int seconds;
-        int minutes;
+        int _milliseconds;
+        int _seconds;
+        int _minutes;
     };
 
     // Updates the x,y coordinates of the circle orbiting the stopwatch
@@ -26,11 +26,20 @@ public:
     // Returns the x,y coordinates of the circle orbiting the stopwatch
     std::pair<int, int> getCirclePosition();
 
-    // Fills time struct with current elapsed time
-    SW_Time updateElapsedTime();
+    // Updates elapsed time with current elapsed time
+    void updateElapsedTime();
 
-    // Converts elapsed time to seconds
+    // Formats time in the form minutes:seconds:milliseconds
+    void formatTime();
+
+    // Returns elapsed time in milliseconds
+    unsigned long getElapsedTime();
+
+    // Returns elapsed time converted to seconds
     float getElapsedTimeSeconds();
+
+    // Returns elapsed time formatted in minutes:seconds:milliseconds
+    SW_Time getFormattedTime();
 
 private:
     int _outer_radius;  // Outer radius of the stopwatch face's circle
@@ -38,7 +47,8 @@ private:
     int _point_radius;  // Radius of the circle orbiting the stopwatch face
     int _period_ms;     // Period of the circle orbiting the stopwatch face
 
-    unsigned long _elapsed_time;    // Elapsed time in milliseconds
-
     std::pair<int, int> _point_coords;  // x,y coordinates of the circle orbiting the stopwatch
+
+    unsigned long _elapsed_time;    // Elapsed time in milliseconds
+    SW_Time _formatted_time;        // Elapsed time formatted in minutes:seconds:milliseconds
 };
