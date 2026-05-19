@@ -2,6 +2,7 @@
 #include <cmath>
 
 static constexpr int SW_PERIOD_MS = 5000;
+static constexpr int SW_DELAY = 50;
 
 class Stopwatch {
 public:
