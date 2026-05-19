@@ -322,21 +322,23 @@ void drawSWScreen(TFT_eSPI &tft) {
     tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
     // Draw start text
     tft.setTextColor(START_TEXT, START_BG);
-    tft.drawString("Start", 243+13, 27+7, 2);
+    tft.drawString("Start", 243+18, 27+7, 2);
 
     // Draw reset button
     tft.fillCircle(SW_BTN_X, RESET_Y, SW_BTN_R, RESET_BG);
     // Draw reset text
     tft.setTextColor(RESET_TEXT, RESET_BG);
-    tft.drawString("Reset", 240+15, 105+7, 2);
+    tft.drawString("Reset", 240+20, 105+7, 2);
 
     // Draw home button
     tft.fillCircle(SW_BTN_X, SW_HOME_Y, SW_BTN_R, RESET_BG);
     // Draw home text
     tft.setTextColor(RESET_TEXT, RESET_BG);
-    tft.drawString("Home", 240+15, 183+7, 2);
+    tft.drawString("Home", 240+20, 183+7, 2);
 
     // Draw test circle for stopwatch
+    tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_WHITE);
+    tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),TFT_BLACK);
 }
 
 void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
