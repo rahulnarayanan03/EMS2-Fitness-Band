@@ -11,7 +11,7 @@ static const int16_t BTN_COL2_X = RIGHT_PNL_X + 4 + BTN_W + BTN_GAP;
 static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 4;
 static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 4 + BTN_H + BTN_GAP;
 
-static const char   *BTN_LABEL[4]  = { "C.T", "S.T", "S.C.T", "P.ID.T" };
+static const char   *BTN_LABEL[4]  = { "C.T", "S.T", "S.W", "P.ID.T" };
 static const bool    BTN_ACTIVE[4] = { true, false, true, false };
 static const int16_t BTN_X[4] = { BTN_COL1_X, BTN_COL2_X, BTN_COL1_X, BTN_COL2_X };
 static const int16_t BTN_Y[4] = { BTN_ROW1_Y, BTN_ROW1_Y, BTN_ROW2_Y, BTN_ROW2_Y };
