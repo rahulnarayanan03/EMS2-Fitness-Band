@@ -16,16 +16,6 @@ Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius, int peri
     _elapsed_time = 0;
 }
 
-Stopwatch::SW_Time Stopwatch::updateElapsedTime() {
-    
-}
-
-float Stopwatch::getElapsedTimeSeconds() {
-    float elapsed_time_f = static_cast<float>(_elapsed_time);
-
-    return elapsed_time_f / 1000.0f;
-}
-
 void Stopwatch::updateCirclePosition() {
     int radius = _outer_radius - (_thickness/2);
 
@@ -40,4 +30,28 @@ void Stopwatch::updateCirclePosition() {
 
 std::pair<int, int> Stopwatch::getCirclePosition() {
     return _point_coords;
+}
+
+void Stopwatch::updateElapsedTime() {
+    
+}
+
+void Stopwatch::formatTime() {
+    _formatted_time._milliseconds = static_cast<int>((_elapsed_time/10) % 100);
+    _formatted_time._seconds = static_cast<int>((_elapsed_time/1000) % 60);
+    _formatted_time._minutes = static_cast<int>((_elapsed_time/6000) % 60);
+}
+
+unsigned long Stopwatch::getElapsedTime() {
+    return _elapsed_time;
+}
+
+float Stopwatch::getElapsedTimeSeconds() {
+    float elapsed_time_f = static_cast<float>(_elapsed_time);
+
+    return elapsed_time_f / 1000.0f;
+}
+
+Stopwatch::SW_Time Stopwatch::getFormattedTime() {
+    return _formatted_time;
 }
