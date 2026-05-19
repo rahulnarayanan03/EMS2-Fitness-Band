@@ -305,7 +305,7 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
     }
 }
 
-void drawSCTScreen(TFT_eSPI &tft) {
+void drawSWScreen(TFT_eSPI &tft) {
     tft.fillScreen(APP_BG);
 
     tft.setTextDatum(TL_DATUM);
