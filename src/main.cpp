@@ -511,7 +511,7 @@ void StopWatch_Case(uint32_t now) {
     if (millis() - lastSCTUpdate >= 500) {
         lastSCTUpdate = millis();
 
-        updateSCTScreen(tft, stepM.getStepCount());
+        updateSWScreen(tft, stepM.getStepCount());
 
         Serial.print("[SCT] Steps: ");
         Serial.println(stepM.getStepCount());
