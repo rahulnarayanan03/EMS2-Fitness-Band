@@ -6,6 +6,12 @@ static constexpr int SW_DELAY = 50;
 
 class Stopwatch {
 public:
+    // Stopwatch constructor
+    Stopwatch(int outer_radius, int thickness, int point_radius, int period_ms);
+
+    // Stopwatch default constructor (no period)
+    Stopwatch(int outer_radius, int thickness, int point_radius);
+
     struct SW_Time {
         int milliseconds;
         int seconds;
@@ -16,4 +22,9 @@ public:
     SW_Time getElapsedTime(unsigned long elapsed_time);
     int getElapsedTimeSeconds(unsigned long elapsed_time);
 
+private:
+    int _outer_radius;
+    int _thickness;
+    int _point_radius;
+    int _period_ms;
 };
