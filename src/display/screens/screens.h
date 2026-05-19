@@ -13,7 +13,7 @@ void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
                            bool isSampling, int secsLeft, int dirIndex);
 
 void drawSWScreen(TFT_eSPI &tft);
-void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount);
+void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount);
 
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
                         float dX, float dY, float dZ);
