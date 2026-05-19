@@ -59,10 +59,10 @@ static constexpr int16_t SW_Y = 20;         // Y coordinate of stopwatch circle
 static constexpr int16_t SW_RADIUS = 74;    // Radius of stopwatch circle
 static constexpr int16_t SW_BTN_GAP = 8;    // Vertical gap between the buttons
 static constexpr int16_t SW_BTN_R = 35;     // Radius of the buttons
-static constexpr int16_t SW_BTN_X = 235;    // X coordinate of the buttons
-static constexpr int16_t START_Y = 8;       // Y coordinate of start button
-static constexpr int16_t RESET_Y = 86;      // Y coordinate of reset button
-static constexpr int16_t SW_HOME_Y = 164;   // Y coordinate of home button
+static constexpr int16_t SW_BTN_X = 270;    // X coordinate of the buttons
+static constexpr int16_t START_Y = 43;       // Y coordinate of start button
+static constexpr int16_t RESET_Y = 121;      // Y coordinate of reset button
+static constexpr int16_t SW_HOME_Y = 199;   // Y coordinate of home button
 
 // layout constants
 static constexpr int16_t SPRITE_X = 235;
