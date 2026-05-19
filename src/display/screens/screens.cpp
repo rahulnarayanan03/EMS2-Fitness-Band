@@ -8,6 +8,7 @@ static constexpr int16_t HOME_BTN_X = 95;
 static constexpr int16_t HOME_BTN_Y = 184;
 static constexpr int16_t HOME_BTN_W = 130;
 static constexpr int16_t HOME_BTN_H = 48;
+static constexpr int16_t HOME_BTN_CR = 10;  // Corner radius of home button
 
 // Setup/settings buttons. These match the hitboxes in main.cpp.
 static constexpr int16_t MINUS_BTN_X = 20;
@@ -27,8 +28,8 @@ static constexpr uint16_t APP_BUTTON_TEXT = GB_DARKEST;
 static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
 static void drawHomeButton(TFT_eSPI &tft) {
-    tft.fillRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, APP_BUTTON);
-    tft.drawRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, APP_BORDER);
+    tft.fillRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BUTTON);
+    tft.drawRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BORDER);
 
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
@@ -319,7 +320,7 @@ void drawSWScreen(TFT_eSPI &tft) {
     drawHomeButton(tft);
 }
 
-void updateSCTScreen(TFT_eSPI &tft, uint32_t stepCount) {
+void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
     // clear only the step number area
     tft.fillRect(10, 105, 100, 36, APP_BG);
 
