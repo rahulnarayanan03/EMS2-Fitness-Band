@@ -60,7 +60,7 @@ static constexpr int16_t SW_RADIUS = 74;    // Radius of stopwatch circle
 static constexpr int16_t SW_BTN_GAP = 20;   // Vertical gap between the start button and the reset button
 static constexpr int16_t SW_BTN_W = 100;    // Width of start/reset buttons
 static constexpr int16_t SW_BTN_H = 50;     // Height of start/reset buttons
-static constexpr int16_t BTN_X = 200;       // X coordinate of start/reset buttons
+static constexpr int16_t SW_BTN_X = 200;    // X coordinate of start/reset buttons
 static constexpr int16_t START_Y = SW_Y + SW_RADIUS - SW_BTN_GAP/2 - SW_BTN_H;  // Y coordinate of start button
 static constexpr int16_t RESET_Y = SW_Y + SW_RADIUS + SW_BTN_GAP/2;             // Y coordinate of reset button
 
