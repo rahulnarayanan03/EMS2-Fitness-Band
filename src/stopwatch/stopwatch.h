@@ -19,12 +19,14 @@ public:
     };
 
     std::pair<int, int> getCirclePosition();
-    SW_Time getElapsedTime(unsigned long elapsed_time);
-    int getElapsedTimeSeconds(unsigned long elapsed_time);
+    SW_Time getElapsedTime();
+    float getElapsedTimeSeconds();
 
 private:
     int _outer_radius;
     int _thickness;
     int _point_radius;
     int _period_ms;
+
+    unsigned long _elapsed_time;
 };
