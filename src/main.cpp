@@ -78,7 +78,7 @@ enum AppCase {
     CASE_CT = 1,
     CASE_HOME = 2,
     CASE_ST = 3,
-    CASE_SCT = 4,
+    CASE_SW = 4,
     CASE_PIDT = 5,
     CASE_SETTINGS = 6
 };
@@ -468,8 +468,8 @@ void Home_Case(uint32_t now, float cv, float cp) {
                 break;
 
             case 2:
-                currentCase = CASE_SCT;
-                drawSCTScreen(tft);
+                currentCase = CASE_SW;
+                drawSWScreen(tft);
                 break;
 
             case 3:
@@ -503,7 +503,7 @@ void SelfTest_Case() {
     }
 }
 
-void StepCountTest_Case(uint32_t now) {
+void StopWatch_Case(uint32_t now) {
     updateStepAndPace(now);
 
     static unsigned long lastSCTUpdate = 0;
@@ -662,8 +662,8 @@ void loop() {
             SelfTest_Case();
             break;
 
-        case CASE_SCT:
-            StepCountTest_Case(now);
+        case CASE_SW:
+            StopWatch_Case(now);
             break;
 
         case CASE_PIDT:
