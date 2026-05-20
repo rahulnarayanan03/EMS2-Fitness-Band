@@ -48,6 +48,8 @@ public:
     // Returns elapsed time formatted in minutes:seconds:milliseconds
     SW_Time getFormattedTime();
 
+    void setState(SW_State state);
+
     // Returns state of the stopwatch
     SW_State getState();
 
