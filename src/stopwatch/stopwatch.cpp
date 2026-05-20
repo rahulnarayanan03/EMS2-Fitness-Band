@@ -7,6 +7,8 @@ Stopwatch::Stopwatch() {
     _state = IDLE;
     _point_coords.first = 0;
     _point_coords.second = 0;
+    _prev_coords.first = 0;
+    _prev_coords.second = 0;
 }
 
 Stopwatch::Stopwatch(int period_ms) {
@@ -16,6 +18,8 @@ Stopwatch::Stopwatch(int period_ms) {
     _state = IDLE;
     _point_coords.first = 0;
     _point_coords.second = 0;
+    _prev_coords.first = 0;
+    _prev_coords.second = 0;
 }
 
 void Stopwatch::updateCirclePosition() {
