@@ -1,4 +1,7 @@
 #include "stopwatch.h"
+#include "../display/UI/UI.h"
+
+using namespace SW_Consts;
 
 Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius) {
     _outer_radius = outer_radius;
@@ -87,4 +90,16 @@ void Stopwatch::updateSW() {
     updateElapsedTime();
     formatTime();
     updateCirclePosition();
+}
+
+bool Stopwatch::homeTouched(uint16_t tx, uint16_t ty) {
+    return (tx >= SW_BTN_X - SW_BTN_R && tx <= SW_BTN_X + SW_BTN_R && ty >= SW_HOME_Y - SW_BTN_R && ty <= SW_HOME_Y + SW_BTN_R);
+}
+
+bool Stopwatch::startStopTouched(uint16_t tx, uint16_t ty) {
+    return (tx >= SW_BTN_X - SW_BTN_R && tx <= SW_BTN_X + SW_BTN_R && ty >= START_Y - SW_BTN_R && ty <= START_Y + SW_BTN_R);
+}
+
+bool Stopwatch::resetTouched(uint16_t tx, uint16_t ty) {
+    return (tx >= SW_BTN_X - SW_BTN_R && tx <= SW_BTN_X + SW_BTN_R && ty >= RESET_Y - SW_BTN_R && ty <= RESET_Y + SW_BTN_R);
 }
