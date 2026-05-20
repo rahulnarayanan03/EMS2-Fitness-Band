@@ -538,12 +538,22 @@ void StopWatch_Case(uint32_t now) {
         if (state == Stopwatch::RUNNING) {
             sw.stopSW();
             Serial.println("SW stopped");
+            // Draw start button
+            tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
+            // Draw start text
+            tft.setTextColor(START_TEXT, START_BG);
+            tft.drawString("Start", 243+18, 27+7, 2);
         } else {
             sw.startSW();
             Serial.println("SW started");
+            // Draw stop button
+            tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, STOP_BG);
+            // Draw stop text
+            tft.setTextColor(STOP_TEXT, STOP_BG);
+            tft.drawString("Stop", 243+18, 27+7, 2);
         }
 
-    } else if (touched && sw.resetTouched(tx, ty)) {
+    } else if (touched && sw.resetTouched(tx, ty) && state == Stopwatch::STOPPED) {
         Serial.println("Reset touched");
         eraseSWDot(tft, sw);
         sw.resetSW();
