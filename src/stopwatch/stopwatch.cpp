@@ -37,7 +37,7 @@ std::pair<int, int> Stopwatch::getCirclePosition() {
     return _point_coords;
 }
 
-std::pair<int, int> Stopwatch::getCirclePosition() {
+std::pair<int, int> Stopwatch::getPrevCirclePosition() {
     return _prev_coords;
 }
 
