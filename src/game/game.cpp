@@ -26,13 +26,23 @@ Game::GridState Game::getCellState(int row, int col) {
 }
 
 void Game::placeO(int row, int col) {
-    _grid_state[row-1][col-1] = Game::OCCUPIED_O;
-    return;
+    if (row > 3 || col > 3 || row < 1 || col < 1) {
+        Serial.println("Warning: row/col out of bounds");
+        return;
+    } else {
+        _grid_state[row-1][col-1] = Game::OCCUPIED_O;
+        return;
+    }
 }
 
 void Game::placeX(int row, int col) {
-    _grid_state[row-1][col-1] = Game::OCCUPIED_X;
-    return;
+    if (row > 3 || col > 3 || row < 1 || col < 1) {
+        Serial.println("Warning: row/col out of bounds");
+        return;
+    } else {
+        _grid_state[row-1][col-1] = Game::OCCUPIED_X;
+        return;
+    }
 }
 
 void Game::resetGrid() {
