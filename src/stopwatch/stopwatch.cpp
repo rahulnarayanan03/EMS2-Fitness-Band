@@ -69,3 +69,8 @@ void Stopwatch::stopSW() {
     SW_State state = STOPPED;
     _state = state;
 }
+
+void Stopwatch::resetSW() {
+    SW_State state = IDLE;
+    _state = state;
+}
