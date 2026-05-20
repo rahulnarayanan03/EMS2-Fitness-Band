@@ -124,6 +124,7 @@ void UI::drawAppIcons() {
     _tft.pushImage(BTN_COL1_X, BTN_ROW1_Y, AXES_WIDTH, AXES_HEIGHT, (uint16_t*)axes_data);
     _tft.pushImage(BTN_COL2_X, BTN_ROW1_Y, CHIP_WIDTH, CHIP_HEIGHT, (uint16_t*)chip_data);
     _tft.pushImage(BTN_COL1_X, BTN_ROW2_Y, PACE_WIDTH, PACE_HEIGHT, (uint16_t*)pace_data);
+    _tft.pushImage(BTN_COL2_X, BTN_ROW2_Y, STOPWATCH_WIDTH, STOPWATCH_HEIGHT, (uint16_t*)stopwatch_data);
     drawRightPanelNoFill();
     _tft.setSwapBytes(false);
 }
