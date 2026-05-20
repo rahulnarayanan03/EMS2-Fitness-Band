@@ -80,7 +80,7 @@ static constexpr int16_t RIGHT_PNL_Y = 42;
 static constexpr int16_t RIGHT_PNL_W = 198;
 static constexpr int16_t RIGHT_PNL_H = 106;
 
-static constexpr int16_t BTN_W   = 94;
+static constexpr int16_t BTN_W   = 48;
 static constexpr int16_t BTN_H   = 48;
 static constexpr int16_t BTN_GAP = 6;
 
