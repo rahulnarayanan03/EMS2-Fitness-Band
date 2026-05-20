@@ -67,10 +67,6 @@ Stopwatch::SW_Time Stopwatch::getFormattedTime() {
     return _formatted_time;
 }
 
-void Stopwatch::setState(SW_State state) {
-    _state = state;
-}
-
 Stopwatch::SW_State Stopwatch::getState() {
     return _state;
 }
