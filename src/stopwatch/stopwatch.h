@@ -20,6 +20,13 @@ public:
         int _minutes;
     };
 
+    // State of the stopwatch
+    enum SW_State {
+        IDLE,       // Before starting the watch or after resetting
+        RUNNING,    // After pressing start
+        STOPPED     // After pressing stop
+    };
+
     // Updates the x,y coordinates of the circle orbiting the stopwatch
     void updateCirclePosition();
 
@@ -41,6 +48,15 @@ public:
     // Returns elapsed time formatted in minutes:seconds:milliseconds
     SW_Time getFormattedTime();
 
+    // Start the stopwatch
+    void start_sw();
+
+    // Stop the stopwatch
+    void stop_sw();
+
+    // Reset the stopwatch
+    void reset_sw();
+
 private:
     int _outer_radius;  // Outer radius of the stopwatch face's circle
     int _thickness;     // Line thickness of the stopwatch face's circle
@@ -51,4 +67,6 @@ private:
 
     unsigned long _elapsed_time;    // Elapsed time in milliseconds
     SW_Time _formatted_time;        // Elapsed time formatted in minutes:seconds:milliseconds
+
+    SW_State _state;    // Stopwatch state
 };
