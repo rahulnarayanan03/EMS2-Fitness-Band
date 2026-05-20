@@ -507,9 +507,12 @@ void SelfTest_Case() {
 }
 
 void StopWatch_Case(uint32_t now) {
+    Stopwatch::SW_State state;
+    state = sw.getState();
+
     static unsigned long lastSWUpdate = 0;
 
-    if (millis() - lastSWUpdate >= Stopwatch::SW_DELAY) {
+    if ((millis() - lastSWUpdate >= Stopwatch::SW_DELAY) && sw.getState() == Stopwatch::RUNNING) {
         lastSWUpdate = millis();
 
         sw.updateSW();
@@ -518,11 +521,27 @@ void StopWatch_Case(uint32_t now) {
 
         Serial.print("[SW] Elapsed time: ");
         Serial.print(sw.getElapsedTimeSeconds());
-        Serial.println("s");
+        Serial.print("s, State: ");
+        Serial.println(state);
     }
 
-    if (touched && tx >= 95 && tx <= 224 && ty >= 184 && ty <= 231) {
+    if (touched && sw.homeTouched(tx, ty)) {
         goHome();
+
+    } else if (touched && sw.startStopTouched(tx, ty)) {
+        Serial.println("Start/stop touched");
+
+        if (state == Stopwatch::RUNNING) {
+            sw.stopSW();
+            Serial.println("SW stopped");
+        } else {
+            sw.startSW();
+            Serial.println("SW started");
+        }
+
+    } else if (touched && sw.resetTouched(tx, ty)) {
+        Serial.println("Reset touched");
+        sw.resetSW();
     }
 }
 
