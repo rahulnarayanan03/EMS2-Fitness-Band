@@ -7,7 +7,7 @@
 
 using namespace SW_Consts;
 
-Stopwatch sw(5000);
+Stopwatch stopwatch(5000);
 
 static constexpr int16_t HOME_BTN_X = 95;
 static constexpr int16_t HOME_BTN_Y = 184;
@@ -350,8 +350,8 @@ void drawSWScreen(TFT_eSPI &tft) {
 void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
     // Draw rotating point
     // Position is a function of elapsed time
-    int point_x = sw.getCirclePosition().first;
-    int point_y = sw.getCirclePosition().second;
+    int point_x = stopwatch.getCirclePosition().first;
+    int point_y = stopwatch.getCirclePosition().second;
 
     tft.fillCircle(point_x, point_y, SW_POINT_R, POINT_BG);
     
