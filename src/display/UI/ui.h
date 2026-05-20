@@ -155,7 +155,9 @@ private:
     void drawStepResetButton();
     void drawLeftPanel();
     void drawRightPanel();
+    void drawRightPanelNoFill();
     void drawButton(int16_t x, int16_t y, const char *label, bool active);
+    void drawButtonBorder(int16_t x, int16_t y, bool active);
     void drawHeartIcon(int16_t cx, int16_t cy);
     void drawBattIcon(int16_t x, int16_t y, int8_t pct);
 
