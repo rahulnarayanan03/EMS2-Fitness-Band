@@ -18,11 +18,17 @@ static constexpr uint16_t STOP_TEXT = 0xf247;
 static constexpr uint16_t RESET_BG = 0x31a6;
 static constexpr uint16_t POINT_BG = 0x863c;
 
+// Stopwatch time text position
+static constexpr int SW_TIME_Y = 110;
+static constexpr int SW_TIME_W = 100;
+static constexpr int SW_TIME_H = 32;
+
 void drawCalibrationScreen(TFT_eSPI &tft);
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
 void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
                            bool isSampling, int secsLeft, int dirIndex);
 
+void drawSWTime(TFT_eSPI &tft, const Stopwatch::SW_Time &t);
 void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw);
 void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount);
 void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw);

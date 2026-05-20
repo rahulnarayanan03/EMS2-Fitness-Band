@@ -112,7 +112,7 @@ void Stopwatch::resetSW() {
     _state = IDLE;
     _elapsed_time = 0;
     _prev_time = 0;
-
+    formatTime();
     initPosition();
 }
 

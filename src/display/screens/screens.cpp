@@ -307,6 +307,19 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
     }
 }
 
+void drawSWTime(TFT_eSPI &tft, const Stopwatch::SW_Time &t) {
+    // Clear only the text area
+    tft.fillRect(30, SW_TIME_Y, SW_TIME_W, SW_TIME_H, APP_BG);
+
+    char buf[12];
+    snprintf(buf, sizeof(buf), "%02d:%02d.%02d",
+             t._minutes, t._seconds, t._milliseconds);
+
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.drawString(buf, SW_X, SW_TIME_Y + SW_TIME_H / 2, 4);
+}
+
 void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw) {
     auto pos = sw.getCirclePosition();
 
@@ -374,6 +387,9 @@ void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
     // Draw initial dot
     auto pos = sw.getCirclePosition();
     tft.fillCircle(pos.first, pos.second, SW_POINT_R, POINT_BG);
+
+    drawSWTime(tft, sw.getFormattedTime());
+
 }
 
 void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount) {
@@ -409,6 +425,8 @@ void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount) {
     tft.endWrite();
 
     tft.fillCircle(curr.first, curr.second, SW_POINT_R, POINT_BG);
+
+    drawSWTime(tft, sw.getFormattedTime());
 }
 
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,

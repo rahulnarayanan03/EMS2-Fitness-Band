@@ -538,6 +538,7 @@ void StopWatch_Case(uint32_t now) {
         if (state == Stopwatch::RUNNING) {
             sw.stopSW();
             Serial.println("SW stopped");
+            tft.setTextDatum(TL_DATUM);
             // Draw start button
             tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
             // Draw start text
@@ -546,6 +547,7 @@ void StopWatch_Case(uint32_t now) {
         } else {
             sw.startSW();
             Serial.println("SW started");
+            tft.setTextDatum(TL_DATUM);
             // Draw stop button
             tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, STOP_BG);
             // Draw stop text
@@ -558,6 +560,8 @@ void StopWatch_Case(uint32_t now) {
         eraseSWDot(tft, sw);
         sw.resetSW();
         drawSWDot(tft, sw);
+        drawSWTime(tft, sw.getFormattedTime());
+
     }
 }
 
