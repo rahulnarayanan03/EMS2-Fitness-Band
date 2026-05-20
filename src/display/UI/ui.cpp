@@ -212,10 +212,10 @@ void UI::drawLeftPanel() {
                        LEFT_PNL_W - 12,
                        GB_DARK);
 
-    _tft.fillTriangle(LEFT_PNL_X + 24, LEFT_PNL_Y + 32,
-                      LEFT_PNL_X + 12, LEFT_PNL_Y + 12,
-                      LEFT_PNL_X + 36, LEFT_PNL_Y + 12,
-                      TFT_ORANGE);
+    //_tft.fillTriangle(LEFT_PNL_X + 24, LEFT_PNL_Y + 32,
+                      //LEFT_PNL_X + 12, LEFT_PNL_Y + 12,
+                      //LEFT_PNL_X + 36, LEFT_PNL_Y + 12,
+                      //TFT_ORANGE);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
@@ -223,7 +223,7 @@ void UI::drawLeftPanel() {
     // Bigger calorie placeholder
     _tft.drawString("-- kcal", LEFT_PNL_X + 56, LEFT_PNL_Y + 8, 2);
 
-    drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 54, 0);
+    drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 50, 0);
 
     // Bigger battery placeholder
     _tft.drawString("--%", LEFT_PNL_X + 62, LEFT_PNL_Y + 46, 2);
@@ -349,7 +349,7 @@ void UI::refreshBattery(float cv, float cp) {
                   28,
                   GB_LIGHTEST);
 
-    drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 54, (pct >= 0) ? pct : 0);
+    drawBattIcon(LEFT_PNL_X + 18, LEFT_PNL_Y + 50, (pct >= 0) ? pct : 0);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
