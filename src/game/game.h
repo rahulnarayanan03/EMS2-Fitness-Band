@@ -36,6 +36,9 @@ public:
     // Row and col values range from 1 to 3
     void placeX(int row, int col);
 
+    // Frees all cells in the grid
+    void resetGrid();
+
     // Sets the difficulty of the game
     void setDifficulty(Difficulty difficulty);
     
