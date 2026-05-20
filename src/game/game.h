@@ -41,6 +41,12 @@ public:
 
     // Sets the difficulty of the game
     void setDifficulty(Difficulty difficulty);
+
+    // Finds the most optimal move at the game state
+    std::pair<int, int> getOptimalMove();
+
+    // Runs the bot's move
+    void runBotMove();
     
 private:
     // Individual cell states

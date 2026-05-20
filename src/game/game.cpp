@@ -40,3 +40,11 @@ void Game::resetGrid() {
 void Game::setDifficulty(Difficulty difficulty) {
     _difficulty = difficulty;
 }
+
+std::pair<int, int> Game::getOptimalMove() {
+    
+}
+
+void Game::runBotMove() {
+
+}
