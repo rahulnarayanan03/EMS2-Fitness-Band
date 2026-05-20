@@ -116,6 +116,13 @@ void UI::drawStaticLayout() {
     drawRightPanel();
     drawLeftPanel();
     drawStepsBar();
+    drawAppIcons();
+}
+
+void UI::drawAppIcons() {
+    _tft.setSwapBytes(true);
+    _tft.pushImage(BTN_COL1_X, BTN_ROW1_Y, AXES_WIDTH, AXES_HEIGHT, (uint16_t*)axes_data);
+    _tft.setSwapBytes(false);
 }
 
 void UI::drawTopBar() {
