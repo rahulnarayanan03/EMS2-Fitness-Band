@@ -517,12 +517,16 @@ void StopWatch_Case(uint32_t now) {
 
         sw.updateSW();
 
-        updateSWScreen(tft, stepM.getStepCount());
+        updateSWScreen(tft, sw, stepM.getStepCount());
 
         Serial.print("[SW] Elapsed time: ");
         Serial.print(sw.getElapsedTimeSeconds());
         Serial.print("s, State: ");
         Serial.println(state);
+        Serial.print("Point x: ");
+        Serial.print(sw.getCirclePosition().first);
+        Serial.print(", Point y: ");
+        Serial.println(sw.getCirclePosition().second);
     }
 
     if (touched && sw.homeTouched(tx, ty)) {
