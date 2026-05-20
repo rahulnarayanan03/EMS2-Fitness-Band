@@ -10,6 +10,14 @@
 
 using namespace SW_Consts;
 
+// Stopwatch screen colours
+static constexpr uint16_t START_BG = 0x0942;
+static constexpr uint16_t START_TEXT = 0x4dad;
+static constexpr uint16_t STOP_BG = 0x3061;
+static constexpr uint16_t STOP_TEXT = 0xf247;
+static constexpr uint16_t RESET_BG = 0x31a6;
+static constexpr uint16_t POINT_BG = 0x863c;
+
 void drawCalibrationScreen(TFT_eSPI &tft);
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
 void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
