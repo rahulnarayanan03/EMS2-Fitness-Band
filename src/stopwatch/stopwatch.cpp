@@ -61,15 +61,11 @@ Stopwatch::SW_State Stopwatch::getState() {
 }
 
 void Stopwatch::startSW() {
-    unsigned long t1 = millis();
-
-    delay(SW_DELAY);
-
-    unsigned long t2 = millis();
-
-    _elapsed_time += t2 - t1;
+    SW_State state = RUNNING;
+    _state = state;
 }
 
 void Stopwatch::stopSW() {
-
+    SW_State state = STOPPED;
+    _state = state;
 }
