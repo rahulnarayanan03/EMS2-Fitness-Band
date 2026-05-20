@@ -36,6 +36,9 @@ public:
     // Returns the x,y coordinates of the circle orbiting the stopwatch
     std::pair<int, int> getCirclePosition();
 
+    // Returns the previous position of the circle orbiting the stopwatch
+    std::pair<int, int> getPrevCirclePosition();
+
     // Updates elapsed time with current elapsed time
     void updateElapsedTime();
 
