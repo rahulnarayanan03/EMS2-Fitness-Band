@@ -44,8 +44,8 @@ public:
     
 private:
     // Individual cell states
-    GridState game_state[3][3];
+    GridState _game_state[3][3];
 
     // Difficulty level of the game
-    Difficulty difficulty;
+    Difficulty _difficulty;
 };
