@@ -14,6 +14,7 @@
 #include "../../steptrack/step_counter.h"
 #include "../../calibration/calibration.h"
 #include "../icons/fire.h"
+#include "../icons/axes.h"
 
 // battery config - swap BATT_ADC_PIN and BATT_DIVIDER_RATIO once PCB schematic confirmed
 static constexpr uint8_t  BATT_ADC_PIN       = 34;
@@ -147,6 +148,7 @@ private:
     float    _calories = 0.0f;
 
     void drawStaticLayout();
+    void drawAppIcons();
     void drawTopBar();
     void drawGearIcon();
     void drawStepsBar();
