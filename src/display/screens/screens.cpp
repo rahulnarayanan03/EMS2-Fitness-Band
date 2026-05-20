@@ -468,3 +468,11 @@ void drawStubScreen(TFT_eSPI &tft, const char *title) {
 
     drawHomeButton(tft);
 }
+
+void drawGameScreen(TFT_eSPI &tft) {
+    
+}
+
+void updateGameScreen(TFT_eSPI &tft) {
+
+}
