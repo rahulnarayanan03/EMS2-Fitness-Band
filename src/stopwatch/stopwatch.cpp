@@ -73,7 +73,7 @@ void Stopwatch::updateElapsedTime() {
 void Stopwatch::formatTime() {
     _formatted_time._milliseconds = static_cast<int>((_elapsed_time/10) % 100);
     _formatted_time._seconds = static_cast<int>((_elapsed_time/1000) % 60);
-    _formatted_time._minutes = static_cast<int>((_elapsed_time/6000) % 60);
+    _formatted_time._minutes = static_cast<int>((_elapsed_time/60000) % 60);
 }
 
 unsigned long Stopwatch::getElapsedTime() {
