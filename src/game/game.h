@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 class Game {
 public:
     // State of each grid
