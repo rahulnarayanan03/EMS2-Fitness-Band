@@ -77,13 +77,13 @@ static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 // ---- state machine ----------------------------------------------------------
 
 enum AppCase {
-    CASE_SETUP = 0,
-    CASE_CT = 1,
-    CASE_HOME = 2,
-    CASE_ST = 3,
-    CASE_SW = 4,
-    CASE_PIDT = 5,
-    CASE_SETTINGS = 6
+    CASE_SETUP,
+    CASE_CT,
+    CASE_HOME,
+    CASE_ST,
+    CASE_SW,
+    CASE_PIDT,
+    CASE_SETTINGS
 };
 
 AppCase currentCase = CASE_SETUP;
@@ -471,14 +471,21 @@ void Home_Case(uint32_t now, float cv, float cp) {
                 break;
 
             case 2:
-                currentCase = CASE_SW;
-                drawSWScreen(tft, sw);
+                
                 break;
 
             case 3:
                 currentCase = CASE_PIDT;
                 paceIdDrawn = false;
                 tft.fillScreen(APP_BG);
+                break;
+
+            case 4:
+                currentCase = CASE_SW;
+                drawSWScreen(tft, sw);
+                break;
+            
+            case 5:
                 break;
         }
     }
