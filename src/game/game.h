@@ -39,6 +39,8 @@ public:
     // Frees all cells in the grid
     void resetGrid();
 
+    bool isBoardFull();
+
     // Sets the difficulty of the game
     void setDifficulty(Difficulty difficulty);
 

@@ -37,12 +37,23 @@ void Game::resetGrid() {
     }
 }
 
+bool Game::isBoardFull() {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (_game_state[i][j] == Game::FREE) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void Game::setDifficulty(Difficulty difficulty) {
     _difficulty = difficulty;
 }
 
 std::pair<int, int> Game::getOptimalMove() {
-    
+
 }
 
 void Game::runBotMove() {
