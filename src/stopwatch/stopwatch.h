@@ -41,6 +41,9 @@ public:
     // Returns the previous position of the circle orbiting the stopwatch
     std::pair<int, int> getPrevCirclePosition();
 
+    // Returns the period in milliseconds
+    int getPeriod();
+
     // Updates elapsed time with current elapsed time
     void updateElapsedTime();
 
