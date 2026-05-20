@@ -37,6 +37,10 @@ std::pair<int, int> Stopwatch::getCirclePosition() {
     return _point_coords;
 }
 
+std::pair<int, int> Stopwatch::getCirclePosition() {
+    return _prev_coords;
+}
+
 void Stopwatch::updateElapsedTime() {
     // Only update the time if the watch is running
     if (_state == RUNNING) {
