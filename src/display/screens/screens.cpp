@@ -354,6 +354,11 @@ void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
     int point_y = stopwatch.getCirclePosition().second;
 
     tft.fillCircle(point_x, point_y, SW_POINT_R, POINT_BG);
+
+    Serial.print("Point x: ");
+    Serial.print(stopwatch.getCirclePosition().first);
+    Serial.print(", Point y: ");
+    Serial.println(stopwatch.getCirclePosition().second);
     
 
     // clear only the step number area
