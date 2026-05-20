@@ -3,6 +3,9 @@
 
 #include "screens.h"
 #include "../UI/UI.h"
+#include "stopwatch/stopwatch.h"
+
+using namespace SW_Consts;
 
 static constexpr int16_t HOME_BTN_X = 95;
 static constexpr int16_t HOME_BTN_Y = 184;
@@ -342,16 +345,20 @@ void drawSWScreen(TFT_eSPI &tft) {
 }
 
 void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
+    // Draw rotating circle
+    // Position is a function of elapsed time
+    
+
     // clear only the step number area
-    tft.fillRect(10, 105, 100, 36, APP_BG);
+    //tft.fillRect(10, 105, 100, 36, APP_BG);
 
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(APP_TEXT, APP_BG);
+    //tft.setTextDatum(TL_DATUM);
+    //tft.setTextColor(APP_TEXT, APP_BG);
 
-    char buf[12];
-    snprintf(buf, sizeof(buf), "%lu", (unsigned long)stepCount);
+    //char buf[12];
+    //snprintf(buf, sizeof(buf), "%lu", (unsigned long)stepCount);
 
-    tft.drawString(buf, 10, 105, 4);
+    //tft.drawString(buf, 10, 105, 4);
 }
 
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
