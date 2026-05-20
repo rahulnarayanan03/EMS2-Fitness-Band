@@ -28,14 +28,6 @@ static constexpr uint16_t APP_BUTTON      = GB_LIGHTEST;
 static constexpr uint16_t APP_BUTTON_TEXT = GB_DARKEST;
 static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
-// Stopwatch screen colours
-static constexpr uint16_t START_BG = 0x0942;
-static constexpr uint16_t START_TEXT = 0x4dad;
-static constexpr uint16_t STOP_BG = 0x3061;
-static constexpr uint16_t STOP_TEXT = 0xf247;
-static constexpr uint16_t RESET_BG = 0x31a6;
-static constexpr uint16_t POINT_BG = 0x863c;
-
 static void drawHomeButton(TFT_eSPI &tft) {
     tft.fillRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BUTTON);
     tft.drawRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BORDER);
@@ -349,11 +341,19 @@ void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
 
     tft.setTextDatum(TL_DATUM);
 
-    // Draw start button
-    tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
-    // Draw start text
-    tft.setTextColor(START_TEXT, START_BG);
-    tft.drawString("Start", 243+18, 27+7, 2);
+    if (sw.getState() == Stopwatch::RUNNING) {
+        // Draw stop button
+        tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, STOP_BG);
+        // Draw stop text
+        tft.setTextColor(STOP_TEXT, STOP_BG);
+        tft.drawString("Stop", 243+18, 27+7, 2);
+    } else {
+        // Draw start button
+        tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
+        // Draw start text
+        tft.setTextColor(START_TEXT, START_BG);
+        tft.drawString("Start", 243+18, 27+7, 2);
+    }
 
     // Draw reset button
     tft.fillCircle(SW_BTN_X, RESET_Y, SW_BTN_R, RESET_BG);
