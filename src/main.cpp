@@ -63,7 +63,7 @@ PACEFIND    paceM;
 SelfTest    stM(ST_PIN, X_PIN, Y_PIN, Z_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
-Stopwatch sw(SW_OUTER_RADIUS, SW_THICKNESS, 10, 5000);
+Stopwatch sw(5000);
 
 // ---- shared app screen colours ---------------------------------------------
 
