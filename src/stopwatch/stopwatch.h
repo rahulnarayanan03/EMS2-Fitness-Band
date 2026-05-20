@@ -60,6 +60,8 @@ public:
     // Reset the stopwatch
     void resetSW();
 
+    void updateSW();
+
 private:
     int _outer_radius;  // Outer radius of the stopwatch face's circle
     int _thickness;     // Line thickness of the stopwatch face's circle
@@ -70,6 +72,7 @@ private:
 
     unsigned long _elapsed_time;    // Elapsed time in milliseconds
     SW_Time _formatted_time;        // Elapsed time formatted in minutes:seconds:milliseconds
+    unsigned long _prev_time;       // Previous value of elapsed time before update
 
     SW_State _state;    // Stopwatch state
 };
