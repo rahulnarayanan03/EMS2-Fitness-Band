@@ -4,6 +4,14 @@
 
 class Game {
 public:
+    // State of the game
+    enum GameState {
+        HUMAN_TURN,
+        BOT_TURN,
+        HUMAN_WIN,
+        BOT_WIN
+    };
+
     // State of each grid
     enum GridState {
         OCCUPIED_O,
@@ -51,8 +59,11 @@ public:
     void runBotMove();
     
 private:
+    // State of the game
+    GameState _game_state;
+    
     // Individual cell states
-    GridState _game_state[3][3];
+    GridState _grid_state[3][3];
 
     // Difficulty level of the game
     Difficulty _difficulty;

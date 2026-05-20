@@ -15,24 +15,24 @@ Game::GridState Game::getCellState(int row, int col) {
         Serial.println("Warning: row/col out of bounds");
         return Game::FREE;
     } else {
-        return _game_state[row-1][col-1];
+        return _grid_state[row-1][col-1];
     }
 }
 
 void Game::placeO(int row, int col) {
-    _game_state[row-1][col-1] = Game::OCCUPIED_O;
+    _grid_state[row-1][col-1] = Game::OCCUPIED_O;
     return;
 }
 
 void Game::placeX(int row, int col) {
-    _game_state[row-1][col-1] = Game::OCCUPIED_X;
+    _grid_state[row-1][col-1] = Game::OCCUPIED_X;
     return;
 }
 
 void Game::resetGrid() {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            _game_state[i][j] = Game::FREE;
+            _grid_state[i][j] = Game::FREE;
         }
     }
 }
@@ -40,7 +40,7 @@ void Game::resetGrid() {
 bool Game::isBoardFull() {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (_game_state[i][j] == Game::FREE) {
+            if (_grid_state[i][j] == Game::FREE) {
                 return false;
             }
         }
