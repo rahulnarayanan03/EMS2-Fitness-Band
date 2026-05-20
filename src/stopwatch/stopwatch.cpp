@@ -19,8 +19,8 @@ void Stopwatch::updateCirclePosition() {
 
     float circle_x;
     float circle_y;
-    circle_x = -1*(float)radius*cos((2000.0f*M_PI/_period_ms)*(getElapsedTimeSeconds() + _period_ms/4000.0f));
-    circle_y = (float)radius*sin((2000.0f*M_PI/_period_ms)*(getElapsedTimeSeconds() + _period_ms/4000.0f));
+    circle_x = -1*(float)radius*cos((2000.0f*M_PI/_period_ms)*(getElapsedTimeSeconds() + _period_ms/4000.0f)) + SW_X;
+    circle_y = (float)radius*sin((2000.0f*M_PI/_period_ms)*(getElapsedTimeSeconds() + _period_ms/4000.0f)) + SW_Y;
 
     _point_coords.first = static_cast<int>(circle_x);
     _point_coords.second = static_cast<int>(circle_y);
