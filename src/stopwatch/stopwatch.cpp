@@ -1,22 +1,13 @@
 #include "stopwatch.h"
-#include "../display/UI/UI.h"
 
-using namespace SW_Consts;
-
-Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius) {
-    _outer_radius = outer_radius;
-    _thickness = thickness;
-    _point_radius = point_radius;
+Stopwatch::Stopwatch() {
     _period_ms = SW_PERIOD_MS;
     _elapsed_time = 0;
     _prev_time = 0;
     _state = IDLE;
 }
 
-Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius, int period_ms) {
-    _outer_radius = outer_radius;
-    _thickness = thickness;
-    _point_radius = point_radius;
+Stopwatch::Stopwatch(int period_ms) {
     _period_ms = period_ms;
     _elapsed_time = 0;
     _prev_time = 0;
@@ -24,7 +15,7 @@ Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius, int peri
 }
 
 void Stopwatch::updateCirclePosition() {
-    int radius = _outer_radius - (_thickness/2);
+    int radius = SW_OUTER_RADIUS - (SW_THICKNESS/2);
 
     float circle_x;
     float circle_y;
