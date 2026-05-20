@@ -7,8 +7,8 @@ public:
         FREE
     };
 
-    // Returns true if a cell is occupied, false if it is free
-    bool getOccupied(int row, int col);
+    // Returns the state of a cell
+    GridState getCellState(int row, int col);
 
     // Places an 'O' marker in a cell
     void placeO(int row, int col);
