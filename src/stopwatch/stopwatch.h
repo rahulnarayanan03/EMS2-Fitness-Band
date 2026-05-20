@@ -60,7 +60,17 @@ public:
     // Reset the stopwatch
     void resetSW();
 
+    // Update all states of the stopwatch
     void updateSW();
+
+    // Check if the home button has been touched
+    bool homeTouched(uint16_t tx, uint16_t ty);
+
+    // Check if the start/stop button has been touched
+    bool startStopTouched(uint16_t tx, uint16_t ty);
+
+    // Check if the reset button has been touched
+    bool resetTouched(uint16_t tx, uint16_t ty);
 
 private:
     int _outer_radius;  // Outer radius of the stopwatch face's circle
