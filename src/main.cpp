@@ -25,6 +25,7 @@
 #include "selftest/SelfTest.h"
 #include "calories/calories.h"
 #include "Adafruit_MAX1704X.h"
+#include "stopwatch/stopwatch.h"
 
 Adafruit_MAX17048 maxlipo;
 
@@ -54,6 +55,7 @@ static constexpr uint8_t  BACKLIGHT_PWM_RES_BITS     = 8;
 static constexpr uint8_t  BACKLIGHT_PWM_CHANNEL      = 0;
 
 // ---- module objects ---------------------------------------------------------
+using namespace SW_Consts;
 
 Calibration calibM;
 StepCounter stepM(calibM);
@@ -61,6 +63,7 @@ PACEFIND    paceM;
 SelfTest    stM(ST_PIN, X_PIN, Y_PIN, Z_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
+Stopwatch sw(SW_OUTER_RADIUS, SW_THICKNESS, 10, 5000);
 
 // ---- shared app screen colours ---------------------------------------------
 
@@ -504,20 +507,21 @@ void SelfTest_Case() {
 }
 
 void StopWatch_Case(uint32_t now) {
-    updateStepAndPace(now);
+    static unsigned long lastSWUpdate = 0;
 
-    static unsigned long lastSCTUpdate = 0;
+    if (millis() - lastSWUpdate >= Stopwatch::SW_DELAY) {
+        lastSWUpdate = millis();
 
-    if (millis() - lastSCTUpdate >= 500) {
-        lastSCTUpdate = millis();
+        sw.updateSW();
 
         updateSWScreen(tft, stepM.getStepCount());
 
-        Serial.print("[SCT] Steps: ");
-        Serial.println(stepM.getStepCount());
+        Serial.print("[SW] Elapsed time: ");
+        Serial.print(sw.getElapsedTimeSeconds());
+        Serial.println("s");
     }
 
-    if (touched && tx >= 95 && tx <= 225 && ty >= 184 && ty <= 232) {
+    if (touched && tx >= 95 && tx <= 224 && ty >= 184 && ty <= 231) {
         goHome();
     }
 }
