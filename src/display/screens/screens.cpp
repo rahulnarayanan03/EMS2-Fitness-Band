@@ -7,6 +7,8 @@
 
 using namespace SW_Consts;
 
+Stopwatch sw(5000);
+
 static constexpr int16_t HOME_BTN_X = 95;
 static constexpr int16_t HOME_BTN_Y = 184;
 static constexpr int16_t HOME_BTN_W = 130;
@@ -36,6 +38,7 @@ static constexpr uint16_t START_TEXT = 0x4dad;
 static constexpr uint16_t STOP_BG = 0x3061;
 static constexpr uint16_t STOP_TEXT = 0xf247;
 static constexpr uint16_t RESET_BG = 0x31a6;
+static constexpr uint16_t POINT_BG = 0x863c;
 
 static void drawHomeButton(TFT_eSPI &tft) {
     tft.fillRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BUTTON);
@@ -345,8 +348,12 @@ void drawSWScreen(TFT_eSPI &tft) {
 }
 
 void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
-    // Draw rotating circle
+    // Draw rotating point
     // Position is a function of elapsed time
+    int point_x = sw.getCirclePosition().first;
+    int point_y = sw.getCirclePosition().second;
+
+    tft.fillCircle(point_x, point_y, SW_POINT_R, POINT_BG);
     
 
     // clear only the step number area
