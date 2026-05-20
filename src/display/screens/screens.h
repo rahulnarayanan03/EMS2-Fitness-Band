@@ -24,5 +24,3 @@ void drawStubScreen(TFT_eSPI &tft, const char *title);
 void drawSetupWelcome(TFT_eSPI &tft);
 void drawSetupQuestion(TFT_eSPI &tft, const char *question,
                        const char *unit, float value, int decimals);
-
-bool homeTouched(uint16_t tx, uint16_t ty);
