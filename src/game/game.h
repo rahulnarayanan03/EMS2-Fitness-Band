@@ -1,3 +1,5 @@
+#pragma once
+
 class Game {
 public:
     // State of each grid
