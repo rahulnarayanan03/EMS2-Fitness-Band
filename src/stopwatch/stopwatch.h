@@ -1,9 +1,6 @@
 #include <Arduino.h>
 #include <cmath>
 
-static constexpr int SW_PERIOD_MS = 5000;
-static constexpr int SW_DELAY = 50;
-
 class Stopwatch {
 public:
     // Stopwatch constructor
@@ -27,6 +24,9 @@ public:
         STOPPED     // After pressing stop
     };
 
+    static constexpr int SW_PERIOD_MS = 5000;
+    static constexpr int SW_DELAY = 50;
+
     // Updates the x,y coordinates of the circle orbiting the stopwatch
     void updateCirclePosition();
 
@@ -48,14 +48,17 @@ public:
     // Returns elapsed time formatted in minutes:seconds:milliseconds
     SW_Time getFormattedTime();
 
+    // Returns state of the stopwatch
+    SW_State getState();
+
     // Start the stopwatch
-    void start_sw();
+    void startSW();
 
     // Stop the stopwatch
-    void stop_sw();
+    void stopSW();
 
     // Reset the stopwatch
-    void reset_sw();
+    void resetSW();
 
 private:
     int _outer_radius;  // Outer radius of the stopwatch face's circle
