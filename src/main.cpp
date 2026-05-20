@@ -83,6 +83,8 @@ enum AppCase {
     CASE_ST,
     CASE_SW,
     CASE_PIDT,
+    CASE_GAME,
+    CASE_HEALTH,
     CASE_SETTINGS
 };
 
@@ -471,7 +473,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
                 break;
 
             case 2:
-                
+                currentCase = CASE_GAME;
                 break;
 
             case 3:
@@ -524,7 +526,7 @@ void StopWatch_Case(uint32_t now) {
 
         sw.updateSW();
 
-        updateSWScreen(tft, sw, stepM.getStepCount());
+        updateSWScreen(tft, sw);
 
         Serial.print("[SW] Elapsed time: ");
         Serial.print(sw.getElapsedTimeSeconds());

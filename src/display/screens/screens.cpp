@@ -392,7 +392,7 @@ void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
 
 }
 
-void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount) {
+void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
     auto prev = sw.getPrevCirclePosition();
     auto curr = sw.getCirclePosition();
 

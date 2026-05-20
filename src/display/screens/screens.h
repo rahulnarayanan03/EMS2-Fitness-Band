@@ -30,7 +30,7 @@ void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
 
 void drawSWTime(TFT_eSPI &tft, const Stopwatch::SW_Time &t);
 void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw);
-void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount);
+void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw);
 void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw);
 void drawSWDot(TFT_eSPI &tft, Stopwatch &sw);
 
