@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Arduino.h>
 #include <cmath>
 #include "../display/UI/UI.h"
