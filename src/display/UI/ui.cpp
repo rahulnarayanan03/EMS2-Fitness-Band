@@ -122,6 +122,7 @@ void UI::drawStaticLayout() {
 void UI::drawAppIcons() {
     _tft.setSwapBytes(true);
     _tft.pushImage(BTN_COL1_X, BTN_ROW1_Y, AXES_WIDTH, AXES_HEIGHT, (uint16_t*)axes_data);
+    drawRightPanelNoFill();
     _tft.setSwapBytes(false);
 }
 
@@ -247,6 +248,12 @@ void UI::drawRightPanel() {
     }
 }
 
+void UI::drawRightPanelNoFill() {
+    for (uint8_t i = 0; i < 6; i++) {
+        drawButtonBorder(BTN_X[i], BTN_Y[i], BTN_ACTIVE[i]);
+    }
+}
+
 void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
     uint16_t bg  = LEAF_GREEN;
     uint16_t bor = active ? GB_DARKEST : GB_DARK;
@@ -258,6 +265,12 @@ void UI::drawButton(int16_t x, int16_t y, const char *label, bool active) {
     _tft.setTextDatum(MC_DATUM);
     _tft.setTextColor(txt, bg);
     _tft.drawString(label, x + BTN_W / 2, y + BTN_H / 2, 4);
+}
+
+void UI::drawButtonBorder(int16_t x, int16_t y, bool active) {
+    uint16_t bor = active ? GB_DARKEST : GB_DARK;
+
+    _tft.drawRect(x, y, BTN_W, BTN_H, bor);
 }
 
 void UI::drawHeartIcon(int16_t cx, int16_t cy) {
