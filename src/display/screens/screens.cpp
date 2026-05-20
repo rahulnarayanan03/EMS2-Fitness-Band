@@ -3,11 +3,6 @@
 
 #include "screens.h"
 #include "../UI/UI.h"
-#include "stopwatch/stopwatch.h"
-
-using namespace SW_Consts;
-
-Stopwatch stopwatch(5000);
 
 static constexpr int16_t HOME_BTN_X = 95;
 static constexpr int16_t HOME_BTN_Y = 184;
@@ -347,18 +342,27 @@ void drawSWScreen(TFT_eSPI &tft) {
     tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),TFT_BLACK);
 }
 
-void updateSWScreen(TFT_eSPI &tft, uint32_t stepCount) {
-    // Draw rotating point
-    // Position is a function of elapsed time
-    int point_x = stopwatch.getCirclePosition().first;
-    int point_y = stopwatch.getCirclePosition().second;
+void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount) {
+    // Erase the previous point
+    // First get it
+    std::pair<int, int> prev_point = sw.getPrevCirclePosition();
+    int prev_point_x = prev_point.first;
+    int prev_point_y = prev_point.second;
 
+    // Draw black circle over this previous point to erase
+    tft.fillCircle(prev_point_x, prev_point_y, SW_POINT_R, TFT_BLACK);
+
+    // Redraw stopwatch circle to close gap
+    tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_WHITE);
+    tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),TFT_BLACK);
+
+    // Get the current point
+    std::pair<int, int> orbiting_point = sw.getCirclePosition();
+    int point_x = orbiting_point.first;
+    int point_y = orbiting_point.second;
+
+    // Draw the current point
     tft.fillCircle(point_x, point_y, SW_POINT_R, POINT_BG);
-
-    Serial.print("Point x: ");
-    Serial.print(stopwatch.getCirclePosition().first);
-    Serial.print(", Point y: ");
-    Serial.println(stopwatch.getCirclePosition().second);
     
 
     // clear only the step number area
