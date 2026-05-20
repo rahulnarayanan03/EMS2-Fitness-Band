@@ -79,6 +79,7 @@ private:
     int _period_ms;     // Period of the circle orbiting the stopwatch face
 
     std::pair<int, int> _point_coords;  // x,y coordinates of the circle orbiting the stopwatch
+    std::pair<int,int> _prev_coords;    // previous x,y coordinates of the circle orbiting the stopwatch
 
     unsigned long _elapsed_time;    // Elapsed time in milliseconds
     SW_Time _formatted_time;        // Elapsed time formatted in minutes:seconds:milliseconds
