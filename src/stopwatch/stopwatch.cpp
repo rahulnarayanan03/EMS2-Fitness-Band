@@ -56,7 +56,11 @@ Stopwatch::SW_Time Stopwatch::getFormattedTime() {
     return _formatted_time;
 }
 
-void Stopwatch::start_sw() {
+Stopwatch::SW_State Stopwatch::getState() {
+    return _state;
+}
+
+void Stopwatch::startSW() {
     unsigned long t1 = millis();
 
     delay(SW_DELAY);
@@ -64,4 +68,8 @@ void Stopwatch::start_sw() {
     unsigned long t2 = millis();
 
     _elapsed_time += t2 - t1;
+}
+
+void Stopwatch::stopSW() {
+
 }
