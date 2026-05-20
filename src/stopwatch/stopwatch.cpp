@@ -6,6 +6,7 @@ Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius) {
     _point_radius = point_radius;
     _period_ms = SW_PERIOD_MS;
     _elapsed_time = 0;
+    _prev_time = 0;
 }
 
 Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius, int period_ms) {
@@ -14,6 +15,7 @@ Stopwatch::Stopwatch(int outer_radius, int thickness, int point_radius, int peri
     _point_radius = point_radius;
     _period_ms = period_ms;
     _elapsed_time = 0;
+    _prev_time = 0;
 }
 
 void Stopwatch::updateCirclePosition() {
@@ -33,7 +35,13 @@ std::pair<int, int> Stopwatch::getCirclePosition() {
 }
 
 void Stopwatch::updateElapsedTime() {
-    
+    // Only update the time if the watch is running
+    if (_state == RUNNING) {
+        _elapsed_time = millis() - _prev_time;
+        _prev_time = _elapsed_time;
+    } else {
+        _elapsed_time = _prev_time;
+    }
 }
 
 void Stopwatch::formatTime() {
@@ -73,4 +81,8 @@ void Stopwatch::stopSW() {
 void Stopwatch::resetSW() {
     SW_State state = IDLE;
     _state = state;
+}
+
+void Stopwatch::updateSW() {
+
 }
