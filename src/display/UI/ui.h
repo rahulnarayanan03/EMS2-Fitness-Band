@@ -13,6 +13,7 @@
 #include "../animation/anim_data.h"
 #include "../../steptrack/step_counter.h"
 #include "../../calibration/calibration.h"
+#include "../icons/fire.h"
 
 // battery config - swap BATT_ADC_PIN and BATT_DIVIDER_RATIO once PCB schematic confirmed
 static constexpr uint8_t  BATT_ADC_PIN       = 34;

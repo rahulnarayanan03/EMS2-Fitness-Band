@@ -212,10 +212,10 @@ void UI::drawLeftPanel() {
                        LEFT_PNL_W - 12,
                        GB_DARK);
 
-    //_tft.fillTriangle(LEFT_PNL_X + 24, LEFT_PNL_Y + 32,
-                      //LEFT_PNL_X + 12, LEFT_PNL_Y + 12,
-                      //LEFT_PNL_X + 36, LEFT_PNL_Y + 12,
-                      //TFT_ORANGE);
+    // Draw fire icon
+    _tft.setSwapBytes(true);
+    _tft.pushImage(LEFT_PNL_X + 16, LEFT_PNL_Y + 5, ICON_WIDTH, ICON_HEIGHT, (uint16_t*)fire_data, ICON_TRANSPARENT);
+    _tft.setSwapBytes(false);
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
