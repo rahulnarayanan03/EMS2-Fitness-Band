@@ -122,6 +122,7 @@ void UI::drawStaticLayout() {
 void UI::drawAppIcons() {
     _tft.setSwapBytes(true);
     _tft.pushImage(BTN_COL1_X, BTN_ROW1_Y, AXES_WIDTH, AXES_HEIGHT, (uint16_t*)axes_data);
+    _tft.pushImage(BTN_COL2_X, BTN_ROW1_Y, CHIP_WIDTH, CHIP_HEIGHT, (uint16_t*)chip_data);
     drawRightPanelNoFill();
     _tft.setSwapBytes(false);
 }
