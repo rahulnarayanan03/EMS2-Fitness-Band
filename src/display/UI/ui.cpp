@@ -214,7 +214,7 @@ void UI::drawLeftPanel() {
 
     // Draw fire icon
     _tft.setSwapBytes(true);
-    _tft.pushImage(LEFT_PNL_X + 16, LEFT_PNL_Y + 5, ICON_WIDTH, ICON_HEIGHT, (uint16_t*)fire_data, ICON_TRANSPARENT);
+    _tft.pushImage(LEFT_PNL_X + 16, LEFT_PNL_Y + 7, ICON_WIDTH, ICON_HEIGHT, (uint16_t*)fire_data, ICON_TRANSPARENT);
     _tft.setSwapBytes(false);
 
     _tft.setTextDatum(TL_DATUM);
@@ -324,7 +324,7 @@ void UI::refreshCalories() {
 
     char buf[12];
     snprintf(buf, sizeof(buf), "%.0f kcal", _calories);
-    _tft.drawString(buf, LEFT_PNL_X + 56, LEFT_PNL_Y + 8, 2);
+    _tft.drawString(buf, LEFT_PNL_X + 62, LEFT_PNL_Y + 10, 2);
 }
 
 void UI::refreshBattery(float cv, float cp) {
