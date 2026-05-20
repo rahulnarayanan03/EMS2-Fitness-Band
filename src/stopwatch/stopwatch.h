@@ -30,7 +30,10 @@ public:
     };
 
     static constexpr int SW_PERIOD_MS = 5000;
-    static constexpr int SW_DELAY = 50;
+    static constexpr int SW_DELAY = 16;
+
+    // Initialises circle position
+    void initPosition();
 
     // Updates the x,y coordinates of the circle orbiting the stopwatch
     void updateCirclePosition();

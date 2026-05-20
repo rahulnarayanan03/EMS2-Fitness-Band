@@ -63,7 +63,7 @@ PACEFIND    paceM;
 SelfTest    stM(ST_PIN, X_PIN, Y_PIN, Z_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
-Stopwatch sw(5000);
+Stopwatch sw(Stopwatch::SW_PERIOD_MS);
 
 // ---- shared app screen colours ---------------------------------------------
 
@@ -472,7 +472,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
 
             case 2:
                 currentCase = CASE_SW;
-                drawSWScreen(tft);
+                drawSWScreen(tft, sw);
                 break;
 
             case 3:
@@ -545,7 +545,9 @@ void StopWatch_Case(uint32_t now) {
 
     } else if (touched && sw.resetTouched(tx, ty)) {
         Serial.println("Reset touched");
+        eraseSWDot(tft, sw);
         sw.resetSW();
+        drawSWDot(tft, sw);
     }
 }
 

@@ -9,6 +9,7 @@ Stopwatch::Stopwatch() {
     _point_coords.second = 0;
     _prev_coords.first = 0;
     _prev_coords.second = 0;
+    initPosition();
 }
 
 Stopwatch::Stopwatch(int period_ms) {
@@ -20,6 +21,15 @@ Stopwatch::Stopwatch(int period_ms) {
     _point_coords.second = 0;
     _prev_coords.first = 0;
     _prev_coords.second = 0;
+    initPosition();
+}
+
+void Stopwatch::initPosition() {
+    int startRadius = SW_OUTER_RADIUS - (SW_THICKNESS / 2);
+    float angle0 = (2000.0f * M_PI / _period_ms) * (_period_ms / 4000.0f);
+    _point_coords.first  = static_cast<int>(-startRadius * cos(angle0) + SW_X);
+    _point_coords.second = static_cast<int>(-startRadius * sin(angle0) + SW_Y);
+    _prev_coords = _point_coords;
 }
 
 void Stopwatch::updateCirclePosition() {
@@ -31,7 +41,7 @@ void Stopwatch::updateCirclePosition() {
     float circle_y;
     float angle = (2000.0f * M_PI/_period_ms) * (getElapsedTimeSeconds() + _period_ms/4000.0f);
     circle_x = -1*(float)radius*cos(angle) + SW_X;
-    circle_y = (float)radius*sin(angle) + SW_Y;
+    circle_y = -1*(float)radius*sin(angle) + SW_Y;
 
     _point_coords.first = static_cast<int>(circle_x);
     _point_coords.second = static_cast<int>(circle_y);
@@ -102,6 +112,8 @@ void Stopwatch::resetSW() {
     _state = IDLE;
     _elapsed_time = 0;
     _prev_time = 0;
+
+    initPosition();
 }
 
 void Stopwatch::updateSW() {

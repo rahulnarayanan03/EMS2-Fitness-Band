@@ -3,6 +3,7 @@
 
 #include "screens.h"
 #include "../UI/UI.h"
+#include <cmath>
 
 static constexpr int16_t HOME_BTN_X = 95;
 static constexpr int16_t HOME_BTN_Y = 184;
@@ -314,7 +315,36 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
     }
 }
 
-void drawSWScreen(TFT_eSPI &tft) {
+void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw) {
+    auto pos = sw.getCirclePosition();
+
+    int r2outer = SW_OUTER_RADIUS * SW_OUTER_RADIUS;
+    int r2inner = (SW_OUTER_RADIUS - SW_THICKNESS) * (SW_OUTER_RADIUS - SW_THICKNESS);
+
+    tft.startWrite();
+    for (int dy = -(SW_POINT_R + 1); dy <= (SW_POINT_R + 1); dy++) {
+        for (int dx = -(SW_POINT_R + 1); dx <= (SW_POINT_R + 1); dx++) {
+            int sx = pos.first  + dx;
+            int sy = pos.second + dy;
+            int d2 = (sx - SW_X)*(sx - SW_X) + (sy - SW_Y)*(sy - SW_Y);
+
+            uint16_t col;
+            if (d2 > r2outer)      col = TFT_BLACK;
+            else if (d2 < r2inner) col = TFT_BLACK;
+            else                   col = TFT_WHITE;
+
+            tft.drawPixel(sx, sy, col);
+        }
+    }
+    tft.endWrite();
+}
+
+void drawSWDot(TFT_eSPI &tft, Stopwatch &sw) {
+    auto pos = sw.getCirclePosition();
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R, POINT_BG);
+}
+
+void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
     tft.fillScreen(APP_BG);
 
     tft.setTextDatum(TL_DATUM);
@@ -337,44 +367,48 @@ void drawSWScreen(TFT_eSPI &tft) {
     tft.setTextColor(RESET_TEXT, RESET_BG);
     tft.drawString("Home", 240+20, 183+7, 2);
 
-    // Draw test circle for stopwatch
+    // Draw circle for stopwatch
     tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_WHITE);
     tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),TFT_BLACK);
+
+    // Draw initial dot
+    auto pos = sw.getCirclePosition();
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R, POINT_BG);
 }
 
 void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount) {
-    // Erase the previous point
-    // First get it
-    std::pair<int, int> prev_point = sw.getPrevCirclePosition();
-    int prev_point_x = prev_point.first;
-    int prev_point_y = prev_point.second;
+    auto prev = sw.getPrevCirclePosition();
+    auto curr = sw.getCirclePosition();
 
-    // Draw black circle over this previous point to erase
-    tft.fillCircle(prev_point_x, prev_point_y, SW_POINT_R, TFT_BLACK);
+    int r2outer = SW_OUTER_RADIUS * SW_OUTER_RADIUS;
+    int r2inner = (SW_OUTER_RADIUS - SW_THICKNESS) * (SW_OUTER_RADIUS - SW_THICKNESS);
+    int r2dot   = SW_POINT_R * SW_POINT_R;
 
-    // Redraw stopwatch circle to close gap
-    tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_WHITE);
-    tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),TFT_BLACK);
+    tft.startWrite();
 
-    // Get the current point
-    std::pair<int, int> orbiting_point = sw.getCirclePosition();
-    int point_x = orbiting_point.first;
-    int point_y = orbiting_point.second;
+    for (int dy = -(SW_POINT_R + 1); dy <= (SW_POINT_R + 1); dy++) {
+        for (int dx = -(SW_POINT_R + 1); dx <= (SW_POINT_R + 1); dx++) {
+            int sx = prev.first  + dx;
+            int sy = prev.second + dy;
 
-    // Draw the current point
-    tft.fillCircle(point_x, point_y, SW_POINT_R, POINT_BG);
-    
+            int ndx = sx - curr.first;
+            int ndy = sy - curr.second;
+            if (ndx*ndx + ndy*ndy <= r2dot) continue;
 
-    // clear only the step number area
-    //tft.fillRect(10, 105, 100, 36, APP_BG);
+            int d2 = (sx - SW_X)*(sx - SW_X) + (sy - SW_Y)*(sy - SW_Y);
+            uint16_t col;
+            if (d2 > r2outer)      col = TFT_BLACK;
+            else if (d2 < r2inner) col = TFT_BLACK;
+            else                   col = TFT_WHITE;
 
-    //tft.setTextDatum(TL_DATUM);
-    //tft.setTextColor(APP_TEXT, APP_BG);
+            tft.drawPixel(sx, sy, col);
+        }
+    }
 
-    //char buf[12];
-    //snprintf(buf, sizeof(buf), "%lu", (unsigned long)stepCount);
+    // fillCircle handles its own CS internally, so end before calling it
+    tft.endWrite();
 
-    //tft.drawString(buf, 10, 105, 4);
+    tft.fillCircle(curr.first, curr.second, SW_POINT_R, POINT_BG);
 }
 
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,

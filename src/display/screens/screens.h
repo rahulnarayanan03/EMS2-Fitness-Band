@@ -15,8 +15,10 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
 void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
                            bool isSampling, int secsLeft, int dirIndex);
 
-void drawSWScreen(TFT_eSPI &tft);
+void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw);
 void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw, uint32_t stepCount);
+void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw);
+void drawSWDot(TFT_eSPI &tft, Stopwatch &sw);
 
 void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
                         float dX, float dY, float dZ);
