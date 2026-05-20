@@ -26,11 +26,20 @@ public:
         HARD
     };
 
+    // Player types
+    enum Player {
+        HUMAN,
+        BOT
+    };
+
     // Default constructor
     Game();
 
     // Constructor with difficulty level
     Game(Difficulty difficulty);
+
+    // Returns the state of the game
+    GameState getGameState();
 
     // Returns the state of a cell
     // Row and col values range from 1 to 3
@@ -49,6 +58,9 @@ public:
 
     bool isBoardFull();
 
+    // Check if a player has won
+    bool checkWin(Player player);
+
     // Sets the difficulty of the game
     void setDifficulty(Difficulty difficulty);
 
@@ -61,7 +73,7 @@ public:
 private:
     // State of the game
     GameState _game_state;
-    
+
     // Individual cell states
     GridState _grid_state[3][3];
 
