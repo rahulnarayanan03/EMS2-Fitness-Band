@@ -88,6 +88,8 @@ void Stopwatch::stopSW() {
 void Stopwatch::resetSW() {
     SW_State state = IDLE;
     _state = state;
+    _elapsed_time = 0;
+    _prev_time = 0;
 }
 
 void Stopwatch::updateSW() {
