@@ -84,5 +84,7 @@ void Stopwatch::resetSW() {
 }
 
 void Stopwatch::updateSW() {
-
+    updateElapsedTime();
+    formatTime();
+    updateCirclePosition();
 }
