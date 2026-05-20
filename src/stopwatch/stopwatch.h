@@ -1,13 +1,16 @@
 #include <Arduino.h>
 #include <cmath>
+#include "../display/UI/UI.h"
+
+using namespace SW_Consts;
 
 class Stopwatch {
 public:
-    // Stopwatch constructor
-    Stopwatch(int outer_radius, int thickness, int point_radius, int period_ms);
-
     // Stopwatch default constructor (no period)
-    Stopwatch(int outer_radius, int thickness, int point_radius);
+    Stopwatch();
+
+    // Stopwatch constructor with period
+    Stopwatch(int period_ms);
 
     // Elapsed time formatted in minutes:seconds:milliseconds
     // Minutes range from 0-59, seconds range from 0-59, milliseconds range from 0-99 (99 = 999)
@@ -73,9 +76,6 @@ public:
     bool resetTouched(uint16_t tx, uint16_t ty);
 
 private:
-    int _outer_radius;  // Outer radius of the stopwatch face's circle
-    int _thickness;     // Line thickness of the stopwatch face's circle
-    int _point_radius;  // Radius of the circle orbiting the stopwatch face
     int _period_ms;     // Period of the circle orbiting the stopwatch face
 
     std::pair<int, int> _point_coords;  // x,y coordinates of the circle orbiting the stopwatch
