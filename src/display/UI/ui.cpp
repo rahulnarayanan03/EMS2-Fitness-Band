@@ -6,13 +6,13 @@
 UI *UI::_instance = nullptr;
 
 // button positions inside the right panel
-static const int16_t BTN_COL1_X = RIGHT_PNL_X + 2;
-static const int16_t BTN_COL2_X = RIGHT_PNL_X + 2 + BTN_W + BTN_GAP;
-static const int16_t BTN_COL3_X = RIGHT_PNL_X + 2 + 2*BTN_W + 2*BTN_GAP;
-static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y + 4;
-static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + 4 + BTN_H + BTN_GAP;
+static const int16_t BTN_COL1_X = RIGHT_PNL_X;
+static const int16_t BTN_COL2_X = RIGHT_PNL_X + BTN_W + BTN_GAP;
+static const int16_t BTN_COL3_X = RIGHT_PNL_X + 2*BTN_W + 2*BTN_GAP;
+static const int16_t BTN_ROW1_Y = RIGHT_PNL_Y;
+static const int16_t BTN_ROW2_Y = RIGHT_PNL_Y + BTN_H + BTN_GAP;
 
-static const char   *BTN_LABEL[6]  = { "0", "1", "2", "3", "4", "5" };
+static const char   *BTN_LABEL[6]  = { "", "", "", "", "", "" };
 static const bool    BTN_ACTIVE[6] = { true, false, true, false, false, false };
 static const int16_t BTN_X[6] = { BTN_COL1_X, BTN_COL2_X, BTN_COL3_X, BTN_COL1_X, BTN_COL2_X, BTN_COL3_X };
 static const int16_t BTN_Y[6] = { BTN_ROW1_Y, BTN_ROW1_Y, BTN_ROW1_Y, BTN_ROW2_Y, BTN_ROW2_Y, BTN_ROW2_Y };
@@ -117,16 +117,15 @@ void UI::drawStaticLayout() {
     drawLeftPanel();
     drawStepsBar();
     drawAppIcons();
-    drawRetroButton(40, 40, 100, 40, 6, 6, "Test", GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void UI::drawAppIcons() {
     _tft.setSwapBytes(true);
-    _tft.pushImage(BTN_COL1_X, BTN_ROW1_Y, AXES_WIDTH, AXES_HEIGHT, (uint16_t*)axes_data);
-    _tft.pushImage(BTN_COL2_X, BTN_ROW1_Y, CHIP_WIDTH, CHIP_HEIGHT, (uint16_t*)chip_data);
-    _tft.pushImage(BTN_COL1_X, BTN_ROW2_Y, PACE_WIDTH, PACE_HEIGHT, (uint16_t*)pace_data);
-    _tft.pushImage(BTN_COL2_X, BTN_ROW2_Y, STOPWATCH_WIDTH, STOPWATCH_HEIGHT, (uint16_t*)stopwatch_data);
-    drawRightPanelNoFill();
+    int shift = 2;
+    _tft.pushImage(BTN_COL1_X+shift, BTN_ROW1_Y+shift, AXES_WIDTH, AXES_HEIGHT, (uint16_t*)axes_data, 0x5de7);
+    _tft.pushImage(BTN_COL2_X+shift, BTN_ROW1_Y+shift, CHIP_WIDTH, CHIP_HEIGHT, (uint16_t*)chip_data, 0x5de7);
+    _tft.pushImage(BTN_COL1_X+shift, BTN_ROW2_Y+shift, PACE_WIDTH, PACE_HEIGHT, (uint16_t*)pace_data, 0x5de7);
+    _tft.pushImage(BTN_COL2_X+shift, BTN_ROW2_Y+shift, STOPWATCH_WIDTH, STOPWATCH_HEIGHT, (uint16_t*)stopwatch_data, 0x5de7);
     _tft.setSwapBytes(false);
 }
 
@@ -245,7 +244,8 @@ void UI::drawRightPanel() {
     _tft.fillRect(RIGHT_PNL_X, RIGHT_PNL_Y, RIGHT_PNL_W, RIGHT_PNL_H, GB_LIGHTEST);
 
     for (uint8_t i = 0; i < 6; i++) {
-        drawButton(BTN_X[i], BTN_Y[i], BTN_LABEL[i], BTN_ACTIVE[i]);
+        drawRetroButton(BTN_X[i], BTN_Y[i], BTN_W, BTN_H, 4, 4, BTN_LABEL[i],
+                        LEAF_GREEN, TFT_BLACK, BTN_SHADOW, APP_GLARE, TFT_BLACK);
     }
 }
 

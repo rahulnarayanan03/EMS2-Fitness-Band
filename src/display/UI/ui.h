@@ -39,6 +39,7 @@ static constexpr uint16_t GB_LIGHTEST = 0xC710;
 static constexpr uint16_t GB_INACTIVE = 0x9D12;
 static constexpr uint16_t HEART_RED   = 0xD020;
 static constexpr uint16_t LEAF_GREEN = 0x5DE7;
+static constexpr uint16_t APP_GLARE = 0x964f;
 
 // Green retro button colours
 static constexpr uint16_t GB_BUTTON = 0x74c6;
@@ -87,13 +88,13 @@ static constexpr int16_t LEFT_PNL_W = 160;
 static constexpr int16_t LEFT_PNL_H = 72;
 
 static constexpr int16_t RIGHT_PNL_X = 8;
-static constexpr int16_t RIGHT_PNL_Y = 42;
+static constexpr int16_t RIGHT_PNL_Y = 40;
 static constexpr int16_t RIGHT_PNL_W = 198;
 static constexpr int16_t RIGHT_PNL_H = 106;
 
-static constexpr int16_t BTN_W   = 48;
-static constexpr int16_t BTN_H   = 48;
-static constexpr int16_t BTN_GAP = 6;
+static constexpr int16_t BTN_W   = 52;
+static constexpr int16_t BTN_H   = 52;
+static constexpr int16_t BTN_GAP = 8;
 
 // Stopwatch constants namespace
 namespace SW_Consts {
