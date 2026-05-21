@@ -39,12 +39,16 @@ static constexpr uint16_t GB_LIGHTEST = 0xC710;
 static constexpr uint16_t GB_INACTIVE = 0x9D12;
 static constexpr uint16_t HEART_RED   = 0xD020;
 static constexpr uint16_t LEAF_GREEN = 0x5DE7;
-static constexpr uint16_t BTN_SHADOW = 0x63e4;
+
+// Green retro button colours
 static constexpr uint16_t GB_BUTTON = 0x74c6;
+static constexpr uint16_t BTN_SHADOW = 0x63e4;
 static constexpr uint16_t BTN_GLARE = 0x8da7;
 
-// stronger reset button colour
+// Retro reset button colours
 static constexpr uint16_t RESET_RED  = 0xD000;
+static constexpr uint16_t RESET_SHADOW  = 0x9800;
+static constexpr uint16_t RESET_GLARE  = 0xd2eb;
 static constexpr uint16_t RESET_DARK = 0x7000;
 static constexpr uint16_t RESET_TEXT = TFT_WHITE;
 

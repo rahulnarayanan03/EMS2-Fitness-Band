@@ -190,23 +190,8 @@ void UI::drawStepsBar() {
 }
 
 void UI::drawStepResetButton() {
-    _tft.fillRect(STEP_RESET_BTN_X,
-                  STEP_RESET_BTN_Y,
-                  STEP_RESET_BTN_W,
-                  STEP_RESET_BTN_H,
-                  RESET_RED);
-
-    _tft.drawRect(STEP_RESET_BTN_X,
-                  STEP_RESET_BTN_Y,
-                  STEP_RESET_BTN_W,
-                  STEP_RESET_BTN_H,
-                  RESET_RED);
-
-    _tft.drawRect(STEP_RESET_BTN_X + 1,
-                  STEP_RESET_BTN_Y + 1,
-                  STEP_RESET_BTN_W - 2,
-                  STEP_RESET_BTN_H - 2,
-                  RESET_RED);
+    drawRetroButton(STEP_RESET_BTN_X, STEP_RESET_BTN_Y, STEP_RESET_BTN_W, STEP_RESET_BTN_H, 4, 4, "",
+                    RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
 
     _tft.setTextDatum(MC_DATUM);
     _tft.setTextColor(RESET_TEXT, RESET_RED);
@@ -494,7 +479,7 @@ void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, 
     _tft.fillRoundRect(x, y, w, (h - shadow_h), r, g_colour);
 
     // Fill button, decreased width to reveal remaining glare
-    _tft.fillRoundRect((x+2), (y+3), (w-2), (h - shadow_h - 3), r, bg_colour);
+    _tft.fillRoundRect((x+3), (y+3), (w-3), (h - shadow_h - 3), r, bg_colour);
 
     // Draw black outline
     _tft.drawRoundRect(x, y, w, h, r, b_colour);
