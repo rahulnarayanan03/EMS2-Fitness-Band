@@ -194,7 +194,7 @@ void initBacklight() {
 
 void drawPaceIdHomeButton() {
     tft.fillRect(95, 184, 130, 48, APP_BUTTON);
-    tft.drawRect(95, 184, 130, 48, APP_BORDER);
+    tft.drawRoundRect(95, 184, 130, 48, APP_BORDER, 10);
 
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);

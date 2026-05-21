@@ -117,7 +117,7 @@ void UI::drawStaticLayout() {
     drawLeftPanel();
     drawStepsBar();
     drawAppIcons();
-    drawRetroButton(40, 40, 100, 40, 6, 6, GB_BUTTON, TFT_BLACK, BTN_SHADOW);
+    drawRetroButton(40, 40, 100, 40, 6, 6, "Test", GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void UI::drawAppIcons() {
@@ -485,16 +485,28 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
     _gifFrame = (_gifFrame + 1) % frameCount;
 }
 
-void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, 
-                        int16_t shadow_h, uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour) {
-    // Fill shadow shifted lower
+void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, int16_t shadow_h, const String &string,
+                        uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour, uint16_t g_colour, uint16_t t_colour) {
+    // Fill rectangle with shadow colour
     _tft.fillRoundRect(x, y, w, h, r, s_colour);
 
-    // Fill button
-    _tft.fillRoundRect(x, y, w, (h - shadow_h), r, bg_colour);
+    // Fill with glare colour, decreased height to reveal remaining shadow
+    _tft.fillRoundRect(x, y, w, (h - shadow_h), r, g_colour);
+
+    // Fill button, decreased width to reveal remaining glare
+    _tft.fillRoundRect((x+2), (y+3), (w-2), (h - shadow_h - 3), r, bg_colour);
 
     // Draw black outline
     _tft.drawRoundRect(x, y, w, h, r, b_colour);
+
+    int button_centre_x = (x + (x + w - 1)) / 2;
+    int button_centre_y = 2 + (y + (y + h - 1)) / 2;
+
+    // Draw button text
+    _tft.setTextDatum(CC_DATUM);
+    _tft.setTextColor(t_colour);
+    _tft.drawString(string, button_centre_x, button_centre_y, 4);
+    _tft.setTextDatum(TL_DATUM);
 }
 
 // ---- library callbacks -----------------------------------------------------
