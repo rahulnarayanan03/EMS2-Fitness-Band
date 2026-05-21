@@ -108,6 +108,71 @@ void Game::setDifficulty(Difficulty difficulty) {
     _difficulty = difficulty;
 }
 
+int Game::minimax(int depth, bool isMaximizing, int alpha, int beta)
+    {
+        int score = 0;
+
+        if (checkWin(Game::HUMAN))
+        {
+            return -1;
+        }
+        else if (checkWin(Game::BOT))
+        {
+            return 1;
+        }
+        else if (isBoardFull())
+        {
+            return 0;
+        }
+
+        if (isMaximizing)
+        {
+            int bestScore = INT_MIN;
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    if (_grid_state[i][j] == Game::FREE)
+                    {
+                        _grid_state[i][j] = Game::OCCUPIED_O;
+                        int currentScore = minimax(depth + 1, false, alpha, beta);
+                        _grid_state[i][j] = Game::FREE;
+                        bestScore = std::max(bestScore, currentScore);
+                        alpha = std::max(alpha, bestScore);
+
+                        if (beta <= alpha)
+                            break;
+                    }
+                }
+            }
+            score = bestScore;
+        }
+        else
+        {
+            int bestScore = INT_MAX;
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    if (_grid_state[i][j] == Game::FREE)
+                    {
+                        _grid_state[i][j] = Game::OCCUPIED_X;
+                        int currentScore = minimax(depth + 1, true, alpha, beta);
+                        _grid_state[i][j] = Game::FREE;
+                        bestScore = std::min(bestScore, currentScore);
+                        beta = std::min(beta, bestScore);
+
+                        if (beta <= alpha)
+                            break;
+                    }
+                }
+            }
+            score = bestScore;
+        }
+
+        return score;
+    }
+
 std::pair<int, int> Game::getOptimalMove() {
 
 }

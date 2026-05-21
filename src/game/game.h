@@ -64,6 +64,9 @@ public:
     // Sets the difficulty of the game
     void setDifficulty(Difficulty difficulty);
 
+    // Runs minimax algorithm with alpha/beta pruning
+    int minimax(int depth, bool isMaximizing, int alpha, int beta);
+
     // Finds the most optimal move at the game state
     std::pair<int, int> getOptimalMove();
 
