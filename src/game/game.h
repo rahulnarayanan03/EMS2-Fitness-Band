@@ -67,9 +67,6 @@ public:
     // Runs minimax algorithm with alpha/beta pruning
     int minimax(int depth, bool isMaximizing, int alpha, int beta);
 
-    // Finds the most optimal move at the game state
-    std::pair<int, int> getOptimalMove();
-
     // Runs the bot's move
     void runBotMove();
     

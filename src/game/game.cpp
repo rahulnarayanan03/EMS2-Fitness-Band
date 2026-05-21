@@ -173,10 +173,33 @@ int Game::minimax(int depth, bool isMaximizing, int alpha, int beta)
         return score;
     }
 
-std::pair<int, int> Game::getOptimalMove() {
-
-}
-
 void Game::runBotMove() {
+        int bestScore = INT_MIN;
+        int bestMoveRow = -1;
+        int bestMoveCol = -1;
 
-}
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                if (_grid_state[i][j] == Game::FREE)
+                {
+                    _grid_state[i][j] = Game::OCCUPIED_O; // Bot's move
+                    int moveScore = minimax(0, false, INT_MIN, INT_MAX);
+                    _grid_state[i][j] = Game::FREE;
+
+                    if (moveScore > bestScore)
+                    {
+                        bestScore = moveScore;
+                        bestMoveRow = i;
+                        bestMoveCol = j;
+                    }
+                }
+            }
+        }
+
+        if (bestMoveRow != -1 && bestMoveCol != -1)
+        {
+            placeO(bestMoveRow, bestMoveCol);
+        }
+    }
