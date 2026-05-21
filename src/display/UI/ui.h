@@ -39,6 +39,8 @@ static constexpr uint16_t GB_LIGHTEST = 0xC710;
 static constexpr uint16_t GB_INACTIVE = 0x9D12;
 static constexpr uint16_t HEART_RED   = 0xD020;
 static constexpr uint16_t LEAF_GREEN = 0x5DE7;
+static constexpr uint16_t BTN_SHADOW = 0x3a24;
+static constexpr uint16_t GB_BUTTON = 0x63e8;
 
 // stronger reset button colour
 static constexpr uint16_t RESET_RED  = 0xD000;
@@ -175,6 +177,9 @@ private:
     void drawStandingGif();
     void drawGifFrame(const uint8_t *data, size_t len,
                       uint32_t frameMs, uint32_t nowMs);
+
+    void drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r,
+                        int16_t shadow_h, uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour);
 
     float  readBatteryVoltage();
     int8_t readBatteryPercent(float vBatt);
