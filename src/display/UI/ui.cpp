@@ -117,7 +117,7 @@ void UI::drawStaticLayout() {
     drawLeftPanel();
     drawStepsBar();
     drawAppIcons();
-    drawButtonRect(40, 40, 100, 40, 6, 2, TFT_BLACK, TFT_BLACK, GB_LIGHTEST);
+    drawRetroButton(40, 40, 100, 40, 6, 6, GB_BUTTON, TFT_BLACK, BTN_SHADOW);
 }
 
 void UI::drawAppIcons() {
@@ -487,11 +487,14 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
 
 void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, 
                         int16_t shadow_h, uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour) {
-    // Draw black outline
-    _tft.drawRoundRect(x, y, w, h, r, TFT_BLACK);
+    // Fill shadow shifted lower
+    _tft.fillRoundRect(x, y, w, h, r, s_colour);
 
-    // Fill shadow
-    _tft.fillRoundRect((x+1), y, (w-2), h, r, s_colour);
+    // Fill button
+    _tft.fillRoundRect(x, y, w, (h - shadow_h), r, bg_colour);
+
+    // Draw black outline
+    _tft.drawRoundRect(x, y, w, h, r, b_colour);
 }
 
 // ---- library callbacks -----------------------------------------------------
