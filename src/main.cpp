@@ -96,6 +96,8 @@ bool     awaitingStepChoice  = false;
 
 uint16_t tx = 0, ty = 0;
 bool     touched = false;
+bool step_reset_touched = false;
+int pressed_time = 0;
 
 uint32_t lastTransition = 0;
 
@@ -416,6 +418,14 @@ void Home_Case(uint32_t now, float cv, float cp) {
     ui.setCalories(calorieM.getKcal());
     ui.update(now, cv, cp);
 
+    if (step_reset_touched) {
+        // Show the reset button as pressed for 300ms
+        if (millis() - pressed_time > 100) {
+            ui.drawStepResetButton();
+            step_reset_touched = false;
+        }
+    }
+
     if (!touched) {
         homeTouchHandled = false;
         return;
@@ -443,6 +453,13 @@ void Home_Case(uint32_t now, float cv, float cp) {
         lastTransition = millis();
 
         Serial.println("Home: step count reset to 0.");
+
+        // Start tracking time since touch
+        pressed_time = millis();
+        step_reset_touched = true;
+
+        // Draw pressed reset button
+        ui.drawStepResetButtonPressed();
         return;
     }
 

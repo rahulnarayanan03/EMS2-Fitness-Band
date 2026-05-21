@@ -201,6 +201,18 @@ void UI::drawStepResetButton() {
                     2);
 }
 
+void UI::drawStepResetButtonPressed() {
+    drawRetroButton(STEP_RESET_BTN_X, STEP_RESET_BTN_Y, STEP_RESET_BTN_W, STEP_RESET_BTN_H, 4, 4, "",
+                    RESET_SHADOW, TFT_BLACK, RESET_SHADOW, RESET_RED, TFT_LIGHTGREY);
+
+    _tft.setTextDatum(MC_DATUM);
+    _tft.setTextColor(RESET_TEXT, RESET_SHADOW);
+    _tft.drawString("RESET",
+                    STEP_RESET_BTN_X + STEP_RESET_BTN_W / 2,
+                    STEP_RESET_BTN_Y + STEP_RESET_BTN_H / 2,
+                    2);
+}
+
 void UI::drawLeftPanel() {
     _tft.fillRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_LIGHTEST);
     _tft.drawRect(LEFT_PNL_X, LEFT_PNL_Y, LEFT_PNL_W, LEFT_PNL_H, GB_DARKEST);

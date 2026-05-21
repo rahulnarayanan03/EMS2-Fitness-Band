@@ -128,6 +128,9 @@ public:
     bool checkStepResetTouch(uint16_t tx, uint16_t ty) const;
     bool checkSettingsTouch(uint16_t tx, uint16_t ty) const;
 
+    void drawStepResetButton();
+    void drawStepResetButtonPressed();
+
 private:
     TFT_eSPI    &_tft;
     StepCounter &_stepM;
@@ -162,7 +165,6 @@ private:
     void drawTopBar();
     void drawGearIcon();
     void drawStepsBar();
-    void drawStepResetButton();
     void drawLeftPanel();
     void drawRightPanel();
     void drawRightPanelNoFill();
