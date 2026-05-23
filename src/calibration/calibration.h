@@ -34,8 +34,8 @@ private:
     static constexpr int   NUM_DIRECTIONS = 6;
     static constexpr int   NUM_SAMPLES    = 32;
     static constexpr float SCALE_FLOOR    = 0.05f;
-    static constexpr float PREP_MS        = 2000;
-    static constexpr float SAMPLE_MS      = 4000;
+    static constexpr float PREP_MS        = 4000;
+    static constexpr float SAMPLE_MS      = 2000;
 
     int        dirIndex   = 0;
     Stage      stage      = Stage::IDLE;

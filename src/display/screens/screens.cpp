@@ -182,12 +182,12 @@ static void drawArrow(TFT_eSPI &tft, int cx, int cy, int dir, int size, uint16_t
 // matches DIR_LABEL order: X+, X-, Y+, Y-, Z+, Z-
 static int arrowDir(int dirIndex) {
     switch (dirIndex) {
-        case 0: return 5;  // X+ UP → ↙
-        case 1: return 4;  // X- UP → ↗
-        case 2: return 1;  // Y+ UP → ←
-        case 3: return 0;  // Y- UP → →
-        case 4: return 2;  // Z+ UP → face up flat → arrow up
-        case 5: return 3;  // Z- UP → face down flat → arrow down
+        case 0: return 2;  // X+ UP is an upwards arrow
+        case 1: return 3;  // X- UP is a downwards arrow
+        case 2: return 0;  // Y+ UP is an arrow pointing to the right
+        case 3: return 1;  // Y- UP is an arrow pointing to the left
+        case 4: return 4;  // Z+ UP is an arrow pointing into the watch screen
+        case 5: return 5;  // Z- UP is an arrow pointing out of the watch screen
         default: return 2;
     }
 }
