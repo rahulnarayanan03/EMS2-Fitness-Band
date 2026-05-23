@@ -135,7 +135,7 @@ void UI::drawTopBar() {
 
     _tft.setTextDatum(TL_DATUM);
     _tft.setTextColor(GB_DARKEST, GB_LIGHTEST);
-    _tft.drawString("00:00", 8, 2, 4);
+    _tft.drawString("00:00", 8, 6, 4);
 
     drawGearIcon();
 }
@@ -307,7 +307,7 @@ void UI::refreshTime() {
 
     char buf[6];
     snprintf(buf, sizeof(buf), "%02d:%02d", _hour, _minute);
-    _tft.drawString(buf, 8, 2, 4);
+    _tft.drawString(buf, 8, 6, 4);
 }
 
 void UI::refreshSteps(uint32_t steps) {
