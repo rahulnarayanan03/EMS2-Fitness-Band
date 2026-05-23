@@ -482,8 +482,14 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.drawFastVLine(80, 40, 180, TFT_BLACK);
     tft.drawFastVLine(140, 40, 180, TFT_BLACK);
 
+    // Draw play button
+    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+
+    // Draw mode button
+    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+
     // Draw home button
-    ui.drawRetroButton(216, 40, 88, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void updateGameScreen(TFT_eSPI &tft) {
