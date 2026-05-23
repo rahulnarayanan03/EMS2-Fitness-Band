@@ -1,13 +1,13 @@
 #include "game.h"
 
 Game::Game() {
-    resetGrid();
+    resetGame();
     _difficulty = Game::MEDIUM;
     _game_state = Game::HUMAN_TURN;
 }
 
 Game::Game(Game::Difficulty difficulty) {
-    resetGrid();
+    resetGame();
     _difficulty = difficulty;
     _game_state = Game::HUMAN_TURN;
 }
