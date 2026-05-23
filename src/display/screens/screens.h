@@ -28,6 +28,15 @@ static constexpr int SW_TIME_H = 32;
 static constexpr int GAME_SIZE = 180;
 static constexpr int GAME_X = 20;
 static constexpr int GAME_Y = 40;
+static constexpr int GAME_COL1_X = GAME_X + (GAME_SIZE/6);
+static constexpr int GAME_COL2_X = GAME_X + (GAME_SIZE/6) + (GAME_SIZE/3);
+static constexpr int GAME_COL3_X = GAME_X + (GAME_SIZE/6) + (2*GAME_SIZE/3);
+static constexpr int GAME_ROW1_Y = GAME_Y + (GAME_SIZE/6);
+static constexpr int GAME_ROW2_Y = GAME_Y + (GAME_SIZE/6) + (GAME_SIZE/3);
+static constexpr int GAME_ROW3_Y = GAME_Y + (GAME_SIZE/6) + (2*GAME_SIZE/3);
+static constexpr std::pair<int, int> CELL_COORDS[3][3] = {{{GAME_COL1_X, GAME_ROW1_Y}, {GAME_COL2_X, GAME_ROW1_Y}, {GAME_COL3_X, GAME_ROW1_Y}},
+                                                        {{GAME_COL1_X, GAME_ROW2_Y}, {GAME_COL2_X, GAME_ROW2_Y}, {GAME_COL3_X, GAME_ROW2_Y}},
+                                                        {{GAME_COL1_X, GAME_ROW3_Y}, {GAME_COL2_X, GAME_ROW3_Y}, {GAME_COL3_X, GAME_ROW3_Y}}};
 
 void drawCalibrationScreen(TFT_eSPI &tft);
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
