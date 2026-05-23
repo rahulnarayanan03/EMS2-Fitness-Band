@@ -45,12 +45,14 @@ void Game::placeX(int row, int col) {
     }
 }
 
-void Game::resetGrid() {
+void Game::resetGame() {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             _grid_state[i][j] = Game::FREE;
         }
     }
+
+    _game_state = Game::IDLE;
 }
 
 bool Game::isBoardFull() {

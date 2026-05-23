@@ -54,8 +54,8 @@ public:
     // Row and col values range from 1 to 3
     void placeX(int row, int col);
 
-    // Frees all cells in the grid
-    void resetGrid();
+    // Frees all cells in the grid, sets state to idle
+    void resetGame();
 
     bool isBoardFull();
 
