@@ -702,6 +702,25 @@ void Game_Case() {
             goHome();
         }
     }
+
+    // Handle cells being touched
+    // If the screen is touched, make sure a cell is being touched
+    if (touched) {
+        std::pair<int, int> cell_touched;
+        cell_touched = game.getRowColTouched(tx, ty);
+        int touched_row = cell_touched.first;
+        int touched_col = cell_touched.second;
+        if (touched_row == 0 || touched_col == 0)  {
+            return;
+        } else {
+            // A valid cell has been touched, make sure it is the human's turn and the cell isn't occupied
+            if (game.getGameState() == Game::HUMAN_TURN && game.getCellState(touched_row, touched_col) == Game::FREE) {
+                // Place an 'X' on the cell
+                game.placeX(touched_row, touched_col);
+                drawGameX(tft, touched_row, touched_col);
+            }
+        }
+    }
 }
 
 // ---- setup helpers ----------------------------------------------------------
