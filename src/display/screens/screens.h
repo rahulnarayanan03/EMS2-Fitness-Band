@@ -7,6 +7,7 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include "stopwatch/stopwatch.h"
+#include "../../game/game.h"
 
 using namespace SW_Consts;
 
@@ -22,6 +23,11 @@ static constexpr uint16_t POINT_BG = 0x863c;
 static constexpr int SW_TIME_Y = 110;
 static constexpr int SW_TIME_W = 100;
 static constexpr int SW_TIME_H = 32;
+
+// Tic tac toe grid
+static constexpr int GAME_SIZE = 180;
+static constexpr int GAME_X = 20;
+static constexpr int GAME_Y = 40;
 
 void drawCalibrationScreen(TFT_eSPI &tft);
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
@@ -40,7 +46,10 @@ void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
 void drawStubScreen(TFT_eSPI &tft, const char *title);
 
 void drawGameScreen(TFT_eSPI &tft, UI &ui);
-void updateGameScreen(TFT_eSPI &tft);
+void updateGameScreen(TFT_eSPI &tft, Game &game);
+std::pair<int, int> getCellXY(int row, int col);
+void drawGameX(TFT_eSPI &tft, int row, int col);
+void drawGameO(TFT_eSPI &tft, int row, int col);
 
 // setup wizard screens
 void drawSetupWelcome(TFT_eSPI &tft);

@@ -474,13 +474,13 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.fillScreen(GB_LIGHTEST);
 
     // Draw tic tac toe grid outline
-    tft.drawRoundRect(20, 40, 180, 180, 10, TFT_BLACK);
+    tft.drawRoundRect(GAME_X, GAME_Y, GAME_SIZE, GAME_SIZE, 10, TFT_BLACK);
 
     // Draw grid lines
-    tft.drawFastHLine(20, 100, 180, TFT_BLACK);
-    tft.drawFastHLine(20, 160, 180, TFT_BLACK);
-    tft.drawFastVLine(80, 40, 180, TFT_BLACK);
-    tft.drawFastVLine(140, 40, 180, TFT_BLACK);
+    tft.drawFastHLine(20, 100, GAME_SIZE, TFT_BLACK);
+    tft.drawFastHLine(20, 160, GAME_SIZE, TFT_BLACK);
+    tft.drawFastVLine(80, 40, GAME_SIZE, TFT_BLACK);
+    tft.drawFastVLine(140, 40, GAME_SIZE, TFT_BLACK);
 
     // Draw play button
     ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
@@ -499,6 +499,18 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.drawFastHLine(80, 30, 160, TFT_BLACK);
 }
 
-void updateGameScreen(TFT_eSPI &tft) {
+void updateGameScreen(TFT_eSPI &tft, Game &game) {
+
+}
+
+std::pair<int, int> getCellXY(int row, int col) {
+    
+}
+
+void drawGameX(TFT_eSPI &tft, int row, int col) {
+
+}
+
+void drawGameO(TFT_eSPI &tft, int row, int col) {
 
 }
