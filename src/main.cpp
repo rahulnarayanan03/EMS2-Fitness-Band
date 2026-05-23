@@ -674,6 +674,24 @@ void Game_Case() {
         drawGameHomePressed(tft, ui);
     }
 
+    // Show the play button as pressed for 100ms
+    if (game_play_touched) {
+        if (millis() - pressed_time > 100) {
+            game_play_touched = false;
+            game.resetGame();
+            goHome();
+        }
+    }
+
+    // Show the mode button as pressed for 100ms
+    if (game_home_touched) {
+        if (millis() - pressed_time > 100) {
+            game_home_touched = false;
+            game.resetGame();
+            goHome();
+        }
+    }
+
     // Show the home button as pressed for 100ms
     if (game_home_touched) {
         if (millis() - pressed_time > 100) {
