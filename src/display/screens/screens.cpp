@@ -543,3 +543,8 @@ void drawGameO(TFT_eSPI &tft, int row, int col) {
     tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS, TFT_BLACK, GB_LIGHTEST);
     tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS-2, GB_LIGHTEST, GB_LIGHTEST);
 }
+
+void drawGameHomePressed(TFT_eSPI &tft, UI &ui) {
+    // Draw home button pressed
+    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
+}

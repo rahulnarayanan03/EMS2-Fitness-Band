@@ -64,6 +64,7 @@ SelfTest    stM(ST_PIN, X_PIN, Y_PIN, Z_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
 Stopwatch sw(Stopwatch::SW_PERIOD_MS);
+Game game;
 
 // ---- shared app screen colours ---------------------------------------------
 
@@ -97,6 +98,7 @@ bool     awaitingStepChoice  = false;
 uint16_t tx = 0, ty = 0;
 bool     touched = false;
 bool step_reset_touched = false;
+bool game_home_touched = false;
 int pressed_time = 0;
 
 uint32_t lastTransition = 0;
@@ -419,7 +421,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
     ui.update(now, cv, cp);
 
     if (step_reset_touched) {
-        // Show the reset button as pressed for 300ms
+        // Show the reset button as pressed for 100ms
         if (millis() - pressed_time > 100) {
             ui.drawStepResetButton();
             step_reset_touched = false;
@@ -649,7 +651,21 @@ void PaceID_Case() {
 }
 
 void Game_Case() {
-    
+    // If the home button gets touched
+    if (touched && tx >= 212 && tx <= 307 && ty >= 166 && ty <= 219) {
+        pressed_time = millis();
+        game_home_touched = true;
+        drawGameHomePressed(tft, ui);
+    }
+
+    // Show the home button as pressed for 100ms
+    if (game_home_touched) {
+        if (millis() - pressed_time > 100) {
+            game_home_touched = false;
+            game.resetGame();
+            goHome();
+        }
+    }
 }
 
 // ---- setup helpers ----------------------------------------------------------
