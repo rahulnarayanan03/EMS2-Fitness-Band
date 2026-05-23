@@ -101,6 +101,8 @@ bool step_reset_touched = false;
 bool game_play_touched = false;
 bool game_mode_touched = false;
 bool game_home_touched = false;
+bool game_human_turn = true;
+bool game_bot_turn = false;
 int pressed_time = 0;
 
 uint32_t lastTransition = 0;

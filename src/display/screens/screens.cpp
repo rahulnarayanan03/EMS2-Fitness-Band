@@ -501,10 +501,6 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     drawGameO(tft, 2, 3);
 }
 
-void updateGameScreen(TFT_eSPI &tft, Game &game) {
-
-}
-
 std::pair<int, int> getCellXY(int row, int col) {
     std::pair<int, int> cell_coords;
     cell_coords.first = CELL_COORDS[row-1][col-1].first;
