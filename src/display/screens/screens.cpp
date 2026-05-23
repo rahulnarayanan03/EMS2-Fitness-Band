@@ -497,6 +497,9 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.drawString("TIC TAC TOE", 160, 20, 4);
     tft.setTextDatum(TL_DATUM);
     tft.drawFastHLine(80, 30, 160, TFT_BLACK);
+
+    // Draw test x
+    drawGameX(tft, 1, 1);
 }
 
 void updateGameScreen(TFT_eSPI &tft, Game &game) {
@@ -504,11 +507,30 @@ void updateGameScreen(TFT_eSPI &tft, Game &game) {
 }
 
 std::pair<int, int> getCellXY(int row, int col) {
-    
+    std::pair<int, int> cell_coords;
+    cell_coords.first = CELL_COORDS[row-1][col-1].first;
+    cell_coords.second = CELL_COORDS[row-1][col-1].second;
+    return cell_coords;
 }
 
 void drawGameX(TFT_eSPI &tft, int row, int col) {
+    int cell_x = getCellXY(row, col).first;
+    int cell_y = getCellXY(row, col).second;
+    
+    float shift_f = CROSS_LENGTH/(2*sqrt(2));
+    int shift = static_cast<int>(shift_f);
 
+    int start1_x = cell_x - shift;
+    int start1_y = cell_y - shift;
+    int end1_x = cell_x + shift;
+    int end1_y = cell_y + shift;
+    tft.drawWideLine(start1_x, start1_y, end1_x, end1_y, 2, TFT_BLACK, GB_LIGHTEST);
+
+    int start2_x = cell_x - shift;
+    int start2_y = cell_y + shift;
+    int end2_x = cell_x + shift;
+    int end2_y = cell_y - shift;
+    tft.drawWideLine(start2_x, start2_y, end2_x, end2_y, 2, TFT_BLACK, GB_LIGHTEST);
 }
 
 void drawGameO(TFT_eSPI &tft, int row, int col) {
