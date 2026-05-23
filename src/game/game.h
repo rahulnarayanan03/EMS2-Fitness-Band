@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../display/screens/screens.h"
 
 class Game {
 public:
@@ -45,6 +46,9 @@ public:
     // Returns the state of a cell
     // Row and col values range from 1 to 3
     GridState getCellState(int row, int col);
+
+    // Returns the row and column of a cell given the location of a touch
+    std::pair<int, int> getRowColTouched(uint16_t tx, uint16_t ty);
 
     // Places an 'O' marker in a cell
     // Row and col values range from 1 to 3

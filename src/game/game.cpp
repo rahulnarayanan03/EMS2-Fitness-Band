@@ -25,6 +25,82 @@ Game::GridState Game::getCellState(int row, int col) {
     }
 }
 
+std::pair<int, int> Game::getRowColTouched(uint16_t tx, uint16_t ty) {
+    std::pair<int, int> touch_rowcol;
+
+    // If the touch is along the first row
+    if (ty >= GAME_Y && ty <= GAME_Y + GAME_SIZE/3) {
+        // Check first column
+        if (tx >= GAME_X && tx <= GAME_X + GAME_SIZE/3) {
+            touch_rowcol.first = 1;
+            touch_rowcol.second = 1;
+            return touch_rowcol;
+        // Check second column
+        } else if (tx >= GAME_X + GAME_SIZE/3 && tx <= GAME_X + 2*GAME_SIZE/3) {
+            touch_rowcol.first = 1;
+            touch_rowcol.second = 2;
+            return touch_rowcol;
+        // Check third column
+        } else if (tx >= GAME_X + 2*GAME_SIZE/3 && tx <= GAME_X + 3*GAME_SIZE/3) {
+            touch_rowcol.first = 1;
+            touch_rowcol.second = 3;
+            return touch_rowcol;
+        } else {
+            touch_rowcol.first = 0;
+            touch_rowcol.second = 0;
+            return touch_rowcol;
+        }
+    // Check second row
+    } else if (ty >= GAME_Y + GAME_SIZE/3 && ty <= GAME_Y + 2*GAME_SIZE/3) {
+        // Check first column
+        if (tx >= GAME_X && tx <= GAME_X + GAME_SIZE/3) {
+            touch_rowcol.first = 2;
+            touch_rowcol.second = 1;
+            return touch_rowcol;
+        // Check second column
+        } else if (tx >= GAME_X + GAME_SIZE/3 && tx <= GAME_X + 2*GAME_SIZE/3) {
+            touch_rowcol.first = 2;
+            touch_rowcol.second = 2;
+            return touch_rowcol;
+        // Check third column
+        } else if (tx >= GAME_X + 2*GAME_SIZE/3 && tx <= GAME_X + 3*GAME_SIZE/3) {
+            touch_rowcol.first = 2;
+            touch_rowcol.second = 3;
+            return touch_rowcol;
+        } else {
+            touch_rowcol.first = 0;
+            touch_rowcol.second = 0;
+            return touch_rowcol;
+        }
+    // Check third row
+    } else if (ty >= GAME_Y + 2*GAME_SIZE/3 && ty <= GAME_Y + 3*GAME_SIZE/3) {
+        // Check first column
+        if (tx >= GAME_X && tx <= GAME_X + GAME_SIZE/3) {
+            touch_rowcol.first = 3;
+            touch_rowcol.second = 1;
+            return touch_rowcol;
+        // Check second column
+        } else if (tx >= GAME_X + GAME_SIZE/3 && tx <= GAME_X + 2*GAME_SIZE/3) {
+            touch_rowcol.first = 3;
+            touch_rowcol.second = 2;
+            return touch_rowcol;
+        // Check third column
+        } else if (tx >= GAME_X + 2*GAME_SIZE/3 && tx <= GAME_X + 3*GAME_SIZE/3) {
+            touch_rowcol.first = 3;
+            touch_rowcol.second = 3;
+            return touch_rowcol;
+        } else {
+            touch_rowcol.first = 0;
+            touch_rowcol.second = 0;
+            return touch_rowcol;
+        }
+    } else {
+        touch_rowcol.first = 0;
+        touch_rowcol.second = 0;
+        return touch_rowcol;
+    }
+}
+
 void Game::placeO(int row, int col) {
     if (row > 3 || col > 3 || row < 1 || col < 1) {
         Serial.println("Warning: row/col out of bounds");
