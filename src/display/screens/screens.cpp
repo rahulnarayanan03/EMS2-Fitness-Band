@@ -490,6 +490,13 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
 
     // Draw home button
     ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+
+    // Draw tic tac toe title
+    tft.setTextDatum(CC_DATUM);
+    tft.setTextColor(TFT_BLACK);
+    tft.drawString("TIC TAC TOE", 160, 20, 4);
+    tft.setTextDatum(TL_DATUM);
+    tft.drawFastHLine(80, 30, 160, TFT_BLACK);
 }
 
 void updateGameScreen(TFT_eSPI &tft) {
