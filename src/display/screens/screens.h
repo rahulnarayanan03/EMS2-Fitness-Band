@@ -39,7 +39,7 @@ void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
 
 void drawStubScreen(TFT_eSPI &tft, const char *title);
 
-void drawGameScreen(TFT_eSPI &tft);
+void drawGameScreen(TFT_eSPI &tft, UI &ui);
 void updateGameScreen(TFT_eSPI &tft);
 
 // setup wizard screens

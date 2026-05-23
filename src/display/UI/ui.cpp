@@ -189,7 +189,7 @@ void UI::drawStepsBar() {
 }
 
 void UI::drawStepResetButton() {
-    drawRetroButton(STEP_RESET_BTN_X, STEP_RESET_BTN_Y, STEP_RESET_BTN_W, STEP_RESET_BTN_H, 4, 4, "",
+    drawRetroButton(STEP_RESET_BTN_X, STEP_RESET_BTN_Y, STEP_RESET_BTN_W, STEP_RESET_BTN_H, 4, 4, "", 4,
                     RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
 
     _tft.setTextDatum(MC_DATUM);
@@ -201,7 +201,7 @@ void UI::drawStepResetButton() {
 }
 
 void UI::drawStepResetButtonPressed() {
-    drawRetroButton(STEP_RESET_BTN_X, STEP_RESET_BTN_Y, STEP_RESET_BTN_W, STEP_RESET_BTN_H, 4, 4, "",
+    drawRetroButton(STEP_RESET_BTN_X, STEP_RESET_BTN_Y, STEP_RESET_BTN_W, STEP_RESET_BTN_H, 4, 4, "", 4,
                     RESET_SHADOW, TFT_BLACK, RESET_SHADOW, RESET_RED, TFT_LIGHTGREY);
 
     _tft.setTextDatum(MC_DATUM);
@@ -244,7 +244,7 @@ void UI::drawRightPanel() {
     _tft.fillRect(RIGHT_PNL_X, RIGHT_PNL_Y, RIGHT_PNL_W, RIGHT_PNL_H, GB_LIGHTEST);
 
     for (uint8_t i = 0; i < 6; i++) {
-        drawRetroButton(BTN_X[i], BTN_Y[i], BTN_W, BTN_H, 4, 4, BTN_LABEL[i],
+        drawRetroButton(BTN_X[i], BTN_Y[i], BTN_W, BTN_H, 4, 4, BTN_LABEL[i], 4,
                         LEAF_GREEN, TFT_BLACK, BTN_SHADOW, APP_GLARE, TFT_BLACK);
     }
 }
@@ -482,7 +482,7 @@ void UI::drawGifFrame(const uint8_t *data, size_t len,
     _gifFrame = (_gifFrame + 1) % frameCount;
 }
 
-void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, int16_t shadow_h, const String &string,
+void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, int16_t shadow_h, const String &string, int font_size,
                         uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour, uint16_t g_colour, uint16_t t_colour) {
     // Fill rectangle with shadow colour
     _tft.fillRoundRect(x, y, w, h, r, s_colour);
@@ -502,7 +502,7 @@ void UI::drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, 
     // Draw button text
     _tft.setTextDatum(CC_DATUM);
     _tft.setTextColor(t_colour);
-    _tft.drawString(string, button_centre_x, button_centre_y, 4);
+    _tft.drawString(string, button_centre_x, button_centre_y, font_size);
     _tft.setTextDatum(TL_DATUM);
 }
 

@@ -132,6 +132,9 @@ public:
     void drawStepResetButton();
     void drawStepResetButtonPressed();
 
+    void drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, int16_t shadow_h, const String &string, int font_size,
+                        uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour, uint16_t g_colour, uint16_t t_colour);
+
 private:
     TFT_eSPI    &_tft;
     StepCounter &_stepM;
@@ -185,9 +188,6 @@ private:
     void drawStandingGif();
     void drawGifFrame(const uint8_t *data, size_t len,
                       uint32_t frameMs, uint32_t nowMs);
-
-    void drawRetroButton(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, int16_t shadow_h, const String &string,
-                        uint16_t bg_colour, uint16_t b_colour, uint16_t s_colour, uint16_t g_colour, uint16_t t_colour);
 
     float  readBatteryVoltage();
     int8_t readBatteryPercent(float vBatt);

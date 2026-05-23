@@ -469,7 +469,7 @@ void drawStubScreen(TFT_eSPI &tft, const char *title) {
     drawHomeButton(tft);
 }
 
-void drawGameScreen(TFT_eSPI &tft) {
+void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     // Draw the screen background
     tft.fillScreen(GB_LIGHTEST);
 
@@ -482,6 +482,8 @@ void drawGameScreen(TFT_eSPI &tft) {
     tft.drawFastVLine(80, 40, 180, TFT_BLACK);
     tft.drawFastVLine(140, 40, 180, TFT_BLACK);
 
+    // Draw home button
+    ui.drawRetroButton(216, 40, 88, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void updateGameScreen(TFT_eSPI &tft) {

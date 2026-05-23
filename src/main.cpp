@@ -491,6 +491,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
 
             case 2:
                 currentCase = CASE_GAME;
+                drawGameScreen(tft, ui);
                 break;
 
             case 3:
@@ -647,6 +648,10 @@ void PaceID_Case() {
     }
 }
 
+void Game_Case() {
+    
+}
+
 // ---- setup helpers ----------------------------------------------------------
 
 void initDisplay() {
@@ -737,6 +742,10 @@ void loop() {
 
         case CASE_PIDT:
             PaceID_Case();
+            break;
+
+        case CASE_GAME:
+            Game_Case();
             break;
 
         case CASE_SETTINGS:
