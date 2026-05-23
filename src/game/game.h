@@ -6,6 +6,7 @@ class Game {
 public:
     // State of the game
     enum GameState {
+        IDLE,
         HUMAN_TURN,
         BOT_TURN,
         HUMAN_WIN,
