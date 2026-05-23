@@ -470,7 +470,18 @@ void drawStubScreen(TFT_eSPI &tft, const char *title) {
 }
 
 void drawGameScreen(TFT_eSPI &tft) {
-    
+    // Draw the screen background
+    tft.fillScreen(GB_LIGHTEST);
+
+    // Draw tic tac toe grid outline
+    tft.drawRoundRect(20, 40, 180, 180, 10, TFT_BLACK);
+
+    // Draw grid lines
+    tft.drawFastHLine(20, 100, 180, TFT_BLACK);
+    tft.drawFastHLine(20, 160, 180, TFT_BLACK);
+    tft.drawFastVLine(80, 40, 180, TFT_BLACK);
+    tft.drawFastVLine(140, 40, 180, TFT_BLACK);
+
 }
 
 void updateGameScreen(TFT_eSPI &tft) {
