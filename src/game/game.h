@@ -65,11 +65,17 @@ public:
     // Sets the difficulty of the game
     void setDifficulty(Difficulty difficulty);
 
+    // Starts the game
+    void playGame();
+
     // Runs minimax algorithm with alpha/beta pruning
     int minimax(int depth, bool isMaximizing, int alpha, int beta);
 
     // Runs the bot's move
     void runBotMove();
+
+    // Ends the game
+    void endGame();
     
 private:
     // State of the game
@@ -80,4 +86,7 @@ private:
 
     // Difficulty level of the game
     Difficulty _difficulty;
+
+    // Whether or not the mode button is pressable
+    bool mode_pressable = true;
 };

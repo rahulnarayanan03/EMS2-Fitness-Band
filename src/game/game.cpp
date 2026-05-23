@@ -3,13 +3,13 @@
 Game::Game() {
     resetGame();
     _difficulty = Game::MEDIUM;
-    _game_state = Game::HUMAN_TURN;
+    _game_state = Game::IDLE;
 }
 
 Game::Game(Game::Difficulty difficulty) {
     resetGame();
     _difficulty = difficulty;
-    _game_state = Game::HUMAN_TURN;
+    _game_state = Game::IDLE;
 }
 
 Game::GameState Game::getGameState() {
@@ -64,6 +64,16 @@ bool Game::isBoardFull() {
         }
     }
     return true;
+}
+
+void Game::playGame() {
+    _game_state = Game::HUMAN_TURN;
+    mode_pressable = false;
+}
+
+void Game::endGame() {
+    _game_state = Game::IDLE;
+    mode_pressable = true;
 }
 
 bool Game::checkWin(Game::Player player) {

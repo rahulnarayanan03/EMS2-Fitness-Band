@@ -61,6 +61,8 @@ void updateGameScreen(TFT_eSPI &tft, Game &game);
 std::pair<int, int> getCellXY(int row, int col);
 void drawGameX(TFT_eSPI &tft, int row, int col);
 void drawGameO(TFT_eSPI &tft, int row, int col);
+void drawGamePlayPressed(TFT_eSPI &tft, UI &ui);
+void drawGameModePressed(TFT_eSPI &tft, UI &ui);
 void drawGameHomePressed(TFT_eSPI &tft, UI &ui);
 
 // setup wizard screens

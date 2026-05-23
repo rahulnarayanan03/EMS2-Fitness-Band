@@ -98,6 +98,8 @@ bool     awaitingStepChoice  = false;
 uint16_t tx = 0, ty = 0;
 bool     touched = false;
 bool step_reset_touched = false;
+bool game_play_touched = false;
+bool game_mode_touched = false;
 bool game_home_touched = false;
 int pressed_time = 0;
 
@@ -651,6 +653,20 @@ void PaceID_Case() {
 }
 
 void Game_Case() {
+    // If the play button gets touched
+    if (touched && tx >= 212 && tx <= 307 && ty >= 40 && ty <= 93) {
+        pressed_time = millis();
+        game_play_touched = true;
+        drawGamePlayPressed(tft, ui);
+    }
+
+    // If the mode button gets touched
+    if (touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
+        pressed_time = millis();
+        game_mode_touched = true;
+        drawGameModePressed(tft, ui);
+    }
+
     // If the home button gets touched
     if (touched && tx >= 212 && tx <= 307 && ty >= 166 && ty <= 219) {
         pressed_time = millis();
