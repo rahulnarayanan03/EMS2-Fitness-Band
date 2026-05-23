@@ -540,6 +540,6 @@ void drawGameO(TFT_eSPI &tft, int row, int col) {
     int cell_x = getCellXY(row, col).first;
     int cell_y = getCellXY(row, col).second;
 
-    tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS, TFT_BLACK);
-    tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS-2, GB_LIGHTEST);
+    tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS, TFT_BLACK, GB_LIGHTEST);
+    tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS-2, GB_LIGHTEST, GB_LIGHTEST);
 }
