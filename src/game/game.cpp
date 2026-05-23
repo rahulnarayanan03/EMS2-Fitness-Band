@@ -76,6 +76,10 @@ void Game::endGame() {
     mode_pressable = true;
 }
 
+bool Game::isModePressable() {
+    return mode_pressable;
+}
+
 bool Game::checkWin(Game::Player player) {
     if (player == Game::HUMAN) {
         for (int i = 0; i < 3; ++i) {

@@ -482,14 +482,10 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.drawFastVLine(80, 40, GAME_SIZE, TFT_BLACK);
     tft.drawFastVLine(140, 40, GAME_SIZE, TFT_BLACK);
 
-    // Draw play button
-    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-
-    // Draw mode button
-    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-
-    // Draw home button
-    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+    // Draw buttons
+    drawGamePlay(tft, ui);
+    drawGameMode(tft, ui);
+    drawGameHome(tft, ui);
 
     // Draw tic tac toe title
     tft.setTextDatum(CC_DATUM);
@@ -542,6 +538,21 @@ void drawGameO(TFT_eSPI &tft, int row, int col) {
 
     tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS, TFT_BLACK, GB_LIGHTEST);
     tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS-2, GB_LIGHTEST, GB_LIGHTEST);
+}
+
+void drawGamePlay(TFT_eSPI &tft, UI &ui) {
+    // Draw play button
+    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+}
+
+void drawGameMode(TFT_eSPI &tft, UI &ui) {
+    // Draw mode button
+    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+}
+
+void drawGameHome(TFT_eSPI &tft, UI &ui) {
+    // Draw home button
+    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void drawGameHomePressed(TFT_eSPI &tft, UI &ui) {

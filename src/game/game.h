@@ -76,6 +76,9 @@ public:
 
     // Ends the game
     void endGame();
+
+    // Checks if the mode button is pressable
+    bool isModePressable();
     
 private:
     // State of the game

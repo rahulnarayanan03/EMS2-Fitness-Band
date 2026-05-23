@@ -662,9 +662,11 @@ void Game_Case() {
 
     // If the mode button gets touched
     if (touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
-        pressed_time = millis();
-        game_mode_touched = true;
-        drawGameModePressed(tft, ui);
+        if (game.isModePressable()) {
+            pressed_time = millis();
+            game_mode_touched = true;
+            drawGameModePressed(tft, ui);
+        }
     }
 
     // If the home button gets touched
@@ -678,17 +680,17 @@ void Game_Case() {
     if (game_play_touched) {
         if (millis() - pressed_time > 100) {
             game_play_touched = false;
-            game.resetGame();
-            goHome();
+            // Draw normal game play button
+            drawGamePlay(tft, ui);
+            game.playGame();
         }
     }
 
     // Show the mode button as pressed for 100ms
-    if (game_home_touched) {
+    if (game_mode_touched) {
         if (millis() - pressed_time > 100) {
-            game_home_touched = false;
-            game.resetGame();
-            goHome();
+            game_mode_touched = false;
+            drawGameMode(tft, ui);
         }
     }
 
