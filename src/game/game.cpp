@@ -151,6 +151,7 @@ bool Game::isBoardFull() {
 }
 
 void Game::playGame() {
+    resetGame();
     _game_state = Game::HUMAN_TURN;
     mode_pressable = false;
 }
