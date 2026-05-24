@@ -667,11 +667,9 @@ void Game_Case() {
 
     // If the mode button gets touched
     if (game_buttons_pressable && touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
-        if (game.isModePressable()) {
-            pressed_time = millis();
-            game_mode_touched = true;
-            drawGameModePressed(tft, ui);
-        }
+        pressed_time = millis();
+        game_mode_touched = true;
+        drawGameModePressed(tft, ui);
     }
 
     // If the home button gets touched
@@ -734,6 +732,13 @@ void Game_Case() {
                 if (game.checkWin(Game::HUMAN)) {
                     // Do human win stuff, will add later
                     Serial.println("Human has won");
+                    // Render human win title
+                    tft.fillRect(0, 0, 320, 35, GB_LIGHTEST);
+                    tft.setTextDatum(CC_DATUM);
+                    tft.setTextColor(TFT_BLACK);
+                    tft.drawString("YOU WIN!", 160, 20, 4);
+                    tft.setTextDatum(TL_DATUM);
+                    tft.drawFastHLine(100, 32, 120, TFT_BLACK);
                     // Draw the active play and mode buttons
                     drawGamePlay(tft, ui);
                     drawGameMode(tft, ui);
@@ -758,7 +763,16 @@ void Game_Case() {
             // Check for bot win after placing
             if (game.checkWin(Game::BOT)) {
                 Serial.println("Bot has won");
-                // Will add other logic here
+                // Render bot win title
+                tft.fillRect(0, 0, 320, 35, GB_LIGHTEST);
+                tft.setTextDatum(CC_DATUM);
+                tft.setTextColor(TFT_BLACK);
+                tft.drawString("BOT WINS!", 160, 20, 4);
+                tft.setTextDatum(TL_DATUM);
+                tft.drawFastHLine(100, 32, 120, TFT_BLACK);
+                // Draw the active play and mode buttons
+                drawGamePlay(tft, ui);
+                drawGameMode(tft, ui);
             }
         }
     }
@@ -778,6 +792,19 @@ void Game_Case() {
         drawGamePlay(tft, ui);
         drawGameMode(tft, ui);
         game_buttons_pressable = true;
+
+        // Render draw title
+        tft.fillRect(0, 0, 320, 35, GB_LIGHTEST);
+        tft.setTextDatum(CC_DATUM);
+        tft.setTextColor(TFT_BLACK);
+        tft.drawString("DRAW", 160, 20, 4);
+        tft.setTextDatum(TL_DATUM);
+        tft.drawFastHLine(110, 32, 100, TFT_BLACK);
+    }
+
+    // Idle animation
+    if (game.getGameState() == Game::IDLE) {
+
     }
 }
 

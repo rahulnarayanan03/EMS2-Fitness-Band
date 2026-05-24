@@ -492,7 +492,7 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.setTextColor(TFT_BLACK);
     tft.drawString("TIC TAC TOE", 160, 20, 4);
     tft.setTextDatum(TL_DATUM);
-    tft.drawFastHLine(80, 30, 160, TFT_BLACK);
+    tft.drawFastHLine(80, 32, 160, TFT_BLACK);
 }
 
 std::pair<int, int> getCellXY(int row, int col) {

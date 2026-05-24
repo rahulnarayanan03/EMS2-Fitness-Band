@@ -39,6 +39,10 @@ static constexpr std::pair<int, int> CELL_COORDS[3][3] = {{{GAME_COL1_X, GAME_RO
                                                         {{GAME_COL1_X, GAME_ROW3_Y}, {GAME_COL2_X, GAME_ROW3_Y}, {GAME_COL3_X, GAME_ROW3_Y}}};
 static constexpr int CROSS_LENGTH = 55;
 static constexpr int CIRCLE_RADIUS = 22;
+static constexpr std::pair<int, int> anim_path[12] = {{1,1}, {1,2}, {1,3},
+                                                    {2, 3}, {2, 2}, {2, 1},
+                                                    {3, 1}, {3, 2}, {3, 3},
+                                                    {2,3}, {2,2}, {2,1}};
 
 void drawCalibrationScreen(TFT_eSPI &tft);
 void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);

@@ -85,9 +85,6 @@ public:
     // Ends the game
     void endGame();
 
-    // Checks if the mode button is pressable
-    bool isModePressable();
-
     static constexpr int BOT_DELAY_MS = 700;
     
 private:
@@ -99,9 +96,6 @@ private:
 
     // Difficulty level of the game
     Difficulty _difficulty;
-
-    // Whether or not the mode button is pressable
-    bool mode_pressable = true;
 
     // Last move the bot made
     std::pair<int, int> last_bot_row_col;

@@ -158,16 +158,10 @@ bool Game::isBoardFull() {
 void Game::playGame() {
     resetGame();
     _game_state = Game::HUMAN_TURN;
-    mode_pressable = false;
 }
 
 void Game::endGame() {
     _game_state = Game::IDLE;
-    mode_pressable = true;
-}
-
-bool Game::isModePressable() {
-    return mode_pressable;
 }
 
 bool Game::checkWin(Game::Player player) {
