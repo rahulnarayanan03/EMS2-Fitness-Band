@@ -682,8 +682,9 @@ void Game_Case() {
     if (game_play_touched) {
         if (millis() - pressed_time > 100) {
             game_play_touched = false;
-            // Draw normal game play button
-            drawGamePlay(tft, ui);
+            // Draw game play and mode buttons as inactive
+            drawGamePlayInactive(tft, ui);
+            drawGameModeInactive(tft, ui);
             game.playGame();
         }
     }
@@ -717,11 +718,19 @@ void Game_Case() {
         } else {
             // A valid cell has been touched, make sure it is the human's turn and the cell isn't occupied
             if (game.getGameState() == Game::HUMAN_TURN && game.getCellState(touched_row, touched_col) == Game::FREE) {
+                Serial.print("Valid touch detected on row ");
+                Serial.print(touched_row);
+                Serial.print(", column ");
+                Serial.println(touched_col);
                 // Place an 'X' on the cell
                 game.placeX(touched_row, touched_col);
                 drawGameX(tft, touched_row, touched_col);
                 if (game.checkWin(Game::HUMAN)) {
                     // Do human win stuff, will add later
+                    Serial.println("Human has won");
+                    // Draw the active play and mode buttons
+                    drawGamePlay(tft, ui);
+                    drawGameMode(tft, ui);
                 }
                 bot_delay_start = millis();
             }
@@ -730,8 +739,10 @@ void Game_Case() {
 
     // If it is the bot's turn to play
     if (game.getGameState() == Game::BOT_TURN) {
+        Serial.println("Bot's turn to play");
         // Check if the bot delay time has passed
         if (millis() - bot_delay_start >= Game::BOT_DELAY_MS) {
+            Serial.println("Bot now placing");
             game.runBotMove();
             std::pair<int, int> last_bot_move = game.getLastBotMove();
             int last_bot_row = last_bot_move.first;

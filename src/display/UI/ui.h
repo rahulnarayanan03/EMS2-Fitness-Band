@@ -45,6 +45,9 @@ static constexpr uint16_t APP_GLARE = 0x964f;
 static constexpr uint16_t GB_BUTTON = 0x74c6;
 static constexpr uint16_t BTN_SHADOW = 0x63e4;
 static constexpr uint16_t BTN_GLARE = 0x8da7;
+static constexpr uint16_t INACTIVE_BUTTON = 0xa5ed;
+static constexpr uint16_t INACTIVE_SHADOW = 0x8cea;
+static constexpr uint16_t INACTIVE_GLARE = 0xc711;
 
 // Retro reset button colours
 static constexpr uint16_t RESET_RED  = 0xD000;

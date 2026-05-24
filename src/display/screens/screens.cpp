@@ -559,3 +559,13 @@ void drawGamePlayPressed(TFT_eSPI &tft, UI &ui) {
     // Draw play button pressed
     ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
 }
+
+void drawGamePlayInactive(TFT_eSPI &tft, UI &ui) {
+    // Draw play button inactive
+    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, INACTIVE_BUTTON, TFT_BLACK, INACTIVE_SHADOW, INACTIVE_GLARE, TFT_WHITE);
+}
+
+void drawGameModeInactive(TFT_eSPI &tft, UI &ui) {
+    // Draw mode button inactive
+    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4, INACTIVE_BUTTON, TFT_BLACK, INACTIVE_SHADOW, INACTIVE_GLARE, TFT_WHITE);
+}
