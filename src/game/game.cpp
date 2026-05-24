@@ -160,17 +160,21 @@ bool Game::checkWin(Game::Player player) {
     if (player == Game::HUMAN) {
         for (int i = 0; i < 3; ++i) {
             if (_grid_state[i][0] == Game::OCCUPIED_X && _grid_state[i][1] == Game::OCCUPIED_X && _grid_state[i][2] == Game::OCCUPIED_X) {
+                _game_state = Game::HUMAN_WIN;
                 return true;
             }
             if (_grid_state[0][i] == Game::OCCUPIED_X && _grid_state[1][i] == Game::OCCUPIED_X && _grid_state[2][i] == Game::OCCUPIED_X) {
+                _game_state = Game::HUMAN_WIN;
                 return true;
             }
         }
         
         if (_grid_state[0][0] == Game::OCCUPIED_X && _grid_state[1][1] == Game::OCCUPIED_X && _grid_state[2][2] == Game::OCCUPIED_X) {
+            _game_state = Game::HUMAN_WIN;
             return true;
         }
         if (_grid_state[0][2] == Game::OCCUPIED_X && _grid_state[1][1] == Game::OCCUPIED_X && _grid_state[2][0] == Game::OCCUPIED_X) {
+            _game_state = Game::HUMAN_WIN;
             return true;
         }
 
@@ -178,17 +182,21 @@ bool Game::checkWin(Game::Player player) {
     } else {
         for (int i = 0; i < 3; ++i) {
             if (_grid_state[i][0] == Game::OCCUPIED_O && _grid_state[i][1] == Game::OCCUPIED_O && _grid_state[i][2] == Game::OCCUPIED_O) {
+                _game_state = Game::BOT_WIN;
                 return true;
             }
             if (_grid_state[0][i] == Game::OCCUPIED_O && _grid_state[1][i] == Game::OCCUPIED_O && _grid_state[2][i] == Game::OCCUPIED_O) {
+                _game_state = Game::BOT_WIN;
                 return true;
             }
         }
         
         if (_grid_state[0][0] == Game::OCCUPIED_O && _grid_state[1][1] == Game::OCCUPIED_O && _grid_state[2][2] == Game::OCCUPIED_O) {
+            _game_state = Game::BOT_WIN;
             return true;
         }
         if (_grid_state[0][2] == Game::OCCUPIED_O && _grid_state[1][1] == Game::OCCUPIED_O && _grid_state[2][0] == Game::OCCUPIED_O) {
+            _game_state = Game::BOT_WIN;
             return true;
         }
         
