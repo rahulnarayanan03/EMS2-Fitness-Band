@@ -493,12 +493,6 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
     tft.drawString("TIC TAC TOE", 160, 20, 4);
     tft.setTextDatum(TL_DATUM);
     tft.drawFastHLine(80, 30, 160, TFT_BLACK);
-
-    // Draw test x
-    drawGameX(tft, 1, 1);
-
-    // Draw test O
-    drawGameO(tft, 2, 3);
 }
 
 std::pair<int, int> getCellXY(int row, int col) {

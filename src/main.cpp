@@ -101,9 +101,9 @@ bool step_reset_touched = false;
 bool game_play_touched = false;
 bool game_mode_touched = false;
 bool game_home_touched = false;
-bool game_human_turn = true;
-bool game_bot_turn = false;
+int bot_delay_start;
 int pressed_time = 0;
+int tx_shift = 20;
 
 uint32_t lastTransition = 0;
 
@@ -709,7 +709,7 @@ void Game_Case() {
     // If the screen is touched, make sure a cell is being touched
     if (touched) {
         std::pair<int, int> cell_touched;
-        cell_touched = game.getRowColTouched(tx, ty);
+        cell_touched = game.getRowColTouched((tx - tx_shift), ty);
         int touched_row = cell_touched.first;
         int touched_col = cell_touched.second;
         if (touched_row == 0 || touched_col == 0)  {
@@ -720,7 +720,23 @@ void Game_Case() {
                 // Place an 'X' on the cell
                 game.placeX(touched_row, touched_col);
                 drawGameX(tft, touched_row, touched_col);
+                if (game.checkWin(Game::HUMAN)) {
+                    // Do human win stuff, will add later
+                }
+                bot_delay_start = millis();
             }
+        }
+    }
+
+    // If it is the bot's turn to play
+    if (game.getGameState() == Game::BOT_TURN) {
+        // Check if the bot delay time has passed
+        if (millis() - bot_delay_start >= Game::BOT_DELAY_MS) {
+            game.runBotMove();
+            std::pair<int, int> last_bot_move = game.getLastBotMove();
+            int last_bot_row = last_bot_move.first;
+            int last_bot_col = last_bot_move.second;
+            drawGameO(tft, last_bot_row, last_bot_col);
         }
     }
 }

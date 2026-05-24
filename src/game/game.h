@@ -50,6 +50,9 @@ public:
     // Returns the row and column of a cell given the location of a touch
     std::pair<int, int> getRowColTouched(uint16_t tx, uint16_t ty);
 
+    // Returns the row and column of the last move the bot made
+    std::pair<int, int> getLastBotMove();
+
     // Places an 'O' marker in a cell
     // Row and col values range from 1 to 3
     void placeO(int row, int col);
@@ -98,4 +101,7 @@ private:
 
     // Whether or not the mode button is pressable
     bool mode_pressable = true;
+
+    // Last move the bot made
+    std::pair<int, int> last_bot_row_col;
 };
