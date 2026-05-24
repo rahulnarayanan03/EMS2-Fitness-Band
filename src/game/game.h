@@ -11,7 +11,8 @@ public:
         HUMAN_TURN,
         BOT_TURN,
         HUMAN_WIN,
-        BOT_WIN
+        BOT_WIN,
+        DRAW
     };
 
     // State of each grid
