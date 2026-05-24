@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "../display/screens/screens.h"
+#include <vector>
 
 class Game {
 public:
@@ -66,6 +67,8 @@ public:
     void resetGame();
 
     bool isBoardFull();
+
+    std::vector<std::pair<int, int>> getFreeCells();
 
     // Check if a player has won
     bool checkWin(Player player);

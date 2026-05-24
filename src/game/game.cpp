@@ -155,6 +155,24 @@ bool Game::isBoardFull() {
     return true;
 }
 
+std::vector<std::pair<int, int>> Game::getFreeCells() {
+    std::vector<std::pair<int, int>> free_cells;
+
+    std::pair<int, int> cell_rowcol = {0, 0};
+
+    // Loop over all the cells and check if they are free
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (_grid_state[i][j] == Game::FREE) {
+                cell_rowcol = {i, j};
+                free_cells.push_back(cell_rowcol);
+            }
+        }
+    }
+
+    return free_cells;
+}
+
 void Game::playGame() {
     resetGame();
     _game_state = Game::HUMAN_TURN;
@@ -309,3 +327,20 @@ void Game::runBotMove() {
             _game_state = Game::HUMAN_TURN;
         }
     }
+
+void Game::runBotMoveEasy() {
+    // Get all the empty cells, then pick a random element from these
+    std::vector<std::pair<int, int>> free_cells = getFreeCells();
+    int number_of_free_cells = sizeof(free_cells);
+
+    int random_index = random(0, number_of_free_cells);
+    std::pair<int, int> random_cell = free_cells[random_index];
+
+    int random_row = random_cell.first;
+    int random_col = random_cell.second;
+
+    placeO(random_row, random_col);
+    last_bot_row_col.first = random_row;
+    last_bot_row_col.second = random_col;
+    _game_state = Game::HUMAN_TURN;
+}
