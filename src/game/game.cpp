@@ -25,6 +25,10 @@ Game::GridState Game::getCellState(int row, int col) {
     }
 }
 
+Game::Difficulty Game::getDifficulty() {
+    return _difficulty;
+}
+
 std::pair<int, int> Game::getRowColTouched(uint16_t tx, uint16_t ty) {
     std::pair<int, int> touch_rowcol;
 

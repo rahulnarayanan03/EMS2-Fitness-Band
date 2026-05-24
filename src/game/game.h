@@ -49,6 +49,9 @@ public:
     // Row and col values range from 1 to 3
     GridState getCellState(int row, int col);
 
+    // Returns the difficulty
+    Difficulty getDifficulty();
+
     // Returns the row and column of a cell given the location of a touch
     std::pair<int, int> getRowColTouched(uint16_t tx, uint16_t ty);
 

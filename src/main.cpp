@@ -700,7 +700,23 @@ void Game_Case() {
     if (game_mode_touched) {
         if (millis() - pressed_time > 100) {
             game_mode_touched = false;
-            drawGameMode(tft, ui);
+            
+            // Display what the current difficulty is
+            Game::Difficulty difficulty = game.getDifficulty();;
+            switch (difficulty) {
+                case Game::EASY:
+                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "EASY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+                    break;
+                case Game::MEDIUM:
+                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MEDIUM", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+                    break;
+                case Game::HARD:
+                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "HARD", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+                    break;
+                default:
+                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "EASY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+                    break;
+            }
         }
     }
 
@@ -758,7 +774,24 @@ void Game_Case() {
         // Check if the bot delay time has passed
         if (millis() - bot_delay_start >= Game::BOT_DELAY_MS) {
             Serial.println("Bot now placing");
-            game.runBotMove();
+
+            // Move according to the difficulty level
+            Game::Difficulty difficulty = game.getDifficulty();;
+            switch (difficulty) {
+                case Game::EASY:
+                    game.runBotMoveEasy();
+                    break;
+                case Game::MEDIUM:
+                    game.runBotMoveMedium();
+                    break;
+                case Game::HARD:
+                    game.runBotMoveHard();
+                    break;
+                default:
+                    game.runBotMoveEasy();
+                    break;
+            }
+        
             std::pair<int, int> last_bot_move = game.getLastBotMove();
             int last_bot_row = last_bot_move.first;
             int last_bot_col = last_bot_move.second;
