@@ -18,6 +18,8 @@
 #include "../icons/chip.h"
 #include "../icons/pace.h"
 #include "../icons/sw.h"
+#include "../icons/gameicon.h"
+#include "../icons/health.h"
 
 // battery config - swap BATT_ADC_PIN and BATT_DIVIDER_RATIO once PCB schematic confirmed
 static constexpr uint8_t  BATT_ADC_PIN       = 34;
