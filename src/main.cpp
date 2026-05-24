@@ -103,8 +103,12 @@ bool game_mode_touched = false;
 bool game_home_touched = false;
 bool game_ended = false;
 bool game_buttons_pressable = true;
+bool idle_anim_updated = true;
 int bot_delay_start;
 int pressed_time = 0;
+int idle_anim_time = 0;
+int idle_anim_delay_ms = 300;
+int current_anim_index = 0;
 int tx_shift = 20;
 
 uint32_t lastTransition = 0;
@@ -804,7 +808,83 @@ void Game_Case() {
 
     // Idle animation
     if (game.getGameState() == Game::IDLE) {
+        // If the idle animation just got updated, start tracking time
+        if (idle_anim_updated) {
+            idle_anim_updated = false;
+            idle_anim_time = millis();
 
+        // If the time has passed for the next animation frame, render it
+        } else if (millis() - idle_anim_time >= idle_anim_delay_ms) {
+            idle_anim_updated = true;
+
+            if (current_anim_index < 11 && current_anim_index > 0) {
+                // Extract the coordinates of the center of this cell
+                std::pair<int, int> circle_coords = getCellXY(anim_path[current_anim_index].first,
+                                                            anim_path[current_anim_index].second);
+                int circle_x = circle_coords.first;
+                int circle_y = circle_coords.second;
+                
+                // Render a circle at these coordinates
+                tft.fillCircle(circle_x, circle_y, 18, GB_BUTTON);
+
+                // Extract the coordinates of the previous cell
+                std::pair<int, int> circle_coords_prev = getCellXY(anim_path[current_anim_index-1].first,
+                                                                anim_path[current_anim_index-1].second);
+                int circle_x_prev = circle_coords_prev.first;
+                int circle_y_prev = circle_coords_prev.second;
+                
+                // Delete the circle at these coordinates
+                tft.fillCircle(circle_x_prev, circle_y_prev, 18, GB_LIGHTEST);
+
+                // Increment the animation index
+                current_anim_index++;
+
+            // When we are on the 12th frame, reset back to 0
+            } else if (current_anim_index == 11) {
+                // Extract the coordinates of the center of this cell
+                std::pair<int, int> circle_coords = getCellXY(anim_path[current_anim_index].first,
+                                                            anim_path[current_anim_index].second);
+                int circle_x = circle_coords.first;
+                int circle_y = circle_coords.second;
+                
+                // Render a circle at these coordinates
+                tft.fillCircle(circle_x, circle_y, 18, GB_BUTTON);
+
+                // Extract the coordinates of the previous cell
+                std::pair<int, int> circle_coords_prev = getCellXY(anim_path[current_anim_index-1].first,
+                                                                anim_path[current_anim_index-1].second);
+                int circle_x_prev = circle_coords_prev.first;
+                int circle_y_prev = circle_coords_prev.second;
+                
+                // Delete the circle at these coordinates
+                tft.fillCircle(circle_x_prev, circle_y_prev, 18, GB_LIGHTEST);
+
+                // Reset the animation index counter
+                current_anim_index = 0;
+
+            // On the 0th frame, erase the 12th circle when rendering the 0th circle
+            } else {
+                // Extract the coordinates of the center of this cell
+                std::pair<int, int> circle_coords = getCellXY(anim_path[current_anim_index].first,
+                                                            anim_path[current_anim_index].second);
+                int circle_x = circle_coords.first;
+                int circle_y = circle_coords.second;
+                
+                // Render a circle at these coordinates
+                tft.fillCircle(circle_x, circle_y, 18, GB_BUTTON);
+
+                // Extract the coordinates of the previous cell
+                std::pair<int, int> circle_coords_prev = getCellXY(anim_path[11].first, anim_path[11].second);
+                int circle_x_prev = circle_coords_prev.first;
+                int circle_y_prev = circle_coords_prev.second;
+                
+                // Delete the circle at these coordinates
+                tft.fillCircle(circle_x_prev, circle_y_prev, 18, GB_LIGHTEST);
+
+                // Increment the animation index
+                current_anim_index++;
+            }
+        }
     }
 }
 
