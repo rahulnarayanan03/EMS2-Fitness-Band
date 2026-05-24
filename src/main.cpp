@@ -103,6 +103,8 @@ bool game_mode_touched = false;
 bool game_home_touched = false;
 bool game_ended = false;
 bool game_buttons_pressable = true;
+bool game_mode_active = false;
+unsigned long game_mode_timer = 0;
 bool idle_anim_updated = true;
 int bot_delay_start;
 int pressed_time = 0;
@@ -503,6 +505,9 @@ void Home_Case(uint32_t now, float cv, float cp) {
 
             case 2:
                 currentCase = CASE_GAME;
+                current_anim_index = 0;
+                idle_anim_updated = true;
+                idle_anim_time = 0;
                 drawGameScreen(tft, ui);
                 break;
 
@@ -673,7 +678,20 @@ void Game_Case() {
     if (game_buttons_pressable && touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
         pressed_time = millis();
         game_mode_touched = true;
-        drawGameModePressed(tft, ui);
+
+        // Show pressed state with the current label
+        const char* pressedLabel = "MODE";
+        if (game_mode_active) {
+            Game::Difficulty d = game.getDifficulty();
+            if (d == Game::EASY) {
+                pressedLabel = "EASY";
+            } else if (d == Game::MEDIUM) {
+                pressedLabel = "MED";
+            } else if (d == Game::HARD) {
+                pressedLabel = "HARD";
+            }
+        }
+        drawGameModePressed(tft, ui, pressedLabel);
     }
 
     // If the home button gets touched
@@ -701,28 +719,62 @@ void Game_Case() {
         if (millis() - pressed_time > 100) {
             game_mode_touched = false;
             
-            // Display what the current difficulty is
-            Game::Difficulty difficulty = game.getDifficulty();;
-            switch (difficulty) {
-                case Game::EASY:
-                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "EASY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-                    break;
-                case Game::MEDIUM:
-                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MEDIUM", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-                    break;
-                case Game::HARD:
-                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "HARD", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-                    break;
-                default:
-                    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "EASY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-                    break;
+            if (game_mode_active) {
+                // Display what the current difficulty is
+                Game::Difficulty difficulty = game.getDifficulty();;
+                switch (difficulty) {
+                    case Game::EASY:
+                        game.setDifficulty(Game::MEDIUM);
+                        break;
+                    case Game::MEDIUM:
+                        game.setDifficulty(Game::HARD);
+                        break;
+                    case Game::HARD:
+                        game.setDifficulty(Game::EASY);
+                        break;
+                    default:
+                        game.setDifficulty(Game::EASY);
+                        break;
+                }
             }
+
+            // Restart the 2s window and show current difficulty
+            game_mode_active = true;
+            game_mode_timer = millis();
+
+            Game::Difficulty difficulty = game.getDifficulty();
+            const char* label = "EASY";
+            if (difficulty == Game::MEDIUM) {
+                label = "MED";
+            } else if (difficulty == Game::HARD) {
+                label = "HARD";
+            }
+
+            ui.drawRetroButton(212, 103, 96, 54, 8, 8, label, 4,
+                            GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+        }
+    }
+
+    // After 2s with no mode press, revert button label to "MODE"
+    if (game_mode_active && (millis() - game_mode_timer >= 2000)) {
+        game_mode_active = false;
+        // Only redraw as active if not mid-game
+        if (game.getGameState() == Game::IDLE || 
+            game.getGameState() == Game::HUMAN_WIN || 
+            game.getGameState() == Game::BOT_WIN || 
+            game.getGameState() == Game::DRAW) {
+            drawGameMode(tft, ui);
+        } else {
+            drawGameModeInactive(tft, ui);
         }
     }
 
     // Show the home button as pressed for 100ms
     if (game_home_touched) {
         if (millis() - pressed_time > 100) {
+            current_anim_index = 0;
+            idle_anim_updated = true;
+            idle_anim_time = 0;
             game_home_touched = false;
             game.resetGame();
             game_buttons_pressable = true;

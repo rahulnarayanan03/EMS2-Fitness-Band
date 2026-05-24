@@ -70,7 +70,7 @@ void drawGamePlay(TFT_eSPI &tft, UI &ui);
 void drawGameMode(TFT_eSPI &tft, UI &ui);
 void drawGameHome(TFT_eSPI &tft, UI &ui);
 void drawGamePlayPressed(TFT_eSPI &tft, UI &ui);
-void drawGameModePressed(TFT_eSPI &tft, UI &ui);
+void drawGameModePressed(TFT_eSPI &tft, UI &ui, const char* label = "MODE");
 void drawGamePlayInactive(TFT_eSPI &tft, UI &ui);
 void drawGameModeInactive(TFT_eSPI &tft, UI &ui);
 void drawGameHomePressed(TFT_eSPI &tft, UI &ui);

@@ -168,7 +168,7 @@ std::vector<std::pair<int, int>> Game::getFreeCells() {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             if (_grid_state[i][j] == Game::FREE) {
-                cell_rowcol = {i, j};
+                cell_rowcol = {i+1, j+1};
                 free_cells.push_back(cell_rowcol);
             }
         }
@@ -335,7 +335,7 @@ void Game::runBotMove() {
 void Game::runBotMoveEasy() {
     // Get all the empty cells, then pick a random element from these
     std::vector<std::pair<int, int>> free_cells = getFreeCells();
-    int number_of_free_cells = sizeof(free_cells);
+    int number_of_free_cells = free_cells.size();
 
     int random_index = random(0, number_of_free_cells);
     std::pair<int, int> random_cell = free_cells[random_index];
