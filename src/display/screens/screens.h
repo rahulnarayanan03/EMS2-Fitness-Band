@@ -45,20 +45,20 @@ static constexpr std::pair<int, int> anim_path[12] = {{1,1}, {1,2}, {1,3},
                                                     {2,3}, {2,2}, {2,1}};
 
 void drawCalibrationScreen(TFT_eSPI &tft);
-void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps);
+void drawCalibrationDone(TFT_eSPI &tft, UI &ui, bool isReentry, uint32_t savedSteps);
 void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
                            bool isSampling, int secsLeft, int dirIndex);
 
 void drawSWTime(TFT_eSPI &tft, const Stopwatch::SW_Time &t);
-void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw);
+void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw, UI &ui);
 void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw);
 void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw);
 void drawSWDot(TFT_eSPI &tft, Stopwatch &sw);
 
-void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
+void drawSelfTestScreen(TFT_eSPI &tft, UI &ui, bool passed, const char *resultStr,
                         float dX, float dY, float dZ);
 
-void drawStubScreen(TFT_eSPI &tft, const char *title);
+void drawStubScreen(TFT_eSPI &tft, UI &ui, const char *title);
 
 void drawGameScreen(TFT_eSPI &tft, UI &ui);
 std::pair<int, int> getCellXY(int row, int col);

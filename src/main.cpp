@@ -209,12 +209,8 @@ void initBacklight() {
 }
 
 void drawPaceIdHomeButton() {
-    tft.fillRect(95, 184, 130, 48, APP_BUTTON);
-    tft.drawRoundRect(95, 184, 130, 48, APP_BORDER, 10);
-
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
-    tft.drawString("HOME", 160, 208, 4);
+    ui.drawRetroButton(95, 184, 130, 48, 10, 6, "HOME", 4,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void goHome() {
@@ -388,7 +384,7 @@ void Calibration_Case() {
 
     if (!awaitingStepChoice && calibM.isCalibrated()) {
         awaitingStepChoice = true;
-        drawCalibrationDone(tft, caseCtIsReentry, savedStepsBeforeCal);
+        drawCalibrationDone(tft, ui, caseCtIsReentry, savedStepsBeforeCal);
         Serial.println("Calibration complete.");
     }
 
@@ -519,7 +515,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
 
             case 4:
                 currentCase = CASE_SW;
-                drawSWScreen(tft, sw);
+                drawSWScreen(tft, sw, ui);
                 break;
             
             case 5:
@@ -536,7 +532,7 @@ void SelfTest_Case() {
 
         bool passed = stM.run();
 
-        drawSelfTestScreen(tft,
+        drawSelfTestScreen(tft, ui,
                            passed,
                            stM.getResultStr(),
                            stM.getDeltaX(),
@@ -583,20 +579,16 @@ void StopWatch_Case(uint32_t now) {
             sw.stopSW();
             Serial.println("SW stopped");
             tft.setTextDatum(TL_DATUM);
-            // Draw start button
-            tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
-            // Draw start text
-            tft.setTextColor(START_TEXT, START_BG);
-            tft.drawString("Start", 243+18, 27+7, 2);
+            // Draw retro start button
+            ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "START", 2,
+                                GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);   
         } else {
             sw.startSW();
             Serial.println("SW started");
             tft.setTextDatum(TL_DATUM);
-            // Draw stop button
-            tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, STOP_BG);
-            // Draw stop text
-            tft.setTextColor(STOP_TEXT, STOP_BG);
-            tft.drawString("Stop", 243+18, 27+7, 2);
+            // Draw retro stop button
+            ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "STOP", 2,
+                                RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
         }
 
     } else if (touched && sw.resetTouched(tx, ty) && state == Stopwatch::STOPPED) {

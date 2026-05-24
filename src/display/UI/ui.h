@@ -107,7 +107,7 @@ namespace SW_Consts {
     static constexpr int16_t SW_Y = 120;        // Y coordinate of stopwatch circle midpoint
     static constexpr int16_t SW_OUTER_RADIUS = 105;     // Outer radius of stopwatch circle
     static constexpr int16_t SW_THICKNESS = 5;  // Line thickness of stopwatch circle
-    static constexpr int16_t SW_POINT_R = 10;   // Radius of the circle orbiting the stopwatch face
+    static constexpr int16_t SW_POINT_R = 14;   // Radius of the circle orbiting the stopwatch face
     static constexpr int16_t SW_BTN_GAP = 8;    // Vertical gap between the buttons
     static constexpr int16_t SW_BTN_R = 35;     // Radius of the buttons
     static constexpr int16_t SW_BTN_X = 275;    // X coordinate of the buttons

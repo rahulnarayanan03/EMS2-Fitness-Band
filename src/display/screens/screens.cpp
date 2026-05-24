@@ -28,16 +28,9 @@ static constexpr uint16_t APP_BUTTON      = GB_LIGHTEST;
 static constexpr uint16_t APP_BUTTON_TEXT = GB_DARKEST;
 static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
-static void drawHomeButton(TFT_eSPI &tft) {
-    tft.fillRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BUTTON);
-    tft.drawRoundRect(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, APP_BORDER);
-
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
-    tft.drawString("HOME",
-                   HOME_BTN_X + HOME_BTN_W / 2,
-                   HOME_BTN_Y + HOME_BTN_H / 2,
-                   4);
+static void drawHomeButton(TFT_eSPI &tft, UI &ui) {
+    ui.drawRetroButton(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, 6, "HOME", 4,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 static void drawSetupButtons(TFT_eSPI &tft) {
@@ -273,7 +266,7 @@ void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
     drawArrow(tft, 245, 120, arrowDir(dirIndex), 90, arrowColor);
 }
 
-void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
+void drawCalibrationDone(TFT_eSPI &tft, UI &ui, bool isReentry, uint32_t savedSteps) {
     tft.fillScreen(APP_BG);
 
     tft.setTextDatum(TL_DATUM);
@@ -303,20 +296,20 @@ void drawCalibrationDone(TFT_eSPI &tft, bool isReentry, uint32_t savedSteps) {
         tft.drawString("USE", 227, 208, 4);
 
     } else {
-        drawHomeButton(tft);
+        drawHomeButton(tft, ui);
     }
 }
 
 void drawSWTime(TFT_eSPI &tft, const Stopwatch::SW_Time &t) {
     // Clear only the text area
-    tft.fillRect(30, SW_TIME_Y, SW_TIME_W, SW_TIME_H, APP_BG);
+    tft.fillRect(30, SW_TIME_Y, SW_TIME_W, SW_TIME_H, GB_LIGHTEST);
 
     char buf[12];
     snprintf(buf, sizeof(buf), "%02d:%02d.%02d",
              t._minutes, t._seconds, t._milliseconds);
 
     tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(APP_TEXT, APP_BG);
+    tft.setTextColor(TFT_BLACK, GB_LIGHTEST);
     tft.drawString(buf, SW_X, SW_TIME_Y + SW_TIME_H / 2, 4);
 }
 
@@ -334,9 +327,9 @@ void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw) {
             int d2 = (sx - SW_X)*(sx - SW_X) + (sy - SW_Y)*(sy - SW_Y);
 
             uint16_t col;
-            if (d2 > r2outer)      col = TFT_BLACK;
-            else if (d2 < r2inner) col = TFT_BLACK;
-            else                   col = TFT_WHITE;
+            if (d2 > r2outer)      col = GB_LIGHTEST;
+            else if (d2 < r2inner) col = GB_LIGHTEST;
+            else                   col = TFT_BLACK;
 
             tft.drawPixel(sx, sy, col);
         }
@@ -346,47 +339,39 @@ void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw) {
 
 void drawSWDot(TFT_eSPI &tft, Stopwatch &sw) {
     auto pos = sw.getCirclePosition();
-    tft.fillCircle(pos.first, pos.second, SW_POINT_R, POINT_BG);
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R, GB_BUTTON);
 }
 
-void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
-    tft.fillScreen(APP_BG);
+void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw, UI &ui) {
+    tft.fillScreen(GB_LIGHTEST);
 
     tft.setTextDatum(TL_DATUM);
 
     if (sw.getState() == Stopwatch::RUNNING) {
-        // Draw stop button
-        tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, STOP_BG);
-        // Draw stop text
-        tft.setTextColor(STOP_TEXT, STOP_BG);
-        tft.drawString("Stop", 243+18, 27+7, 2);
+        // Draw retro stop button
+        ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "STOP", 2,
+                            RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);        
     } else {
-        // Draw start button
-        tft.fillCircle(SW_BTN_X, START_Y, SW_BTN_R, START_BG);
-        // Draw start text
-        tft.setTextColor(START_TEXT, START_BG);
-        tft.drawString("Start", 243+18, 27+7, 2);
+        // Draw retro start button
+        ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "START", 2,
+                            GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);   
     }
 
-    // Draw reset button
-    tft.fillCircle(SW_BTN_X, RESET_Y, SW_BTN_R, RESET_BG);
-    // Draw reset text
-    tft.setTextColor(RESET_TEXT, RESET_BG);
-    tft.drawString("Reset", 240+20, 105+7, 2);
+    // Draw retro reset button
+    ui.drawRetroButton(SW_BTN_X-SW_BTN_R, RESET_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "RESET", 2,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE); 
 
-    // Draw home button
-    tft.fillCircle(SW_BTN_X, SW_HOME_Y, SW_BTN_R, RESET_BG);
-    // Draw home text
-    tft.setTextColor(RESET_TEXT, RESET_BG);
-    tft.drawString("Home", 240+20, 183+7, 2);
+    // Draw retro home button
+    ui.drawRetroButton(SW_BTN_X-SW_BTN_R, SW_HOME_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "HOME", 2,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 
     // Draw circle for stopwatch
-    tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_WHITE);
-    tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),TFT_BLACK);
+    tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_BLACK);
+    tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),GB_LIGHTEST);
 
     // Draw initial dot
     auto pos = sw.getCirclePosition();
-    tft.fillCircle(pos.first, pos.second, SW_POINT_R, POINT_BG);
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R, GB_BUTTON);
 
     drawSWTime(tft, sw.getFormattedTime());
 
@@ -413,9 +398,9 @@ void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
 
             int d2 = (sx - SW_X)*(sx - SW_X) + (sy - SW_Y)*(sy - SW_Y);
             uint16_t col;
-            if (d2 > r2outer)      col = TFT_BLACK;
-            else if (d2 < r2inner) col = TFT_BLACK;
-            else                   col = TFT_WHITE;
+            if (d2 > r2outer)      col = GB_LIGHTEST;
+            else if (d2 < r2inner) col = GB_LIGHTEST;
+            else                   col = TFT_BLACK;
 
             tft.drawPixel(sx, sy, col);
         }
@@ -424,12 +409,12 @@ void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
     // fillCircle handles its own CS internally, so end before calling it
     tft.endWrite();
 
-    tft.fillCircle(curr.first, curr.second, SW_POINT_R, POINT_BG);
+    tft.fillCircle(curr.first, curr.second, SW_POINT_R, GB_BUTTON);
 
     drawSWTime(tft, sw.getFormattedTime());
 }
 
-void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
+void drawSelfTestScreen(TFT_eSPI &tft, UI &ui, bool passed, const char *resultStr,
                         float dX, float dY, float dZ) {
     tft.fillScreen(APP_BG);
 
@@ -453,10 +438,10 @@ void drawSelfTestScreen(TFT_eSPI &tft, bool passed, const char *resultStr,
     snprintf(buf, sizeof(buf), "dZ = %.2f mV", dZ);
     tft.drawString(buf, 10, 160, 4);
 
-    drawHomeButton(tft);
+    drawHomeButton(tft, ui);
 }
 
-void drawStubScreen(TFT_eSPI &tft, const char *title) {
+void drawStubScreen(TFT_eSPI &tft, UI &ui, const char *title) {
     tft.fillScreen(APP_BG);
 
     tft.setTextDatum(TL_DATUM);
@@ -466,7 +451,7 @@ void drawStubScreen(TFT_eSPI &tft, const char *title) {
     tft.setTextColor(APP_MUTED, APP_BG);
     tft.drawString("Not available", 10, 58, 4);
 
-    drawHomeButton(tft);
+    drawHomeButton(tft, ui);
 }
 
 void drawGameScreen(TFT_eSPI &tft, UI &ui) {
