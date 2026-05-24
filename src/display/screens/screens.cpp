@@ -340,6 +340,7 @@ void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw) {
 void drawSWDot(TFT_eSPI &tft, Stopwatch &sw) {
     auto pos = sw.getCirclePosition();
     tft.fillCircle(pos.first, pos.second, SW_POINT_R, GB_BUTTON);
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R-5, GB_LIGHTEST);
 }
 
 void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw, UI &ui) {
@@ -372,6 +373,7 @@ void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw, UI &ui) {
     // Draw initial dot
     auto pos = sw.getCirclePosition();
     tft.fillCircle(pos.first, pos.second, SW_POINT_R, GB_BUTTON);
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R-5, GB_LIGHTEST);
 
     drawSWTime(tft, sw.getFormattedTime());
 
@@ -410,6 +412,7 @@ void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
     tft.endWrite();
 
     tft.fillCircle(curr.first, curr.second, SW_POINT_R, GB_BUTTON);
+    tft.fillCircle(curr.first, curr.second, SW_POINT_R-5, GB_LIGHTEST);
 
     drawSWTime(tft, sw.getFormattedTime());
 }
