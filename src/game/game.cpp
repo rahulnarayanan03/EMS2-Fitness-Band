@@ -101,6 +101,13 @@ std::pair<int, int> Game::getRowColTouched(uint16_t tx, uint16_t ty) {
     }
 }
 
+std::pair<int, int> Game::getLastBotMove() {
+    std::pair<int, int> last_bot_move;
+    last_bot_move.first = last_bot_row_col.first;
+    last_bot_move.second = last_bot_row_col.second;
+    return last_bot_move;
+}
+
 void Game::placeO(int row, int col) {
     if (row > 3 || col > 3 || row < 1 || col < 1) {
         Serial.println("Warning: row/col out of bounds");
@@ -278,18 +285,14 @@ void Game::runBotMove() {
         int bestMoveRow = -1;
         int bestMoveCol = -1;
 
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
-                if (_grid_state[i][j] == Game::FREE)
-                {
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                if (_grid_state[i][j] == Game::FREE) {
                     _grid_state[i][j] = Game::OCCUPIED_O; // Bot's move
                     int moveScore = minimax(0, false, INT_MIN, INT_MAX);
                     _grid_state[i][j] = Game::FREE;
 
-                    if (moveScore > bestScore)
-                    {
+                    if (moveScore > bestScore) {
                         bestScore = moveScore;
                         bestMoveRow = i;
                         bestMoveCol = j;
@@ -298,8 +301,10 @@ void Game::runBotMove() {
             }
         }
 
-        if (bestMoveRow != -1 && bestMoveCol != -1)
-        {
+        if (bestMoveRow != -1 && bestMoveCol != -1) {
             placeO(bestMoveRow, bestMoveCol);
+            last_bot_row_col.first = bestMoveRow;
+            last_bot_row_col.second = bestMoveCol;
+            _game_state = Game::HUMAN_TURN;
         }
     }
