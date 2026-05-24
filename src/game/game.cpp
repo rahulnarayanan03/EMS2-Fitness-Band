@@ -147,6 +147,11 @@ bool Game::isBoardFull() {
             }
         }
     }
+
+    // Make sure it isn't a win first
+    if (!checkWin(Game::HUMAN) && !checkWin(Game::BOT)) {
+        _game_state = Game::DRAW;
+    }
     return true;
 }
 
