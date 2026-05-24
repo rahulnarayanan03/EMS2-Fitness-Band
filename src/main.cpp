@@ -101,6 +101,8 @@ bool step_reset_touched = false;
 bool game_play_touched = false;
 bool game_mode_touched = false;
 bool game_home_touched = false;
+bool game_ended = false;
+bool game_buttons_pressable = true;
 int bot_delay_start;
 int pressed_time = 0;
 int tx_shift = 20;
@@ -656,7 +658,8 @@ void PaceID_Case() {
 
 void Game_Case() {
     // If the play button gets touched
-    if (touched && tx >= 212 && tx <= 307 && ty >= 40 && ty <= 93) {
+    if (game_buttons_pressable && touched && tx >= 212 && tx <= 307 && ty >= 40 && ty <= 93) {
+        game_buttons_pressable = false;
         pressed_time = millis();
         game_play_touched = true;
         drawGamePlayPressed(tft, ui);
@@ -683,6 +686,7 @@ void Game_Case() {
         if (millis() - pressed_time > 100) {
             game_play_touched = false;
             // Draw game play and mode buttons as inactive
+            drawGameScreen(tft, ui);
             drawGamePlayInactive(tft, ui);
             drawGameModeInactive(tft, ui);
             game.playGame();
@@ -748,7 +752,30 @@ void Game_Case() {
             int last_bot_row = last_bot_move.first;
             int last_bot_col = last_bot_move.second;
             drawGameO(tft, last_bot_row, last_bot_col);
+
+            // Check for bot win after placing
+            if (game.checkWin(Game::BOT)) {
+                Serial.println("Bot has won");
+                // Will add other logic here
+            }
         }
+    }
+
+    // If the bot or human has won, game is over and can be restarted or mode can be changed
+    if (game.checkWin(Game::BOT) || game.checkWin(Game::HUMAN)) {
+        game_ended = true;
+        // Draw the active play and mode buttons
+        drawGameHome(tft, ui);
+        drawGameMode(tft, ui);
+        game_buttons_pressable = true;
+
+    // If the grid is full but nobody has won, it is a draw so game can be restarted or mode can be changed
+    } else if (game.isBoardFull()) {
+        game_ended = true;
+        // Draw the active play and mode buttons
+        drawGameHome(tft, ui);
+        drawGameMode(tft, ui);
+        game_buttons_pressable = true;
     }
 }
 
