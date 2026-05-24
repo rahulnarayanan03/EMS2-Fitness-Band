@@ -83,6 +83,8 @@ public:
 
     // Checks if the mode button is pressable
     bool isModePressable();
+
+    static constexpr int BOT_DELAY_MS = 2000;
     
 private:
     // State of the game
