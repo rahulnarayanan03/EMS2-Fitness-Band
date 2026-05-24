@@ -303,9 +303,9 @@ void Game::runBotMove() {
         }
 
         if (bestMoveRow != -1 && bestMoveCol != -1) {
-            placeO(bestMoveRow, bestMoveCol);
-            last_bot_row_col.first = bestMoveRow;
-            last_bot_row_col.second = bestMoveCol;
+            placeO(bestMoveRow+1, bestMoveCol+1);
+            last_bot_row_col.first = bestMoveRow+1;
+            last_bot_row_col.second = bestMoveCol+1;
             _game_state = Game::HUMAN_TURN;
         }
     }
