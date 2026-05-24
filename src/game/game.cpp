@@ -124,6 +124,7 @@ void Game::placeX(int row, int col) {
         return;
     } else {
         _grid_state[row-1][col-1] = Game::OCCUPIED_X;
+        _game_state = Game::BOT_TURN;
         return;
     }
 }
