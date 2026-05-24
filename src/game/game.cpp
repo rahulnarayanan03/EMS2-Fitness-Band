@@ -344,3 +344,25 @@ void Game::runBotMoveEasy() {
     last_bot_row_col.second = random_col;
     _game_state = Game::HUMAN_TURN;
 }
+
+void Game::runBotMoveMedium() {
+    int random_number = random(0, 100);
+
+    // The probability of this condition being met is p_random_medium
+    if (random_number < 100*p_random_medium) {
+        runBotMoveEasy();
+    } else {
+        runBotMove();
+    }
+}
+
+void Game::runBotMoveHard() {
+    int random_number = random(0, 100);
+
+    // The probability of this condition being met is p_random_hard
+    if (random_number < 100*p_random_hard) {
+        runBotMoveEasy();
+    } else {
+        runBotMove();
+    }
+}

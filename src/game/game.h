@@ -116,5 +116,5 @@ private:
     float p_random_medium = 0.5;
 
     // Probably of bot making a random move when on hard difficulty
-    float p_random_medium = 0.1;
+    float p_random_hard = 0.1;
 };
