@@ -666,7 +666,7 @@ void Game_Case() {
     }
 
     // If the mode button gets touched
-    if (touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
+    if (game_buttons_pressable && touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
         if (game.isModePressable()) {
             pressed_time = millis();
             game_mode_touched = true;
@@ -690,6 +690,7 @@ void Game_Case() {
             drawGamePlayInactive(tft, ui);
             drawGameModeInactive(tft, ui);
             game.playGame();
+            game_ended = false;
         }
     }
 
@@ -706,6 +707,7 @@ void Game_Case() {
         if (millis() - pressed_time > 100) {
             game_home_touched = false;
             game.resetGame();
+            game_buttons_pressable = true;
             goHome();
         }
     }
@@ -762,18 +764,18 @@ void Game_Case() {
     }
 
     // If the bot or human has won, game is over and can be restarted or mode can be changed
-    if (game.checkWin(Game::BOT) || game.checkWin(Game::HUMAN)) {
+    if (!game_ended && (game.checkWin(Game::BOT) || game.checkWin(Game::HUMAN))) {
         game_ended = true;
         // Draw the active play and mode buttons
-        drawGameHome(tft, ui);
+        drawGamePlay(tft, ui);
         drawGameMode(tft, ui);
         game_buttons_pressable = true;
 
     // If the grid is full but nobody has won, it is a draw so game can be restarted or mode can be changed
-    } else if (game.isBoardFull()) {
+    } else if (game.getGameState() != Game::DRAW && game.isBoardFull()) {
         game_ended = true;
         // Draw the active play and mode buttons
-        drawGameHome(tft, ui);
+        drawGamePlay(tft, ui);
         drawGameMode(tft, ui);
         game_buttons_pressable = true;
     }
