@@ -79,8 +79,17 @@ public:
     // Runs minimax algorithm with alpha/beta pruning
     int minimax(int depth, bool isMaximizing, int alpha, int beta);
 
-    // Runs the bot's move
+    // Runs the bot's move, bot plays perfectly when moving
     void runBotMove();
+
+    // Runs the bot's move, bot plays completely randomly
+    void runBotMoveEasy();
+
+    // Runs the bot's move, bot plays perfectly only half the time, otherwise it plays randomly
+    void runBotMoveMedium();
+
+    // Runs the bot's move, bot plays perfectly almost all the time, with a small chance of playing randomly
+    void runBotMoveHard();
 
     // Ends the game
     void endGame();
@@ -99,4 +108,10 @@ private:
 
     // Last move the bot made
     std::pair<int, int> last_bot_row_col;
+
+    // Probably of bot making a random move when on medium difficulty
+    float p_random_medium = 0.5;
+
+    // Probably of bot making a random move when on hard difficulty
+    float p_random_medium = 0.1;
 };
