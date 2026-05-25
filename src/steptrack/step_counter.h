@@ -4,9 +4,15 @@
 #include <Arduino.h>
 #include "../calibration/calibration.h"
 
-static constexpr float    SC_THRESHOLD_G  = 0.45f; // highLine = 1.30g
-static constexpr float    SC_HYSTERESIS_G = 0.20f; // lowLine  = 1.20g
-static constexpr uint32_t SC_COOLDOWN_MS  = 225;   // min time between steps, max about 185 SPM
+/*
+What changed - 
+SC_THRESHOLD_G  from 0.45 to 0.60
+SC_HYSTERESIS_G from 0.20 to 0.30
+*/
+
+static constexpr float    SC_THRESHOLD_G  = 0.60f; // highLine = 1.30g
+static constexpr float    SC_HYSTERESIS_G = 0.30f; // lowLine  = 1.20g
+static constexpr uint32_t SC_COOLDOWN_MS  = 265;   // min time between steps, max about 185 SPM
 
 // Save step count to NVS at most once every 5 seconds
 static constexpr uint32_t SC_NVS_SAVE_INTERVAL_MS = 3000;
