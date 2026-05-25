@@ -5,11 +5,11 @@
 #include "../calibration/calibration.h"
 
 static constexpr float    SC_THRESHOLD_G  = 0.45f; // highLine = 1.30g
-static constexpr float    SC_HYSTERESIS_G = 0.30f; // lowLine  = 1.20g
+static constexpr float    SC_HYSTERESIS_G = 0.20f; // lowLine  = 1.20g
 static constexpr uint32_t SC_COOLDOWN_MS  = 225;   // min time between steps, max about 185 SPM
 
 // Save step count to NVS at most once every 5 seconds
-static constexpr uint32_t SC_NVS_SAVE_INTERVAL_MS = 5000;
+static constexpr uint32_t SC_NVS_SAVE_INTERVAL_MS = 3000;
 
 class StepCounter {
 public:
