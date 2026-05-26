@@ -9,6 +9,7 @@
    4 = S.C.T    - step count test
    5 = P.ID.T   - pace ID test
    6 = SETTINGS - edit age, weight, height from gear icon in top bar
+   7 = HEALTH   - health goals and progress tracking
 */
 
 #include <Arduino.h>
@@ -26,6 +27,7 @@
 #include "calories/calories.h"
 #include "Adafruit_MAX1704X.h"
 #include "stopwatch/stopwatch.h"
+#include "healthapp/healthapp.h"
 
 Adafruit_MAX17048 maxlipo;
 
@@ -63,8 +65,9 @@ PACEFIND    paceM;
 SelfTest    stM(ST_PIN, X_PIN, Y_PIN, Z_PIN);
 Calories    calorieM;
 UI          ui(tft, stepM, calibM);
-Stopwatch sw(Stopwatch::SW_PERIOD_MS);
-Game game;
+Stopwatch   sw(Stopwatch::SW_PERIOD_MS);
+Game        game;
+HealthApp   healthApp(tft, ui);
 
 // ---- shared app screen colours ---------------------------------------------
 
@@ -422,6 +425,12 @@ void Home_Case(uint32_t now, float cv, float cp) {
 
     updateStepAndPace(now);
 
+    // keep healthApp in sync with current data even while on home screen
+    bool isRunning = strcmp(paceM.getPace(), "RUNNING") == 0;
+    healthApp.tickActivity(isRunning, now);
+    healthApp.setCurrentSteps(stepM.getStepCount());
+    healthApp.setCurrentCalories(calorieM.getKcal());
+
     ui.setTime(0, 0);
     ui.setDate(1, 1);
     ui.setPace(paceM.getPace());
@@ -429,7 +438,7 @@ void Home_Case(uint32_t now, float cv, float cp) {
     ui.update(now, cv, cp);
 
     if (step_reset_touched) {
-        // Show the reset button as pressed for 100ms
+        // show the reset button as pressed for 100ms
         if (millis() - pressed_time > 100) {
             ui.drawStepResetButton();
             step_reset_touched = false;
@@ -459,16 +468,17 @@ void Home_Case(uint32_t now, float cv, float cp) {
     if (ui.checkStepResetTouch(tx, ty)) {
         stepM.resetCount();
         calorieM.reset();
+        healthApp.resetProgress();
 
         lastTransition = millis();
 
         Serial.println("Home: step count reset to 0.");
 
-        // Start tracking time since touch
+        // start tracking time since touch
         pressed_time = millis();
         step_reset_touched = true;
 
-        // Draw pressed reset button
+        // draw pressed reset button
         ui.drawStepResetButtonPressed();
         return;
     }
@@ -517,8 +527,10 @@ void Home_Case(uint32_t now, float cv, float cp) {
                 currentCase = CASE_SW;
                 drawSWScreen(tft, sw, ui);
                 break;
-            
+
             case 5:
+                currentCase = CASE_HEALTH;
+                healthApp.begin();
                 break;
         }
     }
@@ -579,14 +591,14 @@ void StopWatch_Case(uint32_t now) {
             sw.stopSW();
             Serial.println("SW stopped");
             tft.setTextDatum(TL_DATUM);
-            // Draw retro start button
+            // draw retro start button
             ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "START", 2,
                                 GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);   
         } else {
             sw.startSW();
             Serial.println("SW started");
             tft.setTextDatum(TL_DATUM);
-            // Draw retro stop button
+            // draw retro stop button
             ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "STOP", 2,
                                 RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
         }
@@ -597,7 +609,6 @@ void StopWatch_Case(uint32_t now) {
         sw.resetSW();
         drawSWDot(tft, sw);
         drawSWTime(tft, sw.getFormattedTime());
-
     }
 }
 
@@ -657,8 +668,23 @@ void PaceID_Case() {
     }
 }
 
+void Health_Case() {
+    // keep accumulating running time even while in the health screen
+    bool isRunning = strcmp(paceM.getPace(), "RUNNING") == 0;
+    healthApp.tickActivity(isRunning, millis());
+    healthApp.setCurrentSteps(stepM.getStepCount());
+    healthApp.setCurrentCalories(calorieM.getKcal());
+
+    healthApp.update(tx, ty, touched);
+
+    if (healthApp.wantsHome()) {
+        healthApp.clearHomeFlag();
+        goHome();
+    }
+}
+
 void Game_Case() {
-    // If the play button gets touched
+    // if the play button gets touched
     if (game_buttons_pressable && touched && tx >= 212 && tx <= 307 && ty >= 40 && ty <= 93) {
         game_buttons_pressable = false;
         pressed_time = millis();
@@ -666,12 +692,12 @@ void Game_Case() {
         drawGamePlayPressed(tft, ui);
     }
 
-    // If the mode button gets touched
+    // if the mode button gets touched
     if (game_buttons_pressable && touched && tx >= 212 && tx <= 307 && ty >= 103 && ty <= 156) {
         pressed_time = millis();
         game_mode_touched = true;
 
-        // Show pressed state with the current label
+        // show pressed state with the current label
         const char* pressedLabel = "MODE";
         if (game_mode_active) {
             Game::Difficulty d = game.getDifficulty();
@@ -686,18 +712,18 @@ void Game_Case() {
         drawGameModePressed(tft, ui, pressedLabel);
     }
 
-    // If the home button gets touched
+    // if the home button gets touched
     if (touched && tx >= 212 && tx <= 307 && ty >= 166 && ty <= 219) {
         pressed_time = millis();
         game_home_touched = true;
         drawGameHomePressed(tft, ui);
     }
 
-    // Show the play button as pressed for 100ms
+    // show the play button as pressed for 100ms
     if (game_play_touched) {
         if (millis() - pressed_time > 100) {
             game_play_touched = false;
-            // Draw game play and mode buttons as inactive
+            // draw game play and mode buttons as inactive
             drawGameScreen(tft, ui);
             drawGamePlayInactive(tft, ui);
             drawGameModeInactive(tft, ui);
@@ -706,14 +732,14 @@ void Game_Case() {
         }
     }
 
-    // Show the mode button as pressed for 100ms
+    // show the mode button as pressed for 100ms
     if (game_mode_touched) {
         if (millis() - pressed_time > 100) {
             game_mode_touched = false;
             
             if (game_mode_active) {
-                // Display what the current difficulty is
-                Game::Difficulty difficulty = game.getDifficulty();;
+                // cycle through difficulties
+                Game::Difficulty difficulty = game.getDifficulty();
                 switch (difficulty) {
                     case Game::EASY:
                         game.setDifficulty(Game::MEDIUM);
@@ -730,7 +756,7 @@ void Game_Case() {
                 }
             }
 
-            // Restart the 2s window and show current difficulty
+            // restart the 2s window and show current difficulty
             game_mode_active = true;
             game_mode_timer = millis();
 
@@ -747,10 +773,10 @@ void Game_Case() {
         }
     }
 
-    // After 2s with no mode press, revert button label to "MODE"
+    // after 2s with no mode press, revert button label to "MODE"
     if (game_mode_active && (millis() - game_mode_timer >= 2000)) {
         game_mode_active = false;
-        // Only redraw as active if not mid-game
+        // only redraw as active if not mid-game
         if (game.getGameState() == Game::IDLE || 
             game.getGameState() == Game::HUMAN_WIN || 
             game.getGameState() == Game::BOT_WIN || 
@@ -761,7 +787,7 @@ void Game_Case() {
         }
     }
 
-    // Show the home button as pressed for 100ms
+    // show the home button as pressed for 100ms
     if (game_home_touched) {
         if (millis() - pressed_time > 100) {
             current_anim_index = 0;
@@ -774,36 +800,34 @@ void Game_Case() {
         }
     }
 
-    // Handle cells being touched
-    // If the screen is touched, make sure a cell is being touched
+    // handle cells being touched
     if (touched) {
         std::pair<int, int> cell_touched;
         cell_touched = game.getRowColTouched((tx - tx_shift), ty);
         int touched_row = cell_touched.first;
         int touched_col = cell_touched.second;
-        if (touched_row == 0 || touched_col == 0)  {
+        if (touched_row == 0 || touched_col == 0) {
             return;
         } else {
-            // A valid cell has been touched, make sure it is the human's turn and the cell isn't occupied
+            // a valid cell has been touched, make sure it is the human's turn and the cell isn't occupied
             if (game.getGameState() == Game::HUMAN_TURN && game.getCellState(touched_row, touched_col) == Game::FREE) {
                 Serial.print("Valid touch detected on row ");
                 Serial.print(touched_row);
                 Serial.print(", column ");
                 Serial.println(touched_col);
-                // Place an 'X' on the cell
+                // place an 'X' on the cell
                 game.placeX(touched_row, touched_col);
                 drawGameX(tft, touched_row, touched_col);
                 if (game.checkWin(Game::HUMAN)) {
-                    // Do human win stuff, will add later
                     Serial.println("Human has won");
-                    // Render human win title
+                    // render human win title
                     tft.fillRect(0, 0, 320, 35, GB_LIGHTEST);
                     tft.setTextDatum(CC_DATUM);
                     tft.setTextColor(TFT_BLACK);
                     tft.drawString("YOU WIN!", 160, 20, 4);
                     tft.setTextDatum(TL_DATUM);
                     tft.drawFastHLine(100, 32, 120, TFT_BLACK);
-                    // Draw the active play and mode buttons
+                    // draw the active play and mode buttons
                     drawGamePlay(tft, ui);
                     drawGameMode(tft, ui);
                 }
@@ -812,15 +836,15 @@ void Game_Case() {
         }
     }
 
-    // If it is the bot's turn to play
+    // if it is the bot's turn to play
     if (game.getGameState() == Game::BOT_TURN) {
         Serial.println("Bot's turn to play");
-        // Check if the bot delay time has passed
+        // check if the bot delay time has passed
         if (millis() - bot_delay_start >= Game::BOT_DELAY_MS) {
             Serial.println("Bot now placing");
 
-            // Move according to the difficulty level
-            Game::Difficulty difficulty = game.getDifficulty();;
+            // move according to the difficulty level
+            Game::Difficulty difficulty = game.getDifficulty();
             switch (difficulty) {
                 case Game::EASY:
                     game.runBotMoveEasy();
@@ -841,40 +865,38 @@ void Game_Case() {
             int last_bot_col = last_bot_move.second;
             drawGameO(tft, last_bot_row, last_bot_col);
 
-            // Check for bot win after placing
+            // check for bot win after placing
             if (game.checkWin(Game::BOT)) {
                 Serial.println("Bot has won");
-                // Render bot win title
+                // render bot win title
                 tft.fillRect(0, 0, 320, 35, GB_LIGHTEST);
                 tft.setTextDatum(CC_DATUM);
                 tft.setTextColor(TFT_BLACK);
                 tft.drawString("BOT WINS!", 160, 20, 4);
                 tft.setTextDatum(TL_DATUM);
                 tft.drawFastHLine(100, 32, 120, TFT_BLACK);
-                // Draw the active play and mode buttons
+                // draw the active play and mode buttons
                 drawGamePlay(tft, ui);
                 drawGameMode(tft, ui);
             }
         }
     }
 
-    // If the bot or human has won, game is over and can be restarted or mode can be changed
+    // if the bot or human has won, game is over
     if (!game_ended && (game.checkWin(Game::BOT) || game.checkWin(Game::HUMAN))) {
         game_ended = true;
-        // Draw the active play and mode buttons
         drawGamePlay(tft, ui);
         drawGameMode(tft, ui);
         game_buttons_pressable = true;
 
-    // If the grid is full but nobody has won, it is a draw so game can be restarted or mode can be changed
+    // if the grid is full but nobody has won, it is a draw
     } else if (game.getGameState() != Game::DRAW && game.isBoardFull()) {
         game_ended = true;
-        // Draw the active play and mode buttons
         drawGamePlay(tft, ui);
         drawGameMode(tft, ui);
         game_buttons_pressable = true;
 
-        // Render draw title
+        // render draw title
         tft.fillRect(0, 0, 320, 35, GB_LIGHTEST);
         tft.setTextDatum(CC_DATUM);
         tft.setTextColor(TFT_BLACK);
@@ -883,82 +905,65 @@ void Game_Case() {
         tft.drawFastHLine(110, 32, 100, TFT_BLACK);
     }
 
-    // Idle animation
+    // idle animation
     if (game.getGameState() == Game::IDLE) {
-        // If the idle animation just got updated, start tracking time
+        // if the idle animation just got updated, start tracking time
         if (idle_anim_updated) {
             idle_anim_updated = false;
             idle_anim_time = millis();
 
-        // If the time has passed for the next animation frame, render it
+        // if the time has passed for the next animation frame, render it
         } else if (millis() - idle_anim_time >= idle_anim_delay_ms) {
             idle_anim_updated = true;
 
             if (current_anim_index < 11 && current_anim_index > 0) {
-                // Extract the coordinates of the center of this cell
                 std::pair<int, int> circle_coords = getCellXY(anim_path[current_anim_index].first,
                                                             anim_path[current_anim_index].second);
                 int circle_x = circle_coords.first;
                 int circle_y = circle_coords.second;
                 
-                // Render a circle at these coordinates
                 tft.fillCircle(circle_x, circle_y, 18, GB_BUTTON);
 
-                // Extract the coordinates of the previous cell
                 std::pair<int, int> circle_coords_prev = getCellXY(anim_path[current_anim_index-1].first,
                                                                 anim_path[current_anim_index-1].second);
                 int circle_x_prev = circle_coords_prev.first;
                 int circle_y_prev = circle_coords_prev.second;
                 
-                // Delete the circle at these coordinates
                 tft.fillCircle(circle_x_prev, circle_y_prev, 18, GB_LIGHTEST);
 
-                // Increment the animation index
                 current_anim_index++;
 
-            // When we are on the 12th frame, reset back to 0
             } else if (current_anim_index == 11) {
-                // Extract the coordinates of the center of this cell
                 std::pair<int, int> circle_coords = getCellXY(anim_path[current_anim_index].first,
                                                             anim_path[current_anim_index].second);
                 int circle_x = circle_coords.first;
                 int circle_y = circle_coords.second;
                 
-                // Render a circle at these coordinates
                 tft.fillCircle(circle_x, circle_y, 18, GB_BUTTON);
 
-                // Extract the coordinates of the previous cell
                 std::pair<int, int> circle_coords_prev = getCellXY(anim_path[current_anim_index-1].first,
                                                                 anim_path[current_anim_index-1].second);
                 int circle_x_prev = circle_coords_prev.first;
                 int circle_y_prev = circle_coords_prev.second;
                 
-                // Delete the circle at these coordinates
                 tft.fillCircle(circle_x_prev, circle_y_prev, 18, GB_LIGHTEST);
 
-                // Reset the animation index counter
                 current_anim_index = 0;
 
-            // On the 0th frame, erase the 12th circle when rendering the 0th circle
             } else {
-                // Extract the coordinates of the center of this cell
                 std::pair<int, int> circle_coords = getCellXY(anim_path[current_anim_index].first,
                                                             anim_path[current_anim_index].second);
                 int circle_x = circle_coords.first;
                 int circle_y = circle_coords.second;
                 
-                // Render a circle at these coordinates
                 tft.fillCircle(circle_x, circle_y, 18, GB_BUTTON);
 
-                // Extract the coordinates of the previous cell
                 std::pair<int, int> circle_coords_prev = getCellXY(anim_path[11].first, anim_path[11].second);
                 int circle_x_prev = circle_coords_prev.first;
                 int circle_y_prev = circle_coords_prev.second;
                 
-                // Delete the circle at these coordinates
                 tft.fillCircle(circle_x_prev, circle_y_prev, 18, GB_LIGHTEST);
 
-                // Increment the animation index
                 current_anim_index++;
             }
         }
@@ -1059,6 +1064,10 @@ void loop() {
 
         case CASE_GAME:
             Game_Case();
+            break;
+
+        case CASE_HEALTH:
+            Health_Case();
             break;
 
         case CASE_SETTINGS:

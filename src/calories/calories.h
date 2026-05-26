@@ -20,19 +20,16 @@ public:
     float getHeightCm();
 
 private:
-    Preferences prefs;
-
-    bool  profileSet = false;
-    int   age        = 25;
-    float weightKg   = 70.0f;
-    float heightCm   = 170.0f;
-    float totalKcal  = 0.0f;
-
-    // running step cadence estimate used to derive speed
-    // updated each call based on pace label so fast/slow paces
-    // get a more realistic steps-per-min value
+    bool  profileSet  = false;
+    int   age         = 25;
+    float weightKg    = 70.0f;
+    float heightCm    = 170.0f;
+    float totalKcal   = 0.0f;
     float stepsPerMin = 100.0f;
 
+    uint32_t lastSaveMs = 0;
+
+    void  saveKcal();
     float ageFitnessMultiplier();
     float metFromSpeed(float speedMps);
 };
