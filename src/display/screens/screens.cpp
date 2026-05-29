@@ -28,27 +28,43 @@ static constexpr uint16_t APP_BUTTON      = GB_LIGHTEST;
 static constexpr uint16_t APP_BUTTON_TEXT = GB_DARKEST;
 static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 
+// Local retro button helper used by setup and calibration screens.
+// This keeps the same visual style as the home/app buttons without changing hitboxes.
+static void drawLocalRetroButton(TFT_eSPI &tft,
+                                 int16_t x, int16_t y,
+                                 int16_t w, int16_t h,
+                                 int16_t cornerRadius,
+                                 const char *label,
+                                 uint8_t fontSize = 4) {
+    static constexpr int16_t SHADOW_OFFSET = 4;
+    static constexpr int16_t INNER_OFFSET  = 3;
+
+    tft.fillRoundRect(x, y, w, h, cornerRadius, BTN_SHADOW);
+    tft.fillRoundRect(x, y, w, h - SHADOW_OFFSET, cornerRadius, BTN_GLARE);
+    tft.fillRoundRect(x + INNER_OFFSET,
+                      y + INNER_OFFSET,
+                      w - INNER_OFFSET,
+                      h - SHADOW_OFFSET - INNER_OFFSET,
+                      cornerRadius,
+                      GB_BUTTON);
+
+    tft.drawRoundRect(x, y, w, h, cornerRadius, TFT_BLACK);
+
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(TFT_WHITE, GB_BUTTON);
+    tft.drawString(label, x + w / 2, y + h / 2 - 1, fontSize);
+    tft.setTextDatum(TL_DATUM);
+}
+
 static void drawHomeButton(TFT_eSPI &tft, UI &ui) {
     ui.drawRetroButton(HOME_BTN_X, HOME_BTN_Y, HOME_BTN_W, HOME_BTN_H, HOME_BTN_CR, 6, "HOME", 4,
                         GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 static void drawSetupButtons(TFT_eSPI &tft) {
-    tft.fillRect(MINUS_BTN_X, SETUP_BTN_Y, SIDE_BTN_W, SETUP_BTN_H, APP_BUTTON);
-    tft.drawRect(MINUS_BTN_X, SETUP_BTN_Y, SIDE_BTN_W, SETUP_BTN_H, APP_BORDER);
-
-    tft.fillRect(OK_BTN_X, SETUP_BTN_Y, OK_BTN_W, SETUP_BTN_H, APP_BUTTON);
-    tft.drawRect(OK_BTN_X, SETUP_BTN_Y, OK_BTN_W, SETUP_BTN_H, APP_BORDER);
-
-    tft.fillRect(PLUS_BTN_X, SETUP_BTN_Y, SIDE_BTN_W, SETUP_BTN_H, APP_BUTTON);
-    tft.drawRect(PLUS_BTN_X, SETUP_BTN_Y, SIDE_BTN_W, SETUP_BTN_H, APP_BORDER);
-
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
-
-    tft.drawString("-", MINUS_BTN_X + SIDE_BTN_W / 2, SETUP_BTN_Y + SETUP_BTN_H / 2, 4);
-    tft.drawString("OK", OK_BTN_X + OK_BTN_W / 2, SETUP_BTN_Y + SETUP_BTN_H / 2, 4);
-    tft.drawString("+", PLUS_BTN_X + SIDE_BTN_W / 2, SETUP_BTN_Y + SETUP_BTN_H / 2, 4);
+    drawLocalRetroButton(tft, MINUS_BTN_X, SETUP_BTN_Y, SIDE_BTN_W, SETUP_BTN_H, 6, "-", 4);
+    drawLocalRetroButton(tft, OK_BTN_X,    SETUP_BTN_Y, OK_BTN_W,   SETUP_BTN_H, 6, "OK", 4);
+    drawLocalRetroButton(tft, PLUS_BTN_X,  SETUP_BTN_Y, SIDE_BTN_W, SETUP_BTN_H, 6, "+", 4);
 }
 
 static void drawQuestionText(TFT_eSPI &tft, const char *question) {
@@ -72,8 +88,8 @@ static void drawQuestionText(TFT_eSPI &tft, const char *question) {
     }
 }
 
-// draws a single bold arrow centered at (cx, cy)
-// dir: 0=right, 1=left, 2=up, 3=down, 4=diag up-right ↗, 5=diag down-left ↙
+// draws a single bold arrow centred at (cx, cy)
+// dir: 0=right, 1=left, 2=up, 3=down, 4=diag up-right, 5=diag down-left
 // size controls how big it is
 static void drawArrow(TFT_eSPI &tft, int cx, int cy, int dir, int size, uint16_t color) {
     int shaft  = size / 2;
@@ -82,45 +98,35 @@ static void drawArrow(TFT_eSPI &tft, int cx, int cy, int dir, int size, uint16_t
     int thick  = 4;
 
     if (dir == 4 || dir == 5) {
-        // diagonal arrows — draw as angled line segments using drawLine
-        // dir 4 = ↗ (up-right),  dir 5 = ↙ (down-left)
-        int diag = (int)(shaft * 0.707f);  // shaft * cos(45)
+        int diag = (int)(shaft * 0.707f);
 
-        // tip and tail for ↗
         int tx = cx + diag, ty = cy - diag;
         int bx = cx - diag, by = cy + diag;
 
         if (dir == 5) {
-            // flip for ↙
             tx = cx - diag; ty = cy + diag;
             bx = cx + diag; by = cy - diag;
         }
 
-        // draw thick shaft by offsetting the line a few pixels
         for (int t = -thick / 2; t <= thick / 2; t++) {
             tft.drawLine(bx + t, by - t, tx + t, ty - t, color);
             tft.drawLine(bx - t, by + t, tx - t, ty + t, color);
         }
 
-        // arrowhead: two lines branching back from tip at ~90 deg to arrow
-        int hlen = head;
         if (dir == 4) {
-            // tip is upper-right, head lines go back left and back down
             tft.fillTriangle(tx, ty,
-                             tx - hlen, ty,
-                             tx, ty + hlen,
+                             tx - head, ty,
+                             tx, ty + head,
                              color);
         } else {
-            // tip is lower-left, head lines go back right and back up
             tft.fillTriangle(tx, ty,
-                             tx + hlen, ty,
-                             tx, ty - hlen,
+                             tx + head, ty,
+                             tx, ty - head,
                              color);
         }
         return;
     }
 
-    // straight arrows
     int tx, ty, bx, by;
 
     if (dir == 0) {
@@ -137,7 +143,6 @@ static void drawArrow(TFT_eSPI &tft, int cx, int cy, int dir, int size, uint16_t
         bx = cx; by = cy - shaft;
     }
 
-    // shaft
     if (dir == 0 || dir == 1) {
         int x1 = min(tx, bx);
         tft.fillRect(x1, cy - thick / 2, abs(tx - bx), thick, color);
@@ -146,7 +151,6 @@ static void drawArrow(TFT_eSPI &tft, int cx, int cy, int dir, int size, uint16_t
         tft.fillRect(cx - thick / 2, y1, thick, abs(ty - by), color);
     }
 
-    // arrowhead
     if (dir == 0) {
         tft.fillTriangle(tx, ty,
                          tx - head, ty - spread,
@@ -260,8 +264,6 @@ void drawCalibrationGuided(TFT_eSPI &tft, const char *dirLabel,
     tft.setTextColor(APP_MUTED, APP_BG);
     tft.drawString(stepBuf, 10, 194, 4);
 
-    // draw orientation arrow on the right side of the screen
-    // centered in roughly the y=55 to y=175 region, x=230 area
     int arrowColor = isSampling ? TFT_GREEN : TFT_ORANGE;
     drawArrow(tft, 245, 120, arrowDir(dirIndex), 90, arrowColor);
 }
@@ -284,16 +286,8 @@ void drawCalibrationDone(TFT_eSPI &tft, UI &ui, bool isReentry, uint32_t savedSt
         tft.setTextColor(APP_TEXT, APP_BG);
         tft.drawString(buf, 10, 126, 4);
 
-        tft.fillRect(35, 184, 115, 48, APP_BUTTON);
-        tft.drawRect(35, 184, 115, 48, APP_BORDER);
-
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(APP_BUTTON_TEXT, APP_BUTTON);
-        tft.drawString("CANCEL", 92, 208, 4);
-
-        tft.fillRect(170, 184, 115, 48, APP_BUTTON);
-        tft.drawRect(170, 184, 115, 48, APP_BORDER);
-        tft.drawString("USE", 227, 208, 4);
+        drawLocalRetroButton(tft, 35, 184, 115, 48, 6, "CANCEL", 4);
+        drawLocalRetroButton(tft, 170, 184, 115, 48, 6, "USE", 4);
 
     } else {
         drawHomeButton(tft, ui);
@@ -301,7 +295,6 @@ void drawCalibrationDone(TFT_eSPI &tft, UI &ui, bool isReentry, uint32_t savedSt
 }
 
 void drawSWTime(TFT_eSPI &tft, const Stopwatch::SW_Time &t) {
-    // Clear only the text area
     tft.fillRect(30, SW_TIME_Y, SW_TIME_W, SW_TIME_H, GB_LIGHTEST);
 
     char buf[12];
@@ -340,7 +333,7 @@ void eraseSWDot(TFT_eSPI &tft, Stopwatch &sw) {
 void drawSWDot(TFT_eSPI &tft, Stopwatch &sw) {
     auto pos = sw.getCirclePosition();
     tft.fillCircle(pos.first, pos.second, SW_POINT_R, GB_BUTTON);
-    tft.fillCircle(pos.first, pos.second, SW_POINT_R-5, GB_LIGHTEST);
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R - 5, GB_LIGHTEST);
 }
 
 void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw, UI &ui) {
@@ -349,34 +342,27 @@ void drawSWScreen(TFT_eSPI &tft, Stopwatch &sw, UI &ui) {
     tft.setTextDatum(TL_DATUM);
 
     if (sw.getState() == Stopwatch::RUNNING) {
-        // Draw retro stop button
-        ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "STOP", 2,
-                            RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);        
+        ui.drawRetroButton(SW_BTN_X - SW_BTN_R, START_Y - SW_BTN_R, 2 * SW_BTN_R, 2 * SW_BTN_R, 6, 6, "STOP", 2,
+                            RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
     } else {
-        // Draw retro start button
-        ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "START", 2,
-                            GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);   
+        ui.drawRetroButton(SW_BTN_X - SW_BTN_R, START_Y - SW_BTN_R, 2 * SW_BTN_R, 2 * SW_BTN_R, 6, 6, "START", 2,
+                            GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
     }
 
-    // Draw retro reset button
-    ui.drawRetroButton(SW_BTN_X-SW_BTN_R, RESET_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "RESET", 2,
-                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE); 
-
-    // Draw retro home button
-    ui.drawRetroButton(SW_BTN_X-SW_BTN_R, SW_HOME_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "HOME", 2,
+    ui.drawRetroButton(SW_BTN_X - SW_BTN_R, RESET_Y - SW_BTN_R, 2 * SW_BTN_R, 2 * SW_BTN_R, 6, 6, "RESET", 2,
                         GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 
-    // Draw circle for stopwatch
-    tft.fillCircle(SW_X,SW_Y,SW_OUTER_RADIUS,TFT_BLACK);
-    tft.fillCircle(SW_X,SW_X,(SW_OUTER_RADIUS-SW_THICKNESS),GB_LIGHTEST);
+    ui.drawRetroButton(SW_BTN_X - SW_BTN_R, SW_HOME_Y - SW_BTN_R, 2 * SW_BTN_R, 2 * SW_BTN_R, 6, 6, "HOME", 2,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 
-    // Draw initial dot
+    tft.fillCircle(SW_X, SW_Y, SW_OUTER_RADIUS, TFT_BLACK);
+    tft.fillCircle(SW_X, SW_X, (SW_OUTER_RADIUS - SW_THICKNESS), GB_LIGHTEST);
+
     auto pos = sw.getCirclePosition();
     tft.fillCircle(pos.first, pos.second, SW_POINT_R, GB_BUTTON);
-    tft.fillCircle(pos.first, pos.second, SW_POINT_R-5, GB_LIGHTEST);
+    tft.fillCircle(pos.first, pos.second, SW_POINT_R - 5, GB_LIGHTEST);
 
     drawSWTime(tft, sw.getFormattedTime());
-
 }
 
 void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
@@ -396,7 +382,7 @@ void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
 
             int ndx = sx - curr.first;
             int ndy = sy - curr.second;
-            if (ndx*ndx + ndy*ndy <= r2dot) continue;
+            if (ndx * ndx + ndy * ndy <= r2dot) continue;
 
             int d2 = (sx - SW_X)*(sx - SW_X) + (sy - SW_Y)*(sy - SW_Y);
             uint16_t col;
@@ -408,11 +394,10 @@ void updateSWScreen(TFT_eSPI &tft, Stopwatch &sw) {
         }
     }
 
-    // fillCircle handles its own CS internally, so end before calling it
     tft.endWrite();
 
     tft.fillCircle(curr.first, curr.second, SW_POINT_R, GB_BUTTON);
-    tft.fillCircle(curr.first, curr.second, SW_POINT_R-5, GB_LIGHTEST);
+    tft.fillCircle(curr.first, curr.second, SW_POINT_R - 5, GB_LIGHTEST);
 
     drawSWTime(tft, sw.getFormattedTime());
 }
@@ -458,24 +443,19 @@ void drawStubScreen(TFT_eSPI &tft, UI &ui, const char *title) {
 }
 
 void drawGameScreen(TFT_eSPI &tft, UI &ui) {
-    // Draw the screen background
     tft.fillScreen(GB_LIGHTEST);
 
-    // Draw tic tac toe grid outline
     tft.drawRoundRect(GAME_X, GAME_Y, GAME_SIZE, GAME_SIZE, 10, TFT_BLACK);
 
-    // Draw grid lines
     tft.drawFastHLine(20, 100, GAME_SIZE, TFT_BLACK);
     tft.drawFastHLine(20, 160, GAME_SIZE, TFT_BLACK);
     tft.drawFastVLine(80, 40, GAME_SIZE, TFT_BLACK);
     tft.drawFastVLine(140, 40, GAME_SIZE, TFT_BLACK);
 
-    // Draw buttons
     drawGamePlay(tft, ui);
     drawGameMode(tft, ui);
     drawGameHome(tft, ui);
 
-    // Draw tic tac toe title
     tft.setTextDatum(CC_DATUM);
     tft.setTextColor(TFT_BLACK);
     tft.drawString("TIC TAC TOE", 160, 20, 4);
@@ -485,16 +465,16 @@ void drawGameScreen(TFT_eSPI &tft, UI &ui) {
 
 std::pair<int, int> getCellXY(int row, int col) {
     std::pair<int, int> cell_coords;
-    cell_coords.first = CELL_COORDS[row-1][col-1].first;
-    cell_coords.second = CELL_COORDS[row-1][col-1].second;
+    cell_coords.first = CELL_COORDS[row - 1][col - 1].first;
+    cell_coords.second = CELL_COORDS[row - 1][col - 1].second;
     return cell_coords;
 }
 
 void drawGameX(TFT_eSPI &tft, int row, int col) {
     int cell_x = getCellXY(row, col).first;
     int cell_y = getCellXY(row, col).second;
-    
-    float shift_f = CROSS_LENGTH/(2*sqrt(2));
+
+    float shift_f = CROSS_LENGTH / (2 * sqrt(2));
     int shift = static_cast<int>(shift_f);
 
     int start1_x = cell_x - shift;
@@ -515,44 +495,45 @@ void drawGameO(TFT_eSPI &tft, int row, int col) {
     int cell_y = getCellXY(row, col).second;
 
     tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS, TFT_BLACK, GB_LIGHTEST);
-    tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS-2, GB_LIGHTEST, GB_LIGHTEST);
+    tft.fillSmoothCircle(cell_x, cell_y, CIRCLE_RADIUS - 2, GB_LIGHTEST, GB_LIGHTEST);
 }
 
 void drawGamePlay(TFT_eSPI &tft, UI &ui) {
-    // Draw play button
-    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void drawGameMode(TFT_eSPI &tft, UI &ui) {
-    // Draw mode button
-    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void drawGameHome(TFT_eSPI &tft, UI &ui) {
-    // Draw home button
-    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4,
+                        GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
 }
 
 void drawGameHomePressed(TFT_eSPI &tft, UI &ui) {
-    // Draw home button pressed
-    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4, BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
+    ui.drawRetroButton(212, 166, 96, 54, 8, 8, "HOME", 4,
+                        BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
 }
 
 void drawGameModePressed(TFT_eSPI &tft, UI &ui, const char* label) {
-    ui.drawRetroButton(212, 103, 96, 54, 8, 8, label, 4, BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
+    ui.drawRetroButton(212, 103, 96, 54, 8, 8, label, 4,
+                        BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
 }
 
 void drawGamePlayPressed(TFT_eSPI &tft, UI &ui) {
-    // Draw play button pressed
-    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
+    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4,
+                        BTN_SHADOW, TFT_BLACK, BTN_SHADOW, GB_BUTTON, TFT_WHITE);
 }
 
 void drawGamePlayInactive(TFT_eSPI &tft, UI &ui) {
-    // Draw play button inactive
-    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4, INACTIVE_BUTTON, TFT_BLACK, INACTIVE_SHADOW, INACTIVE_GLARE, TFT_WHITE);
+    ui.drawRetroButton(212, 40, 96, 54, 8, 8, "PLAY", 4,
+                        INACTIVE_BUTTON, TFT_BLACK, INACTIVE_SHADOW, INACTIVE_GLARE, TFT_WHITE);
 }
 
 void drawGameModeInactive(TFT_eSPI &tft, UI &ui) {
-    // Draw mode button inactive
-    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4, INACTIVE_BUTTON, TFT_BLACK, INACTIVE_SHADOW, INACTIVE_GLARE, TFT_WHITE);
+    ui.drawRetroButton(212, 103, 96, 54, 8, 8, "MODE", 4,
+                        INACTIVE_BUTTON, TFT_BLACK, INACTIVE_SHADOW, INACTIVE_GLARE, TFT_WHITE);
 }
