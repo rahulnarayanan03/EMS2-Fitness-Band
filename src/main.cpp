@@ -559,16 +559,20 @@ void SelfTest_Case() {
 }
 
 void StopWatch_Case(uint32_t now) {
-    Stopwatch::SW_State state;
-    state = sw.getState();
+    Stopwatch::SW_State state = sw.getState();
 
     static unsigned long lastSWUpdate = 0;
+
+    // Touch edge detection
+    // This makes a held press count only once.
+    static bool wasTouched = false;
+    bool newTouch = touched && !wasTouched;
+    wasTouched = touched;
 
     if ((millis() - lastSWUpdate >= Stopwatch::SW_DELAY) && sw.getState() == Stopwatch::RUNNING) {
         lastSWUpdate = millis();
 
         sw.updateSW();
-
         updateSWScreen(tft, sw);
 
         Serial.print("[SW] Elapsed time: ");
@@ -581,47 +585,49 @@ void StopWatch_Case(uint32_t now) {
         Serial.println(sw.getCirclePosition().second);
     }
 
-    if (touched && sw.homeTouched(tx, ty)) {
+    if (newTouch && sw.homeTouched(tx, ty)) {
         goHome();
 
-    } else if (touched && sw.startStopTouched(tx, ty)) {
+    } else if (newTouch && sw.startStopTouched(tx, ty)) {
         Serial.println("Start/stop touched");
 
         if (state == Stopwatch::RUNNING) {
             sw.stopSW();
             Serial.println("SW stopped");
+
             tft.setTextDatum(TL_DATUM);
-            // draw retro start button
-            ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "START", 2,
-                                GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);   
+            ui.drawRetroButton(SW_BTN_X - SW_BTN_R, START_Y - SW_BTN_R,
+                               2 * SW_BTN_R, 2 * SW_BTN_R,
+                               6, 6, "START", 2,
+                               GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
         } else {
             sw.startSW();
             Serial.println("SW started");
+
             tft.setTextDatum(TL_DATUM);
-            // draw retro stop button
-            ui.drawRetroButton(SW_BTN_X-SW_BTN_R, START_Y-SW_BTN_R, 2*SW_BTN_R, 2*SW_BTN_R, 6, 6, "STOP", 2,
-                                RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
+            ui.drawRetroButton(SW_BTN_X - SW_BTN_R, START_Y - SW_BTN_R,
+                               2 * SW_BTN_R, 2 * SW_BTN_R,
+                               6, 6, "STOP", 2,
+                               RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
         }
 
-    } 
-    else if (touched && sw.resetTouched(tx, ty)) {
+    } else if (newTouch && sw.resetTouched(tx, ty)) {
         Serial.println("Reset touched");
 
         eraseSWDot(tft, sw);
 
-        // Stop and reset regardless of whether the stopwatch is running or stopped
+        // Stop and reset even if the stopwatch is running
         sw.resetSW();
 
         drawSWDot(tft, sw);
         drawSWTime(tft, sw.getFormattedTime());
 
-        // After reset, make sure the button shows START again
         tft.setTextDatum(TL_DATUM);
         ui.drawRetroButton(SW_BTN_X - SW_BTN_R, START_Y - SW_BTN_R,
-                            2 * SW_BTN_R, 2 * SW_BTN_R,
-                            6, 6, "START", 2,
-                            GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
-        }
+                           2 * SW_BTN_R, 2 * SW_BTN_R,
+                           6, 6, "START", 2,
+                           GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+    }
 }
 
 void PaceID_Case() {
