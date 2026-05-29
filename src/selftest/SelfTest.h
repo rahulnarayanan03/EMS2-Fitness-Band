@@ -21,9 +21,9 @@ static constexpr float ST_Y_MAX_MV =  798.6f;
 static constexpr float ST_Z_MIN_MV =  199.65f;
 static constexpr float ST_Z_MAX_MV = 1331.0f;
 
-static constexpr uint8_t  ST_SAMPLE_COUNT       = 64;
-static constexpr uint16_t ST_SAMPLE_DELAY_MS    = 5;
-static constexpr uint16_t ST_SETTLE_DELAY_MS    = 150;
+static constexpr uint8_t  ST_SAMPLE_COUNT       = 16;
+static constexpr uint16_t ST_SAMPLE_DELAY_MS    = 1;
+static constexpr uint16_t ST_SETTLE_DELAY_MS    = 15;
 static constexpr uint8_t  ST_DISCARD_READ_COUNT = 4;
 
 enum class STResult { PASS, FAIL_X, FAIL_Y, FAIL_Z, NOT_RUN };
