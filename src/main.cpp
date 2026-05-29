@@ -603,13 +603,25 @@ void StopWatch_Case(uint32_t now) {
                                 RESET_RED, TFT_BLACK, RESET_SHADOW, RESET_GLARE, TFT_WHITE);
         }
 
-    } else if (touched && sw.resetTouched(tx, ty) && state == Stopwatch::STOPPED) {
+    } 
+    else if (touched && sw.resetTouched(tx, ty)) {
         Serial.println("Reset touched");
+
         eraseSWDot(tft, sw);
+
+        // Stop and reset regardless of whether the stopwatch is running or stopped
         sw.resetSW();
+
         drawSWDot(tft, sw);
         drawSWTime(tft, sw.getFormattedTime());
-    }
+
+        // After reset, make sure the button shows START again
+        tft.setTextDatum(TL_DATUM);
+        ui.drawRetroButton(SW_BTN_X - SW_BTN_R, START_Y - SW_BTN_R,
+                            2 * SW_BTN_R, 2 * SW_BTN_R,
+                            6, 6, "START", 2,
+                            GB_BUTTON, TFT_BLACK, BTN_SHADOW, BTN_GLARE, TFT_WHITE);
+        }
 }
 
 void PaceID_Case() {
