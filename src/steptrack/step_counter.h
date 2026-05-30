@@ -6,15 +6,15 @@
 
 /*
 What changed - 
-SC_THRESHOLD_G  from 0.45 to 0.60
-SC_HYSTERESIS_G from 0.20 to 0.30
+SC_THRESHOLD_G  from 0.45 to 0.80
+SC_HYSTERESIS_G from 0.20 to 0.40
 */
 
-static constexpr float    SC_THRESHOLD_G  = 0.80f; // highLine = 1.30g
-static constexpr float    SC_HYSTERESIS_G = 0.40f; // lowLine  = 1.20g
-static constexpr uint32_t SC_COOLDOWN_MS  = 265;   // min time between steps, max about 185 SPM
+static constexpr float    SC_THRESHOLD_G  = 0.80f; // highLine = 1.80g
+static constexpr float    SC_HYSTERESIS_G = 0.40f; // lowLine  = 1.40g
+static constexpr uint32_t SC_COOLDOWN_MS  = 265;   // min time between steps, max about 226 SPM
 
-// Save step count to NVS at most once every 5 seconds
+// Save step count to NVS at most once every 3 seconds
 static constexpr uint32_t SC_NVS_SAVE_INTERVAL_MS = 3000;
 
 class StepCounter {
