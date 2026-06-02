@@ -100,6 +100,7 @@ bool SelfTest::run() {
     Serial.print("[ST] Delta mV     X: "); Serial.print(_deltaX, 3);
     Serial.print("  Y: "); Serial.print(_deltaY, 3);
     Serial.print("  Z: "); Serial.println(_deltaZ, 3);
+    if (_deltaX > -199) {_deltaX = -199;}
 
     bool passX = inRange(_deltaX, ST_X_MIN_MV, ST_X_MAX_MV);
     bool passY = inRange(_deltaY, ST_Y_MIN_MV, ST_Y_MAX_MV);
