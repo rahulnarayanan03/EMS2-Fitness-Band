@@ -15,7 +15,7 @@
 */
 
 static constexpr float ST_X_MIN_MV = -798.6f;
-static constexpr float ST_X_MAX_MV = -170.00f;
+static constexpr float ST_X_MAX_MV = -199.65f;
 static constexpr float ST_Y_MIN_MV =  199.65f;
 static constexpr float ST_Y_MAX_MV =  798.6f;
 static constexpr float ST_Z_MIN_MV =  199.65f;
