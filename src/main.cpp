@@ -2,15 +2,15 @@
  State machine coordinator for the EMS2 fitness band.
 
  Cases:
-    CASE_SETUP,    // 0
-    CASE_CT,       // 1
-    CASE_HOME,     // 2
-    CASE_ST,       // 3
-    CASE_SW,       // 4
-    CASE_PIDT,     // 5
-    CASE_GAME,     // 6
-    CASE_HEALTH,   // 7
-    CASE_SETTINGS  // 8
+   0 = SETUP    - first-boot profile setup (height, weight, age)
+   1 = HOME     - main homepage, sprite, steps, calories, battery, app buttons
+   2 = C.T      - manual calibration test
+   3 = S.T      - self test
+   4 = P.ID.T   - pace ID test
+   5 = SW       - stopwatch
+   6 = GAME     - tic-tac-toe
+   7 = HEALTH   - health goals and progress tracking
+   8 = SETTINGS - edit age, weight, height from gear icon
 */
 
 #include <Arduino.h>
@@ -82,15 +82,15 @@ static constexpr uint16_t APP_BORDER      = GB_DARKEST;
 // ---- state machine ----------------------------------------------------------
 
 enum AppCase {
-    CASE_SETUP,
-    CASE_CT,
-    CASE_HOME,
-    CASE_ST,
-    CASE_SW,
-    CASE_PIDT,
-    CASE_GAME,
-    CASE_HEALTH,
-    CASE_SETTINGS
+    CASE_SETUP,     
+    CASE_HOME,      
+    CASE_CT,        
+    CASE_ST,        
+    CASE_PIDT,      
+    CASE_SW,        
+    CASE_GAME,      
+    CASE_HEALTH,    
+    CASE_SETTINGS   
 };
 
 AppCase currentCase = CASE_SETUP;
