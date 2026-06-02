@@ -2,14 +2,15 @@
  State machine coordinator for the EMS2 fitness band.
 
  Cases:
-   0 = SETUP    - first-boot profile setup (height, weight, age)
-   1 = C.T      - manual calibration test
-   2 = HOME     - main homepage, Red's sprite, steps, app buttons
-   3 = S.T      - self test
-   4 = S.C.T    - step count test
-   5 = P.ID.T   - pace ID test
-   6 = SETTINGS - edit age, weight, height from gear icon in top bar
-   7 = HEALTH   - health goals and progress tracking
+    CASE_SETUP,    // 0
+    CASE_CT,       // 1
+    CASE_HOME,     // 2
+    CASE_ST,       // 3
+    CASE_SW,       // 4
+    CASE_PIDT,     // 5
+    CASE_GAME,     // 6
+    CASE_HEALTH,   // 7
+    CASE_SETTINGS  // 8
 */
 
 #include <Arduino.h>
